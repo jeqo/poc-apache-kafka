@@ -1,0 +1,16 @@
+group 'io.github.jeqo.poc'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.9
+targetCompatibility = 1.9
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.apache.kafka', name: 'kafka-clients', version: '1.1.0-SNAPSHOT'
+}
