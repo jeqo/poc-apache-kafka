@@ -11,6 +11,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -80,15 +81,15 @@ public class AdminClientTest {
       System.out.println("Group=>" + groupDescriptionEntry.getKey()
           + ",Description=>" + groupDescriptionEntry.getValue().protocolType());
 
-      for (MemberDescription memberDescription : groupDescriptionEntry.getValue().consumers()) {
+      for (MemberDescription memberDescription : groupDescriptionEntry.getValue().members()) {
         System.out.println("Member description=>" + memberDescription);
       }
     }
 
     final ListGroupOffsetsResult groupOffsets = adminClient.listGroupOffsets("group1");
-    final Map<TopicPartition, Long> groupOffsetsListing = groupOffsets.namesToListings().get();
+    final Map<TopicPartition, OffsetAndMetadata> groupOffsetsListing = groupOffsets.namesToListings().get();
 
-    for (Map.Entry<TopicPartition, Long> groupOffsetListing : groupOffsetsListing.entrySet()) {
+    for (Map.Entry<TopicPartition, OffsetAndMetadata> groupOffsetListing : groupOffsetsListing.entrySet()) {
       System.out.println("Topic:" + groupOffsetListing.getKey().topic() + ",Partition:" + groupOffsetListing.getKey().partition() + ",Offset:" + groupOffsetListing.getValue());
     }
   }
