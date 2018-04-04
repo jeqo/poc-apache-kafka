@@ -2,6 +2,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
@@ -70,7 +71,7 @@ public class AdminClientTest {
     final AdminClient adminClient = KafkaAdminClient.create(adminConfigs);
 
     final ListConsumerGroupsResult consumerGroups = adminClient.listConsumerGroups();
-    Collection<KafkaFuture<Collection<ConsumerGroupListing>>> consumerGroupNames = consumerGroups.listings().get();
+    Collection<KafkaFuture<Collection<ConsumerGroupListing>>> consumerGroupNames = consumerGroups.listings();
 
     for (KafkaFuture<Collection<ConsumerGroupListing>> name : consumerGroupNames) {
       for (ConsumerGroupListing cs : name.get()) {
@@ -79,7 +80,7 @@ public class AdminClientTest {
     }
 
     final DescribeConsumerGroupsResult describedGroups = adminClient.describeConsumerGroups(Collections.singletonList("group1"));
-    final Map<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionMap = describedGroups.values().get();
+    final Map<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionMap = describedGroups.values();
 
     for (Map.Entry<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionEntry : groupDescriptionMap.entrySet()) {
       final ConsumerGroupDescription consumerGroupDescription = groupDescriptionEntry.getValue().get();
@@ -96,6 +97,16 @@ public class AdminClientTest {
 
     for (Map.Entry<TopicPartition, OffsetAndMetadata> groupOffsetListing : groupOffsetsListing.entrySet()) {
       System.out.println("Topic:" + groupOffsetListing.getKey().topic() + ",Partition:" + groupOffsetListing.getKey().partition() + ",Offset:" + groupOffsetListing.getValue());
+    }
+
+    DeleteConsumerGroupsResult rr = adminClient.deleteConsumerGroups(Collections.singletonList("group1"));
+    for (Map.Entry<String, KafkaFuture<Void>> r : rr.values().entrySet()) {
+      r.getValue().get();
+      System.out.println("CG removed: " + r.getKey());
+    }
+
+    for(KafkaFuture<Collection<ConsumerGroupListing>> c : adminClient.listConsumerGroups().listings()) {
+      System.out.println(c.get().size() == 0);
     }
   }
 
