@@ -71,16 +71,14 @@ public class AdminClientTest {
     final AdminClient adminClient = KafkaAdminClient.create(adminConfigs);
 
     final ListConsumerGroupsResult consumerGroups = adminClient.listConsumerGroups();
-    Collection<KafkaFuture<Collection<ConsumerGroupListing>>> consumerGroupNames = consumerGroups.listings();
+    KafkaFuture<Collection<ConsumerGroupListing>> consumerGroupNames = consumerGroups.listings();
 
-    for (KafkaFuture<Collection<ConsumerGroupListing>> name : consumerGroupNames) {
-      for (ConsumerGroupListing cs : name.get()) {
-        System.out.println("Consumer group=>" + cs);
-      }
+    for (ConsumerGroupListing name : consumerGroupNames.get()) {
+        System.out.println("Consumer group=>" + name.groupId());
     }
 
     final DescribeConsumerGroupsResult describedGroups = adminClient.describeConsumerGroups(Collections.singletonList("group1"));
-    final Map<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionMap = describedGroups.values();
+    final Map<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionMap = describedGroups.describedGroups();
 
     for (Map.Entry<String, KafkaFuture<ConsumerGroupDescription>> groupDescriptionEntry : groupDescriptionMap.entrySet()) {
       final ConsumerGroupDescription consumerGroupDescription = groupDescriptionEntry.getValue().get();
@@ -99,15 +97,13 @@ public class AdminClientTest {
       System.out.println("Topic:" + groupOffsetListing.getKey().topic() + ",Partition:" + groupOffsetListing.getKey().partition() + ",Offset:" + groupOffsetListing.getValue());
     }
 
-    DeleteConsumerGroupsResult rr = adminClient.deleteConsumerGroups(Collections.singletonList("group1"));
-    for (Map.Entry<String, KafkaFuture<Void>> r : rr.values().entrySet()) {
-      r.getValue().get();
-      System.out.println("CG removed: " + r.getKey());
-    }
-
-    for(KafkaFuture<Collection<ConsumerGroupListing>> c : adminClient.listConsumerGroups().listings()) {
-      System.out.println(c.get().size() == 0);
-    }
+//    DeleteConsumerGroupsResult rr = adminClient.deleteConsumerGroups(Collections.singletonList("group1"));
+//    for (Map.Entry<String, KafkaFuture<Void>> r : rr.deletedGroups().entrySet()) {
+//      r.getValue().get();
+//      System.out.println("CG removed: " + r.getKey());
+//    }
+//
+//      System.out.println(adminClient.listConsumerGroups().listings().get().size() == 0);
   }
 
 }
