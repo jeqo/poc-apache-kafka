@@ -7,12 +7,12 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
 
-public class Poc {
+public class PocInput {
     public static void main(String[] args) {
         var prodConfigs = new Properties();
         prodConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         var producer = new KafkaProducer<>(prodConfigs, new StringSerializer(), new StringSerializer());
-        var record = new ProducerRecord<>("input", "k1", "v1.0");
+        var record = new ProducerRecord<>("input", "k2", "v1.0");
         record.headers().add("k", "v".getBytes());
         producer.send(record);
         producer.close();
