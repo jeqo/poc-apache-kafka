@@ -56,6 +56,7 @@ public class Main {
         if (exception != null) {
           System.err.println("Error sending message");
           exception.printStackTrace();
+          System.exit(1);
         }
       });
     }
