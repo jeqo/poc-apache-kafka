@@ -86,7 +86,7 @@
               </to>
               <container>
                 <jvmFlags>--enable-preview</jvmFlags>
-                <mainClass>demo.producer.Main</mainClass>
+                <mainClass>demo.consumer.Main</mainClass>
               </container>
             </configuration>
           </plugin>
