@@ -74,7 +74,12 @@ public class App {
       }
 
       var config = new Properties();
-      config.load(Files.newInputStream(Path.of("CONFIG_PATH")));
+      var configPath = "config.properties";
+      var configPathParam = System.getenv("CONFIG_PATH");
+      if (configPathParam != null) {
+        configPath = configPathParam;
+      }
+      config.load(Files.newInputStream(Path.of(configPath)));
 
       return new Config(inputTopic, outputTopic, config);
     }
