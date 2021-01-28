@@ -39,8 +39,12 @@ public class App {
     var topology = builder.build();
 
     var kafkaStreams = new KafkaStreams(topology, config.streamsConfig);
-    Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      System.out.println("Stopping application...");
+      kafkaStreams.close();
+    }));
     kafkaStreams.start();
+    System.out.println("Running application...");
   }
 
   public static class Config {
