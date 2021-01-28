@@ -13,6 +13,8 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Grouped;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 
 /**
@@ -31,8 +33,8 @@ public class App {
 
     builder.stream(config.inputTopic, Consumed.with(Serdes.String(), inputValueSerde))
         .map((key, p) -> KeyValue.pair(p.getUserid(), p.getViewtime()))
-        .groupByKey()
-        .reduce(Long::sum)
+        .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
+        .reduce(Long::sum, Materialized.with(Serdes.String(), Serdes.Long()))
         .toStream()
         .to(config.outputTopic, Produced.with(Serdes.String(), Serdes.Long()));
 
