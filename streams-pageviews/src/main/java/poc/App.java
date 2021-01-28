@@ -22,6 +22,7 @@ public class App {
 
   public static void main(String[] args) throws IOException {
     var config = Config.load();
+    System.out.println(config);
 
     var builder = new StreamsBuilder();
 
@@ -58,6 +59,15 @@ public class App {
       Map<String, Object> map = new LinkedHashMap<>();
       streamsConfig.forEach((o, o2) -> map.put((String) o, o2));
       return map;
+    }
+
+    @Override
+    public String toString() {
+      return "Config{" +
+          "inputTopic='" + inputTopic + '\'' +
+          ", outputTopic='" + outputTopic + '\'' +
+          ", streamsConfig=" + streamsConfig +
+          '}';
     }
 
     static Config load() throws IOException {
