@@ -2,42 +2,48 @@ package poc;
 
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
+import static org.apache.kafka.streams.StreamsConfig.STATE_DIR_CONFIG;
 
-import java.util.Arrays;
 import java.util.Properties;
-import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.ValueAndHeaders;
+import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueAndHeadersSerde;
+import org.apache.kafka.streams.kstream.RecordValueSerde;
+import org.apache.kafka.streams.kstream.Repartitioned;
 
 public class Main {
-    public static void main(String[] args) {
-        var builder = new StreamsBuilder();
-        builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-                .withHeaders()
-                .filter((k, v) -> v.headers().headers("k").iterator().hasNext())
-                .filter((k, v) -> Arrays.equals(v.headers().lastHeader("k").value(), "v".getBytes()))
-                .groupByKey(Grouped.with(Serdes.String(), new ValueAndHeadersSerde<>(Serdes.String())))
-                .reduce((oldValue, newValue) -> {
-                    newValue.headers().add("reduced", "yes".getBytes());
-                    return new ValueAndHeaders<>(oldValue.value().concat(newValue.value()), newValue.headers());
-                })
-                .toStream()
-                .setHeaders((k, v) -> v.headers())
-                .mapValues((k, v) -> v.value())
-                .setHeader((k, v) -> new RecordHeader("newH", "1".getBytes()))
-                .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
-        var configs = new Properties();
-        configs.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configs.put(APPLICATION_ID_CONFIG, "kip-headers");
-        var kafkaStreams = new KafkaStreams(builder.build(), configs);
-        Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
-        kafkaStreams.start();
-    }
+  public static void main(String[] args) {
+    var builder = new StreamsBuilder();
+    var input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
+        .mapRecordValue()
+        .split();
+    input
+        .branch((key, value) -> value.topic().equals("input"), Branched.withConsumer(b1 -> {
+          b1.filter((key, value) -> value.headers().hasWithName("a"))
+              .filter((key, value) -> ("a").equals(value.headers().lastWithName("a").valueAsUtf8()))
+              .setRecordHeaders((k, v) -> v.headers().addUtf8("a", "b").retainLatest())
+              .mapValues((k, v) -> v.value())
+              .to("output", Produced.with(Serdes.String(), Serdes.String()));
+
+          b1.groupByKey().count()
+              .toStream()
+              .mapRecordValue()
+              .repartition(Repartitioned.with(Serdes.String(), new RecordValueSerde<>(Serdes.Long())))
+              .foreach((key, value) -> System.out.println(key + " => " + value));
+
+        }))
+        .noDefaultBranch();
+
+    var configs = new Properties();
+    configs.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    configs.put(APPLICATION_ID_CONFIG, "kip-headers");
+    configs.put(STATE_DIR_CONFIG, "target/kafka-streams");
+    var kafkaStreams = new KafkaStreams(builder.build(), configs);
+    Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
+    kafkaStreams.start();
+  }
 }

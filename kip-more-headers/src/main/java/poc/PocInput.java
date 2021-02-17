@@ -13,7 +13,7 @@ public class PocInput {
         prodConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         var producer = new KafkaProducer<>(prodConfigs, new StringSerializer(), new StringSerializer());
         var record = new ProducerRecord<>("input", "k2", "v1.0");
-        record.headers().add("k", "v".getBytes());
+        record.headers().add("a", "a".getBytes());
         producer.send(record);
         producer.close();
     }
