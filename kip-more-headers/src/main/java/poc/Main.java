@@ -10,6 +10,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.RecordValueSerde;
 import org.apache.kafka.streams.kstream.Repartitioned;
@@ -28,6 +29,13 @@ public class Main {
               .setRecordHeaders((k, v) -> v.headers().addUtf8("a", "b").retainLatest())
               .mapValues((k, v) -> v.value())
               .to("output", Produced.with(Serdes.String(), Serdes.String()));
+
+          b1.groupByKey()
+              .reduce((value1, value2) -> {
+                value1.headers()
+                    .forEach(header -> value2.headers().add(header));
+                return value2;
+              }, Materialized.with(Serdes.String(), new RecordValueSerde<>(Serdes.String())));
 
           b1.groupByKey().count()
               .toStream()
