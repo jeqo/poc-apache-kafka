@@ -1,0 +1,12 @@
+
+{
+  "name": "hello-file-sink",
+  "config": {
+    "tasks": "3",
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "topics": "hello-world",
+    "file": "/tmp/hello.txt"
+  }
+}
