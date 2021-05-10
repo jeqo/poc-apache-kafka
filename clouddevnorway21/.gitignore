@@ -1,7 +1,0 @@
-target/
-cp-helm-charts/
-
-aks-connect.yml
-ccloud.properties
-
-*.log

@@ -1,5 +1,0 @@
-bootstrap.servers={{ CCLOUD_KAFKA_BOOTSTRAP_SERVERS }}
-ssl.endpoint.identification.algorithm=https
-security.protocol=SASL_SSL
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="{{ CCLOUD_KAFKA_API_KEY }}" password="{{ CCLOUD_KAFKA_API_SECRET }}";
