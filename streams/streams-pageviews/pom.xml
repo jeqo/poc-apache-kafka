@@ -97,7 +97,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>libs/</classpathPrefix>
-              <mainClass>poc.App</mainClass>
+              <mainClass>poc.StreamsTestingApp</mainClass>
             </manifest>
           </archive>
         </configuration>
