@@ -38,7 +38,8 @@ public class StreamsTestingApp {
   static Topology buildSimpleFromTo() {
     final var builder = new StreamsBuilder();
 
-    builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
+    builder
+        .stream("input", Consumed.with(Serdes.String(), Serdes.String()))
         .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
     return builder.build();
