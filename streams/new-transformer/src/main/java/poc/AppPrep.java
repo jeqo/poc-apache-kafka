@@ -16,9 +16,8 @@ public class AppPrep {
     final Properties props = loadProperties();
     final var admin = AdminClient.create(props);
     admin.createTopics(List.of(
-        new NewTopic("input", 1, (short) 1),
-        new NewTopic("output", 1, (short) 1),
-        new NewTopic("output-table", 1, (short) 1)
+        new NewTopic("words", 1, (short) 1),
+        new NewTopic("output", 1, (short) 1)
     )).all().get();
     admin.close();
   }
