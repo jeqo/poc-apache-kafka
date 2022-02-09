@@ -18,7 +18,7 @@ public class App {
     final Properties config = loadConfig();
     System.out.println(config);
 
-    final var topology = buildTopology();
+    final var topology = sameEntityTopology();
 
     System.out.println(topology.describe());
     final var kafkaStreams = new KafkaStreams(topology, config);
@@ -56,6 +56,18 @@ public class App {
         .toStream()
         .to("fkjoin_v1", Produced.with(Serdes.String(), Serdes.String()));
 
+    return builder.build();
+  }
+
+  static Topology sameEntityTopology() {
+    final var builder = new StreamsBuilder();
+    final var items = builder.table("items", Consumed.with(Serdes.String(), new ItemSerde()));
+
+    items.leftJoin(items,
+            Item::parent,
+            (item, parent) -> item.addAttrs(parent.attributes()))
+        .toStream()
+        .to("joined", Produced.with(Serdes.String(), new ItemSerde()));
     return builder.build();
   }
 
