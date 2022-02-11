@@ -13,9 +13,9 @@ public class AppDriver {
   public static void main(String[] args) {
     final Properties props = loadProperties();
     final var producer = new KafkaProducer<>(props, new StringSerializer(), new ItemSerializer());
-    producer.send(new ProducerRecord<>("items", "k1", new Item("k1", null, "k1", Map.of("a", "v2"))));
+    producer.send(new ProducerRecord<>("parents", "k1", new Item("k1", null, "k1", Map.of("a", "v2"))));
     producer.send(new ProducerRecord<>("items", "k1.1", new Item("k1.1", "k1", "k1.1", Map.of())));
-    producer.send(new ProducerRecord<>("items", "k2", new Item("k2", null, "k2", Map.of())));
+    producer.send(new ProducerRecord<>("", "k2", new Item("k2", null, "k2", Map.of())));
     producer.close();
   }
 

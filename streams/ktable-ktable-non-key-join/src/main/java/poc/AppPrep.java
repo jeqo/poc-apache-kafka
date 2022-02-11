@@ -14,6 +14,8 @@ public class AppPrep {
     final var admin = AdminClient.create(props);
     admin.createTopics(List.of(
         new NewTopic("items", 1, (short) 1),
+        new NewTopic("parent", 1, (short) 1),
+        new NewTopic("child", 1, (short) 1),
         new NewTopic("joined", 1, (short) 1)
     )).all().get();
     admin.close();

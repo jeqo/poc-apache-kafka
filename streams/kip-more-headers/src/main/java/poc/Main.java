@@ -12,7 +12,7 @@ import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.RecordValueSerde;
+import org.apache.kafka.streams.kstream.RecordSerde;
 import org.apache.kafka.streams.kstream.Repartitioned;
 
 public class Main {
@@ -20,7 +20,7 @@ public class Main {
   public static void main(String[] args) {
     var builder = new StreamsBuilder();
     var input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-        .mapRecordValue()
+        .mapValueToRecord()
         .split();
     input
         .branch((key, value) -> value.topic().equals("input"), Branched.withConsumer(b1 -> {
@@ -35,12 +35,13 @@ public class Main {
                 value1.headers()
                     .forEach(header -> value2.headers().add(header));
                 return value2;
-              }, Materialized.with(Serdes.String(), new RecordValueSerde<>(Serdes.String())));
+              }, Materialized.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.String())));
 
           b1.groupByKey().count()
               .toStream()
-              .mapRecordValue()
-              .repartition(Repartitioned.with(Serdes.String(), new RecordValueSerde<>(Serdes.Long())))
+              .mapValueToRecord()
+              .repartition(
+                  Repartitioned.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.Long())))
               .foreach((key, value) -> System.out.println(key + " => " + value));
 
         }))
@@ -48,7 +49,7 @@ public class Main {
 
     var configs = new Properties();
     configs.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    configs.put(APPLICATION_ID_CONFIG, "kip-headers");
+    configs.put(APPLICATION_ID_CONFIG, "kip-headers_1");
     configs.put(STATE_DIR_CONFIG, "target/kafka-streams");
     var kafkaStreams = new KafkaStreams(builder.build(), configs);
     Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));

@@ -4,7 +4,9 @@ import java.util.Map;
 
 public record Item(String id, String parent, String name, Map<String, String> attributes) {
   Item addAttrs(Map<String, String> attributes) {
-    this.attributes.putAll(attributes);
+    if (attributes != null) {
+      this.attributes.putAll(attributes);
+    }
     return this;
   }
 }
