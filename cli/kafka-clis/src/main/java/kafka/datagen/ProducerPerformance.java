@@ -32,7 +32,7 @@ public class ProducerPerformance {
     this.stats = stats;
   }
 
-  void start() {
+  void start() throws IOException {
 
     GenericRecord payload;
     String key;
@@ -40,6 +40,8 @@ public class ProducerPerformance {
 
     int currentTransactionSize = 0;
     long transactionStartTime = 0;
+
+    var sample = payloadGenerator.sample();
 
     for (long i = 0; i < config.records(); i++) {
       payload = payloadGenerator.get();
@@ -53,7 +55,7 @@ public class ProducerPerformance {
       record = new ProducerRecord<>(config.topicName(), key, payload);
 
       long sendStartMs = System.currentTimeMillis();
-      Callback cb = stats.nextCompletion(sendStartMs, 0, stats); //FIXME payload.length, stats);
+      Callback cb = stats.nextCompletion(sendStartMs, sample.length, stats);
       producer.send(record, cb);
 
       currentTransactionSize++;
@@ -104,17 +106,19 @@ public class ProducerPerformance {
     var producerConfig = new Properties();
     producerConfig.load(Files.newInputStream(Path.of("client.properties")));
     var producer = new KafkaProducer<String, GenericRecord>(producerConfig);
+    final var records = 1_000_000;
+    final var targetThroughput = 10_000;
     var pp = new ProducerPerformance(
-        new Config(1000000, "jeqo-test-v1", false, 100, false),
+        new Config(records, "jeqo-test-v1", false, 100, false),
         producer,
         new PayloadGenerator(new PayloadGenerator.Config(
             Optional.empty(),
             Optional.of(Quickstart.CLICKSTREAM),
             Optional.empty(),
             Optional.empty(),
-            1000000)),
-        new ThroughputThrottler(System.currentTimeMillis(), 1000),
-        new Stats(1000000, 5000)
+            records)),
+        new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
+        new Stats(records, 5000)
     );
     pp.start();
   }
