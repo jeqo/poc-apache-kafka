@@ -1,6 +1,7 @@
 package kafka.datagen;
 
 import io.confluent.avro.random.generator.Generator;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +13,10 @@ import java.util.function.Supplier;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.SchemaParseException;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.kafka.common.config.ConfigException;
 
 /**
@@ -52,6 +56,16 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
       ));
     }
     return (GenericRecord) generatedObject;
+  }
+
+  byte[] sample() throws IOException {
+    var record = get();
+    var outputStream = new ByteArrayOutputStream();
+    var datumWriter = new GenericDatumWriter<GenericRecord>(record.getSchema());
+    Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+    datumWriter.write(record, encoder);
+    encoder.flush();
+    return outputStream.toByteArray();
   }
 
   public String key(GenericRecord payload) {
@@ -115,5 +129,16 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
     public String keyFieldName() {
       return quickstart.map(Quickstart::getSchemaKeyField).orElse(null);
     }
+  }
+
+  public static void main(String[] args) throws IOException {
+    var pg = new PayloadGenerator(new PayloadGenerator.Config(
+        Optional.empty(),
+        Optional.of(Quickstart.CLICKSTREAM),
+        Optional.empty(),
+        Optional.empty(),
+        1000000));
+    var bytes = pg.sample();
+    Files.write(Path.of("test.avro"), bytes);
   }
 }
