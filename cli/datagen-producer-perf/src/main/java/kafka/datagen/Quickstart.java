@@ -38,7 +38,7 @@ public enum Quickstart {
   }
 
   public Path getSchemaFilename() {
-    return Path.of(schemaFilename);
+    return Path.of("src/main/resources/" + schemaFilename);
   }
 
   public String getSchemaKeyField() {

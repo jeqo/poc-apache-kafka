@@ -18,30 +18,32 @@ import org.apache.kafka.common.config.ConfigException;
 /**
  * Datagen side
  */
-public class PayloadGenerator implements Supplier<byte[]> {
+public class PayloadGenerator implements Supplier<GenericRecord> {
 
   final Config config;
   final Random random;
   final Generator generator;
+  final String keyFieldName;
 
   public PayloadGenerator(Config config) {
     this.config = config;
 
     this.random = new Random();
-    if (config.randomSeed() != null) {
-      random.setSeed(config.randomSeed());
+    config.randomSeed().ifPresent(r -> {
+      random.setSeed(r);
       random.setSeed(random.nextLong());
-    }
+    });
 
     generator = new Generator.Builder()
         .random(random)
         .generation(config.count())
         .schema(config.schema())
         .build();
+    keyFieldName = config.keyFieldName();
   }
 
   @Override
-  public byte[] get() {
+  public GenericRecord get() {
     final Object generatedObject = generator.generate();
     if (!(generatedObject instanceof GenericRecord)) {
       throw new RuntimeException(String.format(
@@ -49,16 +51,23 @@ public class PayloadGenerator implements Supplier<byte[]> {
           generatedObject.getClass().getName()
       ));
     }
-    final GenericRecord randomAvroMessage = (GenericRecord) generatedObject;
-
-    return new byte[0];
+    return (GenericRecord) generatedObject;
   }
 
-  record Config(Long randomSeed, Optional<String> quickstart, Optional<Path> schemaPath,
-                Optional<String> schemaString, long count) {
+  public String key(GenericRecord payload) {
+    return (String) payload.get(config.keyFieldName());
+  }
+
+  record Config(
+      Optional<Long> randomSeed,
+      Optional<Quickstart> quickstart,
+      Optional<Path> schemaPath,
+      Optional<String> schemaString,
+      long count
+  ) {
 
     Schema schema() {
-      return quickstart.map(s -> Quickstart.valueOf(s.toUpperCase()).getSchemaFilename())
+      return quickstart.map(Quickstart::getSchemaFilename)
           .map(Config::getSchemaFromSchemaFileName)
           .orElse(
               schemaString.map(Config::getSchemaFromSchemaString).orElse(
@@ -98,9 +107,13 @@ public class PayloadGenerator implements Supplier<byte[]> {
         }
       } catch (SchemaParseException | IOException e) {
         // log.error("Unable to parse the provided schema", e);
-        throw new ConfigException("Unable to parse the provided schema");
+        throw new ConfigException("Unable to parse the provided schema", e);
       }
       return schema;
+    }
+
+    public String keyFieldName() {
+      return quickstart.map(Quickstart::getSchemaKeyField).orElse(null);
     }
   }
 }
