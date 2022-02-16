@@ -55,14 +55,43 @@
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin</artifactId>
         <version>3.2.0</version>
-        <configuration>
-          <to>
-            <image>docker.pkg.github.com/jeqo/kafka-streams-poc</image>
-          </to>
-        </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>stateless-in-out</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.google.cloud.tools</groupId>
+            <artifactId>jib-maven-plugin</artifactId>
+            <configuration>
+              <from>
+                <image>openjdk:17</image>
+              </from>
+              <to>
+                <image>ghcr.io/jeqo/poc-apache-kafka:stateless-in-out</image>
+              </to>
+              <container>
+                <mainClass>poc.StatelessInOut</mainClass>
+              </container>
+              <extraDirectories>
+                <paths>
+                  <path>
+                    <from>.</from>
+                    <into>/</into>
+                    <includes>*.properties</includes>
+                  </path>
+                </paths>
+              </extraDirectories>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <repositories>
     <repository>

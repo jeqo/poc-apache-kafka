@@ -14,7 +14,7 @@ public class App {
         producerConfig.load(Files.newInputStream(Path.of("client.properties")));
         var producer = new KafkaProducer<String, GenericRecord>(producerConfig);
         final var records = 10_000_000;
-        final var targetThroughput = 10_000;
+        final var targetThroughput = 5_000;
         var pp = new ProducerPerformance(
             new ProducerPerformance.Config(records, "jeqo-test-v1", false, 100, false),
             producer,

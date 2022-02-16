@@ -1,0 +1,42 @@
+---
+version: '3.8'
+services:
+  stateless-in-out-1:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8001:8080"
+    networks:
+      - poc-apache-kafka
+  stateless-in-out-2:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8002:8080"
+    networks:
+      - poc-apache-kafka
+  stateless-in-out-3:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8003:8080"
+    networks:
+      - poc-apache-kafka
+  stateless-in-out-4:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8004:8080"
+    networks:
+      - poc-apache-kafka
+  stateless-in-out-5:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8005:8080"
+    networks:
+      - poc-apache-kafka
+  stateless-in-out-6:
+    image: ghcr.io/jeqo/poc-apache-kafka:stateless-in-out
+    ports:
+      - "8006:8080"
+    networks:
+      - poc-apache-kafka
+
+networks:
+  poc-apache-kafka:

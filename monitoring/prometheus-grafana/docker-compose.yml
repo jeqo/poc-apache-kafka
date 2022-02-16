@@ -1,0 +1,36 @@
+---
+version: '3.8'
+services:
+  prometheus:
+    image: prom/prometheus:v2.33.3
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/config/:/etc/prometheus/
+    networks:
+      - poc-apache-kafka
+  grafana:
+    image: grafana/grafana:8.3.6
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/:/etc/grafana/provisioning/
+    networks:
+      - poc-apache-kafka
+  ccloud_exporter:
+    image: dabz/ccloudexporter
+    environment:
+      CCLOUD_API_KEY: ${CCLOUD_API_KEY}
+      CCLOUD_API_SECRET: ${CCLOUD_API_SECRET}
+      CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
+    # command: ["-config", "/config/ccloud.yml"]
+    volumes:
+      - ./ccloud_exporter:/config
+    networks:
+      - poc-apache-kafka
+networks:
+  poc-apache-kafka:

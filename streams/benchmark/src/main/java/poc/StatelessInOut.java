@@ -26,6 +26,8 @@ public class StatelessInOut {
     builder.stream("jeqo-test-v1", Consumed.with(Serdes.String(), valueSerde))
         .to("jeqo-test-output-v1", Produced.with(Serdes.String(), valueSerde));
     HttpKafkaStreamsServer.newBuilder()
+        .port(8080)
+        .prometheusMetricsEnabled(true)
         .build(builder.build(), props)
         .startApplicationAndServer();
   }
