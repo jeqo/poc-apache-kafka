@@ -12,8 +12,8 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
-import poc.metrics.StatsMetrics;
-import poc.metrics.StatsMetrics.MetricName;
+import poc.metrics.MetricsPrinter;
+import poc.metrics.MetricsPrinter.MetricName;
 
 public class StatelessInOut {
 
@@ -36,7 +36,7 @@ public class StatelessInOut {
     final var ks = new KafkaStreams(builder.build(), props);
     Runtime.getRuntime().addShutdownHook(new Thread(ks::close));
     ks.start();
-    var stats = new StatsMetrics(ks,
+    var stats = new MetricsPrinter(ks,
         List.of(
             new MetricName("process-rate", "stream-thread-metrics"),
             new MetricName("records-lag-avg", "consumer-fetch-manager-metrics")
