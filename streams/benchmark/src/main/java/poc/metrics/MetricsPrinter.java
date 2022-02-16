@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.Map;
 import org.apache.kafka.streams.KafkaStreams;
 
-public class StatsMetrics {
+public class MetricsPrinter {
 
   final KafkaStreams ks;
   final List<MetricName> metricNames;
   final Map<String, List<String>> metricNamesByGroup;
   final long frequency;
 
-  public StatsMetrics(
+  public MetricsPrinter(
       KafkaStreams ks,
       List<MetricName> metricNames,
       long frequency) {
