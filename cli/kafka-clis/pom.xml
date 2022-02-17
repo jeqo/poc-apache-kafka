@@ -46,6 +46,11 @@
       <version>${confluent.avro.generator.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>4.6.1</version>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
