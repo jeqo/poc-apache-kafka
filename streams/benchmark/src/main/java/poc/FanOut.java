@@ -18,7 +18,8 @@ public class FanOut {
         // a:v1-topic1
         // a:v1-topic2
         // a:v1-topic3
-        .to((key, value, recordContext) -> value);
+        .to((key, value, recordContext) -> 
+            new String(recordContext.headers().lastHeader("topic").value()));
 
     System.out.println(b.build().describe());
   }
