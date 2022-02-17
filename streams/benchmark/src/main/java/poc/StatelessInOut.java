@@ -41,6 +41,8 @@ public class StatelessInOut {
             new MetricName("stream-thread-metrics", "process-rate"),
             new MetricName("stream-thread-metrics", "process-latency-avg"),
             new MetricName("stream-thread-metrics", "process-latency-max"),
+            new MetricName("stream-thread-metrics", "poll-records-avg"),
+            new MetricName("stream-thread-metrics", "poll-records-max"),
             new MetricName("consumer-fetch-manager-metrics", "records-lag-avg")
         ),
         5_000);

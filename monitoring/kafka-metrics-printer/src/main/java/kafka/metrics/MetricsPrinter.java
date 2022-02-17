@@ -71,12 +71,16 @@ public class MetricsPrinter {
     }
     try {
       for (org.apache.kafka.common.MetricName metricName : selected) {
-         Metric m = metrics.get(metricName);
-        System.out.println(Instant.now() + " @ " + m.metricName().group() + ":" + m.metricName().name() + " => " + m.metricValue());
+        Metric m = metrics.get(metricName);
+        System.out.println(Instant.now() + " @ "
+            + m.metricName().group() + ":" + m.metricName().name()
+            + m.metricName().tags() +
+            " => " + m.metricValue());
       }
     } catch (Exception e) {
       e.printStackTrace();
     }
+    System.out.println();
   }
 
   public static class MetricName {
