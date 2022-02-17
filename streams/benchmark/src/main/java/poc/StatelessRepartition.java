@@ -28,5 +28,26 @@ public class StatelessRepartition {
     var topology = builder.build();
 
     System.out.println(topology.describe());
+
+    new StatelessRepartition().other();
+  }
+
+  void other() {
+    var builder = new StreamsBuilder();
+    final var input = builder.stream("input",
+        Consumed.with(Serdes.String(), Serdes.String()).withName("poll-input"));
+
+    input.filter((key, value) -> key == null)
+        .selectKey((key, value) -> value) //set key from value.
+        .to("input", Produced.with(Serdes.String(), Serdes.String()));
+
+    input
+        .filter((key, value) -> key != null)
+        .mapValues(value -> "Processed: " + value)
+        .to("output", Produced.with(Serdes.String(), Serdes.String()));
+
+    var topology = builder.build();
+
+    System.out.println(topology.describe());
   }
 }
