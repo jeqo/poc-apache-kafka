@@ -7,13 +7,13 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import kafka.metrics.MetricsPrinter;
+import kafka.metrics.MetricsPrinter.MetricName;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
-import poc.metrics.MetricsPrinter;
-import poc.metrics.MetricsPrinter.MetricName;
 
 public class StatelessInOut {
 
@@ -36,10 +36,12 @@ public class StatelessInOut {
     final var ks = new KafkaStreams(builder.build(), props);
     Runtime.getRuntime().addShutdownHook(new Thread(ks::close));
     ks.start();
-    var stats = new MetricsPrinter(ks,
+    var stats = new MetricsPrinter(ks::metrics,
         List.of(
-            new MetricName("process-rate", "stream-thread-metrics"),
-            new MetricName("records-lag-avg", "consumer-fetch-manager-metrics")
+            new MetricName("stream-thread-metrics", "process-rate"),
+            new MetricName("stream-thread-metrics", "process-latency-avg"),
+            new MetricName("stream-thread-metrics", "process-latency-max"),
+            new MetricName("consumer-fetch-manager-metrics", "records-lag-avg")
         ),
         5_000);
     stats.start();
