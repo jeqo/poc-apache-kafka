@@ -1,4 +1,4 @@
-package kafka.datagen;
+package kafka.producer.performance.datagen;
 
 import java.nio.file.Path;
 import java.util.HashSet;

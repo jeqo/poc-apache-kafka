@@ -1,4 +1,4 @@
-package kafka.datagen;
+package kafka.producer.performance.datagen;
 
 public class ThroughputThrottler {
   private static final long NS_PER_MS = 1000000L;

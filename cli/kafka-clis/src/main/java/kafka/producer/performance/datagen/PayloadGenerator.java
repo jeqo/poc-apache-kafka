@@ -1,4 +1,4 @@
-package kafka.datagen;
+package kafka.producer.performance.datagen;
 
 import io.confluent.avro.random.generator.Generator;
 import java.io.ByteArrayOutputStream;
@@ -69,7 +69,7 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
   }
 
   public String key(GenericRecord payload) {
-    return (String) payload.get(config.keyFieldName());
+    return String.valueOf(payload.get(config.keyFieldName()));
   }
 
   record Config(

@@ -1,4 +1,4 @@
-package kafka;
+package kafka.topics;
 
 import java.io.IOException;
 import java.nio.file.Files;
