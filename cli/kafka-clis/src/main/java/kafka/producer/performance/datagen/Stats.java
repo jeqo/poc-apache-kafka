@@ -1,4 +1,4 @@
-package kafka.datagen;
+package kafka.producer.performance.datagen;
 
 
 import java.util.Arrays;

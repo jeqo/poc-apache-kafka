@@ -1,4 +1,4 @@
-package kafka.datagen;
+package kafka.producer.performance.datagen;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,14 +13,14 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public class ProducerPerformance {
 
   final Config config;
-  final KafkaProducer<String, GenericRecord> producer;
+  final KafkaProducer<String, Object> producer;
   final PayloadGenerator payloadGenerator;
   final ThroughputThrottler throttler;
   final Stats stats;
 
   public ProducerPerformance(
       final Config config,
-      final KafkaProducer<String, GenericRecord> producer,
+      final KafkaProducer<String, Object> producer,
       final PayloadGenerator payloadGenerator,
       final ThroughputThrottler throughputThrottler,
       final Stats stats
@@ -36,7 +36,7 @@ public class ProducerPerformance {
 
     GenericRecord payload;
     String key;
-    ProducerRecord<String, GenericRecord> record;
+    ProducerRecord<String, Object> record;
 
     int currentTransactionSize = 0;
     long transactionStartTime = 0;
@@ -105,7 +105,7 @@ public class ProducerPerformance {
   public static void main(String[] args) throws IOException {
     var producerConfig = new Properties();
     producerConfig.load(Files.newInputStream(Path.of("client.properties")));
-    var producer = new KafkaProducer<String, GenericRecord>(producerConfig);
+    var producer = new KafkaProducer<String, Object>(producerConfig);
     final var records = 1_000_000;
     final var targetThroughput = 10_000;
     var pp = new ProducerPerformance(
