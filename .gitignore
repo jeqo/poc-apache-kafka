@@ -1,1 +1,5 @@
-*.properties
+client.properties
+streams.properties
+cloud.properties
+
+target/

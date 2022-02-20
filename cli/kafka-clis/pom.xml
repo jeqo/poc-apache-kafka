@@ -2,8 +2,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.github.jeqo.kafka</groupId>
-  <artifactId>datagen-producer-perf</artifactId>
+  <groupId>com.github.jeqo.kafka</groupId>
+  <artifactId>kafka-clis</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -37,6 +37,11 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
+      <version>4.6.3</version>
+    </dependency>
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli-codegen</artifactId>
       <version>4.6.3</version>
     </dependency>
 
@@ -93,7 +98,11 @@
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
                 <buildArg>--allow-incomplete-classpath</buildArg>
-                <buildArg>-H:IncludeResourceBundles=sun.security.util.Resources</buildArg>
+                <buildArg>-H:AdditionalSecurityProviders=com.sun.security.sasl.Provider</buildArg>
+                <buildArg>--initialize-at-run-time=org.apache.kafka.common.security.authenticator.SaslClientAuthenticator</buildArg>
+                <buildArg>--initialize-at-build-time=org.slf4j.impl.StaticLoggerBinder,org.slf4j.impl.SimpleLogger,org.apache.kafka,kafka</buildArg>
+                <buildArg>--trace-class-initialization=org.slf4j.impl.SimpleLogger</buildArg>
+                <buildArg>-H:ReflectionConfigurationFiles=../src/main/resources/META-INF/native-image/com.github.jeqo.kafka/kafka-clis/reflect-config.json</buildArg>
               </buildArgs>
             </configuration>
           </plugin>
