@@ -7,14 +7,15 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>datagen-producer-perf</name>
-  <url>http://maven.apache.org</url>
+  <name>kafka-clis</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <kafka.version>3.1.0</kafka.version>
     <confluent.avro.generator.version>0.4.1</confluent.avro.generator.version>
+    <confluent.version>7.0.1</confluent.version>
+    <picocli.version>4.6.3</picocli.version>
   </properties>
 
   <dependencies>
@@ -26,7 +27,7 @@
     <dependency>
       <groupId>io.confluent</groupId>
       <artifactId>kafka-avro-serializer</artifactId>
-      <version>7.0.1</version>
+      <version>${confluent.version}</version>
     </dependency>
     <dependency>
       <groupId>io.confluent.avro</groupId>
@@ -37,18 +38,24 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
-      <version>4.6.3</version>
+      <version>${picocli.version}</version>
     </dependency>
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli-codegen</artifactId>
-      <version>4.6.3</version>
+      <version>${picocli.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>1.7.35</version>
+      <version>1.7.36</version>
+    </dependency>
+    <dependency>
+      <groupId>org.graalvm.nativeimage</groupId>
+      <artifactId>svm</artifactId>
+      <version>22.0.0.2</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
