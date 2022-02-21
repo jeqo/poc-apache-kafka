@@ -2,6 +2,7 @@ package kafka.topics;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -65,11 +66,15 @@ public class ListTopics implements Callable<Integer> {
     }
     var startOffsets = adminClient.listOffsets(startOffsetRequest).all().get();
     var endOffsets = adminClient.listOffsets(endOffsetRequest).all().get();
+    var numberFormat = NumberFormat.getInstance();
     for (String topic: list) {
       System.out.printf("Topic: %s%n", topic);
       System.out.println("Configs: " + configs.get(new ConfigResource(ConfigResource.Type.TOPIC, topic)));
       for (var tp : tpsByTopic.get(topic)) {
-        System.out.printf("\tPartition %s => offsets[%d-%d]%n", tp.partition(), startOffsets.get(tp).offset(), endOffsets.get(tp).offset());
+        System.out.printf("\tPartition %s => offsets[%s-%s]%n",
+                tp.partition(),
+                numberFormat.format(startOffsets.get(tp).offset()),
+                numberFormat.format(endOffsets.get(tp).offset()));
       }
     }
     return 0;
