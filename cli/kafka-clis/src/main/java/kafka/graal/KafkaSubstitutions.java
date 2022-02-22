@@ -16,7 +16,6 @@
 package kafka.graal;
 
 import com.oracle.svm.core.annotate.*;
-//import io.micronaut.core.reflect.InstantiationUtils;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Metrics;
 import org.apache.kafka.common.metrics.MetricsReporter;
@@ -27,7 +26,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
 import java.util.List;
 import java.util.Map;
-import java.util.zip.Checksum;
 
 
 //CHECKSTYLE:OFF
@@ -61,10 +59,12 @@ final class CompressionTypeSubs {
     // @Alias @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
     // public static CompressionType LZ4 = CompressionType.GZIP;
 
-    @Alias @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
+    @Alias
+    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
     public static CompressionType SNAPPY = CompressionType.GZIP;
 
-    @Alias @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
+    @Alias
+    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
     public static CompressionType ZSTD = CompressionType.GZIP;
 }
 
@@ -112,7 +112,7 @@ final class AppInfoParserNoJMX {
 
     @Substitute
     public static void registerAppInfo(String prefix, String id, Metrics metrics, long nowMs) {
-       // no-op
+        // no-op
     }
 
     @Substitute
