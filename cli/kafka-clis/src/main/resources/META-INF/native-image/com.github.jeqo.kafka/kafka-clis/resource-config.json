@@ -1,10 +1,20 @@
 {
-  "resources":{
-    "includes":[
-      {"pattern":"\\Qkafka/kafka-version.properties\\E"}
-    ]},
-  "bundles":[
-    {"name":"sun.security.util.AuthResources"},
-    {"name":"sun.security.util.Resources"}
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\Qkafka/kafka-version.properties\\E"
+      },
+      {
+        "pattern": "^.*\\.avro$"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "sun.security.util.AuthResources"
+    },
+    {
+      "name": "sun.security.util.Resources"
+    }
   ]
 }

@@ -16,16 +16,18 @@
  */
 package kafka.producer.performance.datagen;
 
-import java.util.Map;
-import java.util.TreeMap;
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
+
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ToolsUtils {
 
     /**
      * print out the metrics in alphabetical order
-     * @param metrics   the metrics to be printed out
+     *
+     * @param metrics the metrics to be printed out
      */
     public static void printMetrics(Map<MetricName, ? extends Metric> metrics) {
         if (metrics != null && !metrics.isEmpty()) {
