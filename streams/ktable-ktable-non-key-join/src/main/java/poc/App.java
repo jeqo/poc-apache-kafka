@@ -21,10 +21,10 @@ public class App {
     final var topology = buildTopology();
 
     System.out.println(topology.describe());
-    final var kafkaStreams = new KafkaStreams(topology, config);
-    Runtime.getRuntime()
-        .addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
-    kafkaStreams.start();
+//    final var kafkaStreams = new KafkaStreams(topology, config);
+//    Runtime.getRuntime()
+//        .addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
+//    kafkaStreams.start();
   }
 
   static Properties loadConfig() throws IOException {

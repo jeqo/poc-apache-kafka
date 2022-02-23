@@ -1,16 +1,6 @@
-package kafka.producer.performance.datagen;
+package kafka.producer.datagen;
 
 import io.confluent.avro.random.generator.Generator;
-import io.confluent.kafka.schemaregistry.avro.AvroSchema;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Parser;
-import org.apache.avro.SchemaParseException;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.kafka.common.config.ConfigException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +9,14 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Parser;
+import org.apache.avro.SchemaParseException;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.kafka.common.config.ConfigException;
 
 /**
  * Datagen side
@@ -63,9 +61,6 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
         var record = get();
         var outputStream = new ByteArrayOutputStream();
         var schema = record.getSchema();
-        System.out.println(schema);
-        System.out.println(record);
-        System.out.println("Canonical: " + new AvroSchema(schema).canonicalString());
         var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
         Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
         datumWriter.write(record, encoder);
@@ -109,7 +104,6 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
             try {
                 schema = schemaParser.parse(schemaString);
             } catch (SchemaParseException e) {
-                // log.error("Unable to parse the provided schema", e);
                 throw new ConfigException("Unable to parse the provided schema");
             }
             return schema;
@@ -120,9 +114,7 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
             Schema schema;
             try {
                 schema = schemaParser.parse(stream);
-//      } catch (FileNotFoundException e) {
             } catch (SchemaParseException | IOException e) {
-                // log.error("Unable to parse the provided schema", e);
                 throw new ConfigException("Unable to parse the provided schema", e);
             } finally {
                 try {
@@ -131,7 +123,6 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
                     e.printStackTrace();
                 }
             }
-            System.out.println(schema);
             return schema;
         }
 

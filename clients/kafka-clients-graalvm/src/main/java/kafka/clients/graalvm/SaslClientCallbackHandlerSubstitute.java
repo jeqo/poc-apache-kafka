@@ -13,12 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kafka.graal;
+package kafka.clients.graalvm;
 
 import com.oracle.svm.core.annotate.Alias;
 import com.oracle.svm.core.annotate.Inject;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.spi.LoginModule;
+import javax.security.sasl.AuthorizeCallback;
+import javax.security.sasl.RealmCallback;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
@@ -30,19 +42,6 @@ import org.apache.kafka.common.security.scram.ScramExtensionsCallback;
 import org.apache.kafka.common.security.scram.internals.ScramMechanism;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.spi.LoginModule;
-import javax.security.sasl.AuthorizeCallback;
-import javax.security.sasl.RealmCallback;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 // Copy from: https://github.com/oracle/helidon/blob/785ce38ca06b268d16e387fb6498aaaa890695cc/messaging/kafka/src/main/java/io/helidon/messaging/connectors/kafka/SaslClientCallbackHandlerSubstitution.java
 // Workaround for https://github.com/oracle/graal/issues/2745

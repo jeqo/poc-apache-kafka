@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kafka.graal;
+package kafka.clients.graalvm;
 
-import com.oracle.svm.core.annotate.*;
+import com.oracle.svm.core.annotate.Alias;
+import com.oracle.svm.core.annotate.AutomaticFeature;
+import com.oracle.svm.core.annotate.RecomputeFieldValue;
+import com.oracle.svm.core.annotate.Substitute;
+import com.oracle.svm.core.annotate.TargetClass;
+import java.util.List;
+import java.util.Map;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Metrics;
 import org.apache.kafka.common.metrics.MetricsReporter;
@@ -23,9 +29,6 @@ import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.utils.AppInfoParser;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
-
-import java.util.List;
-import java.util.Map;
 
 
 //CHECKSTYLE:OFF

@@ -1,4 +1,4 @@
-package kafka.producer.performance.datagen;
+package kafka.producer.datagen;
 
 import org.apache.avro.SchemaParseException;
 import org.apache.kafka.common.config.ConfigException;

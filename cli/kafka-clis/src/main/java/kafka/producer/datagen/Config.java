@@ -1,4 +1,4 @@
-package kafka.producer.performance.datagen;
+package kafka.producer.datagen;
 
 public record Config(long reportingInterval) {
 }
