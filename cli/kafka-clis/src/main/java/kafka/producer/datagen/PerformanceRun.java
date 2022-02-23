@@ -1,7 +1,6 @@
-package kafka.producer.performance.datagen;
+package kafka.producer.datagen;
 
 import org.apache.avro.generic.GenericRecord;
-import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -11,7 +10,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
 
-public class ProducerPerformance {
+public class PerformanceRun {
 
     final Config config;
     final KafkaProducer<String, Object> producer;
@@ -19,7 +18,7 @@ public class ProducerPerformance {
     final ThroughputThrottler throttler;
     final Stats stats;
 
-    public ProducerPerformance(
+    public PerformanceRun(
             final Config config,
             final KafkaProducer<String, Object> producer,
             final PayloadGenerator payloadGenerator,
@@ -55,8 +54,8 @@ public class ProducerPerformance {
 
             record = new ProducerRecord<>(config.topicName(), key, payload);
 
-            long sendStartMs = System.currentTimeMillis();
-            Callback cb = stats.nextCompletion(sendStartMs, sample.length, stats);
+            var sendStartMs = System.currentTimeMillis();
+            var cb = stats.nextCompletion(sendStartMs, sample.length, stats);
             producer.send(record, cb);
 
             currentTransactionSize++;
@@ -109,7 +108,7 @@ public class ProducerPerformance {
         var producer = new KafkaProducer<String, Object>(producerConfig);
         final var records = 1_000_000;
         final var targetThroughput = 10_000;
-        var pp = new ProducerPerformance(
+        var pp = new PerformanceRun(
                 new Config(records, "jeqo-test-v1", false, 100, false),
                 producer,
                 new PayloadGenerator(new PayloadGenerator.Config(

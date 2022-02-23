@@ -1,4 +1,4 @@
-package kafka.producer.performance.datagen;
+package kafka.producer.datagen;
 
 
 import org.apache.kafka.clients.producer.Callback;

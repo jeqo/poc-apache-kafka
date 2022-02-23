@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kafka.graal;
+package kafka.clients.graalvm;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
-import org.apache.kafka.common.utils.ByteBufferUnmapper;
-import org.apache.kafka.common.utils.Java;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import org.apache.kafka.common.utils.ByteBufferUnmapper;
+import org.apache.kafka.common.utils.Java;
 
 @TargetClass(value = ByteBufferUnmapper.class)
 @SuppressWarnings("MissingJavadocType")

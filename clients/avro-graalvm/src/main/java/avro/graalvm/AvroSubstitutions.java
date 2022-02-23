@@ -1,4 +1,4 @@
-package kafka.graal;
+package avro.graalvm;
 
 
 import com.oracle.svm.core.WeakIdentityHashMap;
@@ -7,16 +7,15 @@ import com.oracle.svm.core.annotate.RecomputeFieldValue;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 import com.oracle.svm.core.jdk.JDK17OrLater;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.ResolvingDecoder;
-
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.ResolvingDecoder;
 
 @TargetClass(className = "org.apache.avro.generic.GenericDatumReader")
 final class Target_org_apache_avro_generic_GenericDatumReader {
