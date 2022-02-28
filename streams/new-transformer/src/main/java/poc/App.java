@@ -7,7 +7,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.processor.api.Processor;
+import org.apache.kafka.streams.kstream.Named;
+import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.processor.api.ContextualProcessor;
 import org.apache.kafka.streams.processor.api.Record;
 
 public class App {
@@ -25,21 +27,24 @@ public class App {
   private static Topology topology() {
     final var builder = new StreamsBuilder();
     final var input = builder.stream("words", Consumed.with(Serdes.String(), Serdes.String()));
-//    input.processValues(() -> new ContextualProcessor<String, String, String, String>() {
-//          @Override
-//          public void process(Record<String, String> record) {
-//            for (var s : record.value().split(",")) {
-//                context().forward(record.withKey("FAIL").withValue("Hello " + s));
-//            }
-//          }
-//        }, Named.as("test"))
-//        .to("output", Produced.with(Serdes.String(), Serdes.String()));
-    input.process(() -> new Processor<>() {
-      @Override
-      public void process(Record<String, String> record) {
-        System.out.println(record.value());
-      }
-    });
+    input.processValues(() -> new ContextualProcessor<String, String, Void, String>() {
+          @Override
+          public void process(Record<String, String> record) {
+            for (var s : record.value().split(",")) {
+                context().forward(
+                    record
+                        .withKey((Void) null)
+                        .withValue("Hello " + s));
+            }
+          }
+        }, Named.as("test"))
+        .to("output", Produced.with(Serdes.String(), Serdes.String()));
+//    input.process(() -> new Processor<>() {
+//      @Override
+//      public void process(Record<String, String> record) {
+//        System.out.println(record.value());
+//      }
+//    });
     return builder.build();
   }
 
