@@ -70,11 +70,10 @@ public class LatestEventPerSessionKey {
     var stream = s.stream("input");
     stream.transform(session);
 
-    var t =
-        s.stream("input", Consumed.with(Serdes.ByteArray(), Serdes.ByteBuffer()))
-            .groupByKey()
-            .windowedBy(SessionWindows.with(Duration.ofMinutes(1)))
-            .reduce((value1, value2) -> value2, Materialized.as("session"));
+    s.stream("input", Consumed.with(Serdes.ByteArray(), Serdes.ByteBuffer()))
+        .groupByKey()
+        .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofMinutes(1)))
+        .reduce((value1, value2) -> value2, Materialized.as("session"));
     return s.build();
   }
 
