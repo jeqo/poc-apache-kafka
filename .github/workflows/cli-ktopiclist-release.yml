@@ -77,7 +77,7 @@ jobs:
         id: head
         uses: juliangruber/read-file-action@v1
         with:
-          path: artifacts/cli/topic-list/HEAD
+          path: artifacts/HEAD
 
       - name: 'Check out repository'
         uses: actions/checkout@v2
