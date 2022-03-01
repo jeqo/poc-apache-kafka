@@ -13,7 +13,6 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-
 @CommandLine.Command(
     name = "kafka-producer-datagen",
     version = "0.1.0-SNAPSHOT",
