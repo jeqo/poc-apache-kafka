@@ -190,7 +190,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: 'Check artifacts'
-        run: ls artifacts
+        run: ls cli/topic-list/artifacts
 
       - name: 'Build deps'
         working-directory: clients/
