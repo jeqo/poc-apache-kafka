@@ -1,4 +1,4 @@
-package kafka.producer.datagen;
+package kafka.cli.producer.datagen;
 
 import java.io.IOException;
 import org.apache.kafka.clients.producer.KafkaProducer;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kafka.producer.datagen;
+package kafka.cli.producer.datagen;
 
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
