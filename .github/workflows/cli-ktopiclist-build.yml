@@ -3,13 +3,15 @@ name: Build
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'cli/topic-list'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-#    if: startsWith(github.event.head_commit.message, '🏁 Releasing version') != true && startsWith(github.event.head_commit.message, '⬆️  Next version') != true
+    if: startsWith(github.event.head_commit.message, '🏁 Releasing version') != true && startsWith(github.event.head_commit.message, '⬆️  Next version') != true
     runs-on: ubuntu-latest
 
     steps:
