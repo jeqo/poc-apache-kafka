@@ -267,10 +267,5 @@
         ]
       }
     ]
-  },
-  {
-    "name": "org.apache.commons.compress.archivers.ArchiveOutputStream",
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
   }
 ]
