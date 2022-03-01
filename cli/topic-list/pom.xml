@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.jeqo.kafka</groupId>
   <artifactId>kafka-cli-list-topics</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
 
   <name>kafka-cli: topic-list</name>
   <description>Kafka: CLI: Topic List: Expand Kafka topic listing with Offsets and more.</description>
@@ -190,7 +190,7 @@
         <configuration>
           <attach>false</attach>
           <appendAssemblyId>false</appendAssemblyId>
-          <finalName>klisttopics-${project.version}-${os.detected.classifier}</finalName>
+          <finalName>ktopiclist-${project.version}-${os.detected.classifier}</finalName>
           <outputDirectory>${app.distribution.directory}</outputDirectory>
           <workDirectory>${project.build.directory}/assembly/work</workDirectory>
           <skipAssembly>true</skipAssembly>
