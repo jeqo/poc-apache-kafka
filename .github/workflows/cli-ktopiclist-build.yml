@@ -1,4 +1,4 @@
-name: Build
+name: 'cli:topic-list:build'
 
 on:
   push:
@@ -37,4 +37,4 @@ jobs:
 
       - name: 'Build'
         working-directory: cli/topic-list
-        run: ../mvnw -B --file pom.xml verify
+        run: ./mvnw -B --file pom.xml verify

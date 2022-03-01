@@ -1,4 +1,4 @@
-name: Release
+name: 'cli:topic-list:release'
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
           then
             NEXT_VERSION=$COMPUTED_NEXT_VERSION
           fi
-          ../mvnw -B --file pom.xml versions:set versions:commit -DnewVersion=$RELEASE_VERSION
+          ./mvnw -B --file pom.xml versions:set versions:commit -DnewVersion=$RELEASE_VERSION
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Action"
           git commit -a -m "🏁 Releasing version $RELEASE_VERSION"
@@ -105,16 +105,16 @@ jobs:
       - name: 'Build Native Image (Linux)'
         if: ${{ runner.os == 'Linux' }}
         working-directory: cli/topic-list/
-        run: ../mvnw -B --file pom.xml -Pnative package
+        run: ./mvnw -B --file pom.xml -Pnative package
 
       - name: 'Build Native Image (macOS, Windows)'
         if: ${{ runner.os == 'macOS' || runner.os == 'Windows' }}
         working-directory: cli/topic-list/
-        run: ../mvnw -B --file pom.xml -Pnative package "-Dquarkus.test.profile.tags=basic"
+        run: ./mvnw -B --file pom.xml -Pnative package "-Dquarkus.test.profile.tags=basic"
 
       - name: 'Create distribution'
         working-directory: cli/topic-list/
-        run: ../mvnw -B --file pom.xml -Pdist package -DskipTests
+        run: ./mvnw -B --file pom.xml -Pdist package -DskipTests
 
       - name: 'Upload build artifact'
         uses: actions/upload-artifact@v2
@@ -184,7 +184,7 @@ jobs:
 #          JRELEASER_SDKMAN_CONSUMER_TOKEN: ${{ secrets.JRELEASER_SDKMAN_CONSUMER_TOKEN }}
 #          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.JRELEASER_HOMEBREW_GITHUB_TOKEN }}
         working-directory: cli/topic-list
-        run: ../mvnw -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
+        run: ./mvnw -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
 
       - name: JReleaser output
         if: always()
@@ -200,7 +200,7 @@ jobs:
           NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
         working-directory: cli/topic-list
         run: |
-          ../mvnw -B --file pom.xml versions:set versions:commit -DnewVersion=$NEXT_VERSION
+          ./mvnw -B --file pom.xml versions:set versions:commit -DnewVersion=$NEXT_VERSION
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Action"
           git commit -a -m "⬆️  Next version $NEXT_VERSION"
