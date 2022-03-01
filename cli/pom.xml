@@ -25,11 +25,6 @@
     <picocli.version>4.6.3</picocli.version>
   </properties>
 
-  <modules>
-    <module>topic-list</module>
-    <module>producer-datagen</module>
-  </modules>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.kafka</groupId>
