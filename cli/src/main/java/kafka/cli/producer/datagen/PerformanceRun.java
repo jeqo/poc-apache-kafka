@@ -1,4 +1,4 @@
-package kafka.producer.datagen;
+package kafka.cli.producer.datagen;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;

@@ -1,4 +1,4 @@
-package kafka.producer.datagen;
+package kafka.cli.producer.datagen;
 
 import io.confluent.avro.random.generator.Generator;
 import java.io.ByteArrayOutputStream;

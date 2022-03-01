@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.jeqo.kafka</groupId>
-  <artifactId>kafka-clis</artifactId>
+  <artifactId>kafka-cli</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>kafka-clis</name>
+  <name>kafka-cli</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -152,7 +152,7 @@
             <version>0.9.7.1</version>
             <configuration>
               <imageName>kafka-producer-datagen</imageName>
-              <mainClass>kafka.producer.datagen.App</mainClass>
+              <mainClass>kafka.cli.producer.datagen.ProducerDatagenCli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
                 <buildArg>--allow-incomplete-classpath</buildArg>

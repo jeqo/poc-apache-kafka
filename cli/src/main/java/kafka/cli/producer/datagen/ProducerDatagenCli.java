@@ -1,4 +1,4 @@
-package kafka.producer.datagen;
+package kafka.cli.producer.datagen;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -19,12 +19,17 @@ import java.util.stream.Collectors;
     version = "0.1.0-SNAPSHOT",
     description = "Kafka Performance Producer with Data generation",
     subcommands = {
-        Cli.Run.class,
-        Cli.Interval.class,
-        Cli.ProduceOnce.class,
-        Cli.ListQuickstarts.class,
+        ProducerDatagenCli.Run.class,
+        ProducerDatagenCli.Interval.class,
+        ProducerDatagenCli.ProduceOnce.class,
+        ProducerDatagenCli.ListQuickstarts.class,
     })
-public class Cli implements Callable<Integer> {
+public class ProducerDatagenCli implements Callable<Integer> {
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new ProducerDatagenCli()).execute(args);
+        System.exit(exitCode);
+    }
 
     @Override
     public Integer call() {
