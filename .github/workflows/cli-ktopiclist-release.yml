@@ -74,6 +74,8 @@ jobs:
     steps:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
+        with:
+          name: artifacts/HEAD
 
       - name: 'Read HEAD ref'
         id: head
@@ -141,8 +143,7 @@ jobs:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
         with:
-          name: HEAD
-          path: artifacts
+          name: artifacts/HEAD
 
       - name: 'Read HEAD ref'
         id: head
