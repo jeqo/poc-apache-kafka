@@ -1,4 +1,4 @@
-package kafka.topics;
+package kafka.cli.topics;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
@@ -19,10 +19,10 @@ import java.util.concurrent.ExecutionException;
         name = "kafka-list-topics",
         version = "0.1.0-SNAPSHOT"
 )
-public class ListTopics implements Callable<Integer> {
+public class TopicListCli implements Callable<Integer> {
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new ListTopics()).execute(args);
+        int exitCode = new CommandLine(new TopicListCli()).execute(args);
         System.exit(exitCode);
     }
 
