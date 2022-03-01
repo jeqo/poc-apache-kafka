@@ -12,6 +12,7 @@ on:
 
 jobs:
   version:
+    name: "Prepare release version"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -131,6 +132,7 @@ jobs:
 
   # Collect all executables and release
   release:
+    name: "Release and prepare new version"
     needs: [ build ]
     runs-on: ubuntu-latest
 
@@ -138,6 +140,9 @@ jobs:
       # must read HEAD before checkout
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
+        with:
+          name: HEAD
+          path: artifacts
 
       - name: 'Read HEAD ref'
         id: head
@@ -168,6 +173,8 @@ jobs:
       # we have to download them again
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
+        with:
+          path: cli/topic-list/artifacts
 
       - name: 'Set up Java'
         uses: actions/setup-java@v2
@@ -196,7 +203,7 @@ jobs:
 #          JRELEASER_SDKMAN_CONSUMER_TOKEN: ${{ secrets.JRELEASER_SDKMAN_CONSUMER_TOKEN }}
 #          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.JRELEASER_HOMEBREW_GITHUB_TOKEN }}
         working-directory: cli/topic-list
-        run: ./mvnw -B -X --file pom.xml -Prelease -DartifactsDir=./../../artifacts jreleaser:full-release
+        run: ./mvnw -B -X --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
 
       - name: JReleaser output
         if: always()
