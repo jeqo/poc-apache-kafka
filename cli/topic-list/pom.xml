@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.jeqo.kafka</groupId>
   <artifactId>kafka-cli-list-topics</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -214,7 +214,7 @@
             </executions>
             <configuration>
               <buildDirectory>bin/</buildDirectory>
-              <imageName>ktopiclist-${project.version}${executable-suffix}</imageName>
+              <imageName>ktopiclist-${project.version}</imageName>
               <mainClass>kafka.cli.topics.TopicListCli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
