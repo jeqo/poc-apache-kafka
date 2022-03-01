@@ -74,8 +74,6 @@ jobs:
     steps:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
-        with:
-          name: artifacts/HEAD
 
       - name: 'Read HEAD ref'
         id: head
@@ -142,8 +140,6 @@ jobs:
       # must read HEAD before checkout
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
-        with:
-          name: artifacts/HEAD
 
       - name: 'Read HEAD ref'
         id: head
@@ -175,7 +171,7 @@ jobs:
       - name: 'Download all build artifacts'
         uses: actions/download-artifact@v2
         with:
-          path: cli/topic-list/artifacts
+          path: cli/topic-list
 
       - name: 'Set up Java'
         uses: actions/setup-java@v2
