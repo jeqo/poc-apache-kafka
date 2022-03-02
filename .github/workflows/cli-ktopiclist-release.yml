@@ -107,15 +107,9 @@ jobs:
         working-directory: clients/
         run: ./mvnw -B --file pom.xml install
 
-      - name: 'Build Native Image (Linux)'
-        if: ${{ runner.os == 'Linux' }}
+      - name: 'Build Native Image'
         working-directory: cli/topic-list/
         run: ./mvnw -B --file pom.xml -Pnative package
-
-      - name: 'Build Native Image (macOS, Windows)'
-        if: ${{ runner.os == 'macOS' || runner.os == 'Windows' }}
-        working-directory: cli/topic-list/
-        run: ./mvnw -B --file pom.xml -Pnative package "-Dquarkus.test.profile.tags=basic"
 
       - name: 'Create distribution'
         working-directory: cli/topic-list/
