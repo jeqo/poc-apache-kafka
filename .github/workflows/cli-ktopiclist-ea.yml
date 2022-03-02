@@ -3,6 +3,9 @@ name: 'cli:topic-list:ea'
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'cli/topic-list/**'
+  workflow_dispatch:
 
 jobs:
   # Build native executable per runner
@@ -93,6 +96,7 @@ jobs:
       - name: 'Release with JReleaser'
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: cli/topic-list/
         run: ./mvnw -B --file pom.xml -Prelease -DartifactsDir=artifacts jreleaser:full-release
 
       - name: JReleaser output
