@@ -1,6 +1,11 @@
 package kafka.cli.topics;
 
+import static java.lang.System.out;
+
+import java.io.IOException;
+import java.net.URL;
 import java.util.stream.Collectors;
+import kafka.cli.topics.TopicListCli.VersionProviderWithConfigProvider;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.OffsetSpec;
@@ -16,10 +21,12 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import picocli.CommandLine.IVersionProvider;
 
 @CommandLine.Command(
-        name = "kafka-list-topics",
-        version = "0.1.0-SNAPSHOT"
+    name = "kafka-list-topics",
+    versionProvider = VersionProviderWithConfigProvider.class,
+    mixinStandardHelpOptions = true
 )
 public class TopicListCli implements Callable<Integer> {
 
@@ -48,18 +55,22 @@ public class TopicListCli implements Callable<Integer> {
         clientConfig.load(Files.newInputStream(configPath));
         var adminClient = AdminClient.create(clientConfig);
         List<String> list = listOfTopics(config, adminClient);
-        System.out.println("List of topics:");
-        System.out.println(list);
+        out.println("List of topics:");
+        out.println(list);
+        out.println();
         var described = adminClient.describeTopics(list).allTopicNames().get();
-        var configs = adminClient.describeConfigs(list.stream().map(t -> new ConfigResource(ConfigResource.Type.TOPIC, t)).toList()).all().get();
+        var configs = adminClient.describeConfigs(
+                list.stream().map(t -> new ConfigResource(ConfigResource.Type.TOPIC, t)).toList()).all()
+            .get();
         var tpsByTopic = new LinkedHashMap<String, List<TopicPartition>>();
         var startOffsetRequest = new LinkedHashMap<TopicPartition, OffsetSpec>();
         var endOffsetRequest = new LinkedHashMap<TopicPartition, OffsetSpec>();
         for (String topic : list) {
             var description = described.get(topic);
-            var tps = description.partitions().stream().map(tpi -> new TopicPartition(topic, tpi.partition()))
-                    .sorted(Comparator.comparingInt(TopicPartition::partition))
-                    .toList();
+            var tps = description.partitions().stream()
+                .map(tpi -> new TopicPartition(topic, tpi.partition()))
+                .sorted(Comparator.comparingInt(TopicPartition::partition))
+                .toList();
             tps.forEach(topicPartition -> {
                 startOffsetRequest.put(topicPartition, OffsetSpec.earliest());
                 endOffsetRequest.put(topicPartition, OffsetSpec.latest());
@@ -74,13 +85,13 @@ public class TopicListCli implements Callable<Integer> {
             var description = described.get(topic);
             var tps = description.partitions().stream()
                 .collect(Collectors.toMap(TopicPartitionInfo::partition, tpi -> tpi));
-            System.out.printf("Topic: %s (UID: %s)%n", topic, description.topicId());
-            System.out.println(
-                "Configs: " + configs.get(new ConfigResource(ConfigResource.Type.TOPIC, topic)));
+            out.printf("Topic: %s (UID: %s)%n", topic, description.topicId());
+            out.println(
+                " Configs: " + configs.get(new ConfigResource(ConfigResource.Type.TOPIC, topic)));
             for (var tp : tpsByTopic.get(topic)) {
                 var tpi = tps.get(tp.partition());
-                System.out.println("Partitions:");
-                System.out.printf(" %s: [Leader: %s] [ISR: %s] %n",
+                out.println(" Partitions:");
+                out.printf("  %s: [Leader: %s] [ISR: %s] %n",
                     tp.partition(),
                     tpi.leader().id(),
                     tpi.isr().stream()
@@ -88,12 +99,13 @@ public class TopicListCli implements Callable<Integer> {
                             node.id() + " (" + node.host() + "@rack:" + node.rack() + ")" :
                             node.id() + " (" + node.host() + ")")
                         .toList());
-                System.out.printf("  offsets: [ %s - %s ]%n",
+                out.printf("   offsets: [ %s - %s ]%n",
                     String.format("%1$" + length + "s",
                         numberFormat.format(startOffsets.get(tp).offset())).replace(' ', '_'),
                     String.format("%1$" + length + "s",
                         numberFormat.format(endOffsets.get(tp).offset())).replace(' ', '_'));
             }
+            out.println();
         }
         return 0;
     }
@@ -101,17 +113,34 @@ public class TopicListCli implements Callable<Integer> {
     private List<String> listOfTopics(Config config, AdminClient adminClient) throws InterruptedException, ExecutionException {
         var listing = adminClient.listTopics(new ListTopicsOptions()).listings().get();
         var list = listing.stream()
-                .map(TopicListing::name)
-                .filter(l -> config.topics().contains(l) || config.prefix().map(l::startsWith)
-                        .orElse(true))
-                .toList();
+            .map(TopicListing::name)
+            .filter(l -> config.topics().contains(l) || config.prefix().map(l::startsWith)
+                .orElse(true))
+            .toList();
         return list.isEmpty() ? listing.stream().map(TopicListing::name).toList() : list;
     }
 
     record Config(
-            List<String> topics,
-            Optional<String> prefix
+        List<String> topics,
+        Optional<String> prefix
     ) {
 
+    }
+
+    static class VersionProviderWithConfigProvider implements IVersionProvider {
+
+        @Override
+        public String[] getVersion() throws IOException {
+            var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            if (url == null) {
+                return new String[]{"No cli.properties file found in the classpath."};
+            }
+            Properties properties = new Properties();
+            properties.load(url.openStream());
+            return new String[]{
+                properties.getProperty("appName") + " version " + properties.getProperty(
+                    "appVersion") + "", "Built: " + properties.getProperty("appBuildTime"),
+            };
+        }
     }
 }
