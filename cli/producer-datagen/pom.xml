@@ -23,7 +23,7 @@
   <licenses>
     <license>
       <name>Apache-2.0</name>
-      <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/topic-list/LICENSE</url>
+      <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/producer-datagen/LICENSE</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -266,7 +266,7 @@
             </executions>
             <configuration>
               <buildDirectory>bin/</buildDirectory>
-              <imageName>kproducerdatagen</imageName>
+              <imageName>kproducerdatagen-${project.version}</imageName>
               <mainClass>kafka.cli.producer.datagen.ProducerDatagenCli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
@@ -332,10 +332,23 @@
             <configuration>
               <jreleaser>
                 <project>
+                  <name>kafka-cli-producer-datagen</name>
+                  <java>
+                    <mainClass>kafka.cli.producer.datagen.ProducerDatagenCli</mainClass>
+                  </java>
                   <snapshot>
                     <label>{{ projectVersionNumber }}-early-access</label>
                   </snapshot>
                 </project>
+                <release>
+                  <github>
+                    <owner>jeqo</owner>
+                    <name>poc-apache-kafka</name>
+                    <tagName>cli-producer-datagen-v{{projectVersion}}</tagName>
+                    <releaseName>cli:producer-datagen v{{projectVersion}}</releaseName>
+                    <overwrite>true</overwrite>
+                  </github>
+                </release>
                 <!--                <packagers>-->
                 <!--                  <brew>-->
                 <!--                    <active>RELEASE</active>-->
