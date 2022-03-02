@@ -8,21 +8,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 public enum Quickstart {
-    CLICKSTREAM_CODES("cli/src/main/resources/clickstream_codes_schema.avro", "code"),
-    CLICKSTREAM("cli/src/main/resources/clickstream_schema.avro", "ip"),
-    CLICKSTREAM_USERS("cli/src/main/resources/clickstream_users_schema.avro", "user_id"),
-    ORDERS("cli/src/main/resources/orders_schema.avro", "orderid"),
-    RATINGS("cli/src/main/resources/ratings_schema.avro", "rating_id"),
-    USERS("cli/src/main/resources/users_schema.avro", "userid"),
-    USERS_("cli/src/main/resources/users_array_map_schema.avro", "userid"),
-    PAGEVIEWS("cli/src/main/resources/pageviews_schema.avro", "viewtime"),
-    STOCK_TRADES("cli/src/main/resources/stock_trades_schema.avro", "symbol"),
-    INVENTORY("cli/src/main/resources/inventory.avro", "id"),
-    PRODUCT("cli/src/main/resources/product.avro", "id"),
-    PURCHASES("cli/src/main/resources/purchase.avro", "id"),
-    TRANSACTIONS("cli/src/main/resources/transactions.avro", "transaction_id"),
-    STORES("cli/src/main/resources/stores.avro", "store_id"),
-    CREDIT_CARDS("cli/src/main/resources/credit_cards.avro", "card_id");
+
+    CLICKSTREAM_CODES("clickstream_codes_schema.avro", "code"),
+    CLICKSTREAM("clickstream_schema.avro", "ip"),
+    CLICKSTREAM_USERS("clickstream_users_schema.avro", "user_id"),
+    ORDERS("orders_schema.avro", "orderid"),
+    RATINGS("ratings_schema.avro", "rating_id"),
+    USERS("users_schema.avro", "userid"),
+    USERS_("users_array_map_schema.avro", "userid"),
+    PAGEVIEWS("pageviews_schema.avro", "viewtime"),
+    STOCK_TRADES("stock_trades_schema.avro", "symbol"),
+    INVENTORY("inventory.avro", "id"),
+    PRODUCT("product.avro", "id"),
+    PURCHASES("purchase.avro", "id"),
+    TRANSACTIONS("transactions.avro", "transaction_id"),
+    STORES("stores.avro", "store_id"),
+    CREDIT_CARDS("credit_cards.avro", "card_id");
 
     static final Set<String> configValues = new HashSet<>();
 
