@@ -363,8 +363,8 @@
                 <!--                  </sdkman>-->
                 <!--                </packagers>-->
                 <distributions>
-                  <ktopiclist>
-                    <name>ktopiclist</name>
+                  <kproducerdatagen>
+                    <name>kproducerdatagen</name>
                     <type>NATIVE_IMAGE</type>
                     <artifacts>
                       <artifact>
@@ -388,7 +388,7 @@
                         <platform>osx-x86_64</platform>
                       </artifact>
                     </artifacts>
-                  </ktopiclist>
+                  </kproducerdatagen>
                 </distributions>
               </jreleaser>
             </configuration>
