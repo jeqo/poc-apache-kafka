@@ -19,7 +19,7 @@
 <!--      <outputDirectory>./</outputDirectory>-->
 <!--    </file>-->
     <file>
-      <source>${project.build.directory}/${project.artifactId}-${project.version}${executable-suffix}</source>
+      <source>${project.build.directory}/kproducerdatagen-${project.version}${executable-suffix}</source>
       <outputDirectory>./bin</outputDirectory>
       <destName>kproducerdatagen${executable-suffix}</destName>
     </file>
