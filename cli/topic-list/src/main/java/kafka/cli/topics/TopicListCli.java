@@ -1,10 +1,12 @@
 package kafka.cli.topics;
 
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine;
 
@@ -67,14 +69,30 @@ public class TopicListCli implements Callable<Integer> {
         var startOffsets = adminClient.listOffsets(startOffsetRequest).all().get();
         var endOffsets = adminClient.listOffsets(endOffsetRequest).all().get();
         var numberFormat = NumberFormat.getInstance();
+        final var length = String.valueOf(Long.MAX_VALUE).length();
         for (String topic : list) {
-            System.out.printf("Topic: %s%n", topic);
-            System.out.println("Configs: " + configs.get(new ConfigResource(ConfigResource.Type.TOPIC, topic)));
+            var description = described.get(topic);
+            var tps = description.partitions().stream()
+                .collect(Collectors.toMap(TopicPartitionInfo::partition, tpi -> tpi));
+            System.out.printf("Topic: %s (UID: %s)%n", topic, description.topicId());
+            System.out.println(
+                "Configs: " + configs.get(new ConfigResource(ConfigResource.Type.TOPIC, topic)));
             for (var tp : tpsByTopic.get(topic)) {
-                System.out.printf("\tPartition %s => offsets[%s-%s]%n",
-                        tp.partition(),
-                        numberFormat.format(startOffsets.get(tp).offset()),
-                        numberFormat.format(endOffsets.get(tp).offset()));
+                var tpi = tps.get(tp.partition());
+                System.out.println("Partitions:");
+                System.out.printf(" %s: [Leader: %s] [ISR: %s] %n",
+                    tp.partition(),
+                    tpi.leader().id(),
+                    tpi.isr().stream()
+                        .map(node -> node.hasRack() ?
+                            node.id() + " (" + node.host() + "@rack:" + node.rack() + ")" :
+                            node.id() + " (" + node.host() + ")")
+                        .toList());
+                System.out.printf("  offsets: [ %s - %s ]%n",
+                    String.format("%1$" + length + "s",
+                        numberFormat.format(startOffsets.get(tp).offset())).replace(' ', '_'),
+                    String.format("%1$" + length + "s",
+                        numberFormat.format(endOffsets.get(tp).offset())).replace(' ', '_'));
             }
         }
         return 0;
