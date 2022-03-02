@@ -1,6 +1,8 @@
 package kafka.cli.producer.datagen;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import java.io.IOException;
+import kafka.cli.producer.datagen.ProducerDatagenCli.VersionProviderWithConfigProvider;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -12,10 +14,12 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import picocli.CommandLine.IVersionProvider;
 
 @CommandLine.Command(
-    name = "kafka-producer-datagen",
-    version = "0.1.0-SNAPSHOT",
+    name = "kproducerdatagen",
+    versionProvider = VersionProviderWithConfigProvider.class,
+    mixinStandardHelpOptions = true,
     description = "Kafka Performance Producer with Data generation",
     subcommands = {
         ProducerDatagenCli.Run.class,
@@ -71,18 +75,19 @@ public class ProducerDatagenCli implements Callable<Integer> {
             var valueSerializer = new KafkaAvroSerializer();
             valueSerializer.configure(producerConfig.keySet().stream()
                 .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer);
-            final var records = numRecords;
-            final var targetThroughput = throughput;
-            var pp = new PerformanceRun(
-                new PerformanceRun.Config(records, topicName, transactionEnabled,
-                    transactionDuration, shouldPrintMetrics), producer, new PayloadGenerator(
-                new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                    Optional.empty(),
-                    Optional.empty(), records)),
-                new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
-                new Stats(records, reportingInterval));
-            pp.start();
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+                final var records = numRecords;
+                final var targetThroughput = throughput;
+                var pp = new PerformanceRun(
+                    new PerformanceRun.Config(records, topicName, transactionEnabled,
+                        transactionDuration, shouldPrintMetrics), producer, new PayloadGenerator(
+                    new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
+                        Optional.empty(),
+                        Optional.empty(), records)),
+                    new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
+                    new Stats(records, reportingInterval));
+                pp.start();
+            }
             return 0;
         }
     }
@@ -118,17 +123,18 @@ public class ProducerDatagenCli implements Callable<Integer> {
             var valueSerializer = new KafkaAvroSerializer();
             valueSerializer.configure(producerConfig.keySet().stream()
                 .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer);
-            final var maxRecords = numRecords;
-            final var maxInterval = interval;
-            var pp = new IntervalRun(
-                new IntervalRun.Config(topicName, maxRecords, maxInterval), producer,
-                new PayloadGenerator(
-                    new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                        Optional.empty(),
-                        Optional.empty(), maxRecords)),
-                new Stats(maxRecords, reportingInterval));
-            pp.start();
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+                final var maxRecords = numRecords;
+                final var maxInterval = interval;
+                var pp = new IntervalRun(
+                    new IntervalRun.Config(topicName, maxRecords, maxInterval), producer,
+                    new PayloadGenerator(
+                        new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
+                            Optional.empty(),
+                            Optional.empty(), maxRecords)),
+                    new Stats(maxRecords, reportingInterval));
+                pp.start();
+            }
             return 0;
         }
     }
@@ -156,15 +162,16 @@ public class ProducerDatagenCli implements Callable<Integer> {
             var valueSerializer = new KafkaAvroSerializer();
             valueSerializer.configure(producerConfig.keySet().stream()
                 .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer);
-            var pg = new PayloadGenerator(
-                new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                    Optional.empty(),
-                    Optional.empty(), 1));
-            var record = pg.get();
-            var meta = producer.send(new ProducerRecord<>(topicName, pg.key(record), record)).get();
-            System.out.println("Record sent. " + meta);
-            producer.close();
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+                var pg = new PayloadGenerator(
+                    new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
+                        Optional.empty(),
+                        Optional.empty(), 10));
+                var record = pg.get();
+                var meta = producer.send(new ProducerRecord<>(topicName, pg.key(record), record))
+                    .get();
+                System.out.println("Record sent. " + meta);
+            }
             return 0;
         }
     }
@@ -179,6 +186,23 @@ public class ProducerDatagenCli implements Callable<Integer> {
                 System.out.printf("\t%s%n", q.name());
             }
             return 0;
+        }
+    }
+
+    static class VersionProviderWithConfigProvider implements IVersionProvider {
+
+        @Override
+        public String[] getVersion() throws IOException {
+            final var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            if (url == null) {
+                return new String[]{"No cli.properties file found in the classpath."};
+            }
+            final var properties = new Properties();
+            properties.load(url.openStream());
+            return new String[]{
+                properties.getProperty("appName") + " version " + properties.getProperty(
+                    "appVersion") + "", "Built: " + properties.getProperty("appBuildTime"),
+            };
         }
     }
 }
