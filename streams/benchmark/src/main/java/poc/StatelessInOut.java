@@ -9,8 +9,9 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import kafka.metrics.MetricsPrinter;
 import kafka.metrics.MetricsPrinter.MetricName;
+import kafka.streams.rest.armeria.HttpKafkaStreamsServer;
+import org.apache.avro.util.Utf8;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
@@ -27,16 +28,15 @@ public class StatelessInOut {
     valueSerde.configure(srConfig, false);
     final var builder = new StreamsBuilder();
     builder.stream("jeqo-test-v1", Consumed.with(Serdes.String(), valueSerde))
+        .filter((key, value) -> ((Utf8) value.get("ip")).toString().startsWith("1"))
         .to("jeqo-test-output-v1", Produced.with(Serdes.String(), valueSerde));
-//    HttpKafkaStreamsServer.newBuilder()
-//        .port(8080)
-//        .prometheusMetricsEnabled(true)
-//        .build(builder.build(), props)
-//        .startApplicationAndServer();
-    final var ks = new KafkaStreams(builder.build(), props);
-    Runtime.getRuntime().addShutdownHook(new Thread(ks::close));
-    ks.start();
-    var stats = new MetricsPrinter(ks::metrics,
+    final var server = HttpKafkaStreamsServer.newBuilder()
+        .port(8080)
+        .prometheusMetricsEnabled(true)
+        .build(builder.build(), props);
+    server.startApplicationAndServer();
+
+    var stats = new MetricsPrinter(() -> server.kafkaStreams().metrics(),
         List.of(
             new MetricName("stream-thread-metrics", "process-rate"),
             new MetricName("stream-thread-metrics", "process-latency-avg"),
@@ -45,7 +45,7 @@ public class StatelessInOut {
             new MetricName("stream-thread-metrics", "poll-records-max"),
             new MetricName("consumer-fetch-manager-metrics", "records-lag-avg")
         ),
-        5_000);
+        10_000);
     stats.start();
   }
 }
