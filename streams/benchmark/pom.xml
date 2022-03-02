@@ -106,14 +106,14 @@
       <url>https://repo1.maven.org/maven2</url>
     </repository>
     <repository>
-      <id>github</id>
+      <id>github-1</id>
       <url>https://maven.pkg.github.com/jeqo/kafka-streams-rest</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
     </repository>
     <repository>
-      <id>github</id>
+      <id>github-2</id>
       <url>https://maven.pkg.github.com/jeqo/poc-apache-kafka</url>
       <snapshots>
         <enabled>true</enabled>
