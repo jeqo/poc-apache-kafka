@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-cli-topic-list</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2-SNAPSHOT</version>
 
   <name>kafka-cli-topic-list</name>
   <description>Kafka: CLI: Topic List: Expand Kafka topic listing with Offsets and more.</description>
