@@ -1,4 +1,4 @@
-package com.github.jeqo.kafka;
+package io.github.jeqo.kafka;
 
 public class Config {
     final Kafka kafka;
