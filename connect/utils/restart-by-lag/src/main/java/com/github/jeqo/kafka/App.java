@@ -1,4 +1,4 @@
-package com.github.jeqo.kafka;
+package io.github.jeqo.kafka;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;

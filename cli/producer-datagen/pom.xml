@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.jeqo.kafka</groupId>
+  <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-cli-producer-datagen</artifactId>
   <version>0.1.1-SNAPSHOT</version>
 
@@ -80,7 +80,7 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.jeqo.kafka</groupId>
+      <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-clients-graalvm</artifactId>
       <version>0.1.0-SNAPSHOT</version>
     </dependency>
@@ -97,7 +97,7 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.jeqo.kafka</groupId>
+      <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>avro-graalvm</artifactId>
       <version>0.1.0-SNAPSHOT</version>
     </dependency>
@@ -280,8 +280,8 @@
                 <buildArg>--enable-url-protocols=https</buildArg>
                 <buildArg>-H:IncludeResources='^.*\.avro$'</buildArg>
                 <buildArg>-H:Log=registerResource:3</buildArg>
-                <buildArg>-H:ReflectionConfigurationFiles=../src/main/resources/META-INF/native-image/com.github.jeqo.kafka/kafka-clis/reflect-config.json</buildArg>
-                <buildArg>-H:ResourceConfigurationFiles=../src/main/resources/META-INF/native-image/com.github.jeqo.kafka/kafka-clis/resource-config.json</buildArg>
+                <buildArg>-H:ReflectionConfigurationFiles=../src/main/resources/META-INF/native-image/io.github.jeqo.kafka/kafka-clis/reflect-config.json</buildArg>
+                <buildArg>-H:ResourceConfigurationFiles=../src/main/resources/META-INF/native-image/io.github.jeqo.kafka/kafka-clis/resource-config.json</buildArg>
               </buildArgs>
             </configuration>
           </plugin>

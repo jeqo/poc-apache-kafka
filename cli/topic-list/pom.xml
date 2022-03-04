@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.jeqo.kafka</groupId>
+  <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-cli-topic-list</artifactId>
   <version>0.1.1-SNAPSHOT</version>
 
@@ -77,7 +77,7 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.jeqo.kafka</groupId>
+      <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-clients-graalvm</artifactId>
       <version>0.1.0-SNAPSHOT</version>
     </dependency>
@@ -272,8 +272,8 @@
                 <buildArg>--initialize-at-run-time=org.apache.kafka.common.security.authenticator.SaslClientAuthenticator</buildArg>
                 <buildArg>--initialize-at-build-time=org.slf4j.LoggerFactory,org.slf4j.impl.StaticLoggerBinder,org.slf4j.impl.SimpleLogger,org.apache.kafka,kafka</buildArg>
                 <buildArg>-H:Log=registerResource:3</buildArg>
-                <buildArg>-H:ReflectionConfigurationFiles=../src/main/resources/META-INF/native-image/com.github.jeqo.kafka/kafka-clis/reflect-config.json</buildArg>
-                <buildArg>-H:ResourceConfigurationFiles=../src/main/resources/META-INF/native-image/com.github.jeqo.kafka/kafka-clis/resource-config.json</buildArg>
+                <buildArg>-H:ReflectionConfigurationFiles=../src/main/resources/META-INF/native-image/io.github.jeqo.kafka/kafka-clis/reflect-config.json</buildArg>
+                <buildArg>-H:ResourceConfigurationFiles=../src/main/resources/META-INF/native-image/io.github.jeqo.kafka/kafka-clis/resource-config.json</buildArg>
               </buildArgs>
             </configuration>
           </plugin>
