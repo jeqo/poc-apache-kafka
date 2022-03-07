@@ -1,6 +1,7 @@
 package kafka.cli.producer.datagen;
 
 import java.io.IOException;
+import kafka.cli.producer.datagen.PayloadGenerator.Format;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -53,10 +54,17 @@ public class IntervalRun {
   void runOnce() {
     var payload = payloadGenerator.get();
     var key = payloadGenerator.key(payload);
+    Object value;
+
+    if (payloadGenerator.config.format().equals(Format.AVRO)) {
+      value = payload;
+    } else {
+      value = payloadGenerator.toJson(payload);
+    }
 
     var sendStartMs = System.currentTimeMillis();
     var cb = stats.nextCompletion(sendStartMs, sample.length, stats);
-    var record = new ProducerRecord<String, Object>(config.topicName(), key, payload);
+    var record = new ProducerRecord<>(config.topicName(), key, value);
 
     producer.send(record, cb);
 

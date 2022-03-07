@@ -1,5 +1,6 @@
 package kafka.cli.producer.datagen;
 
+import kafka.cli.producer.datagen.PayloadGenerator.Format;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -32,9 +33,10 @@ public class PerformanceRun {
         this.stats = stats;
     }
 
-    void start() throws IOException {
+    void start() {
 
         GenericRecord payload;
+        Object value;
         String key;
         ProducerRecord<String, Object> record;
 
@@ -47,12 +49,18 @@ public class PerformanceRun {
             payload = payloadGenerator.get();
             key = payloadGenerator.key(payload);
 
+            if (payloadGenerator.config.format().equals(Format.AVRO)) {
+                value = payload;
+            } else {
+                value = payloadGenerator.toJson(payload);
+            }
+
             if (config.transactionsEnabled() && currentTransactionSize == 0) {
                 producer.beginTransaction();
                 transactionStartTime = System.currentTimeMillis();
             }
 
-            record = new ProducerRecord<>(config.topicName(), key, payload);
+            record = new ProducerRecord<>(config.topicName(), key, value);
 
             var sendStartMs = System.currentTimeMillis();
             var cb = stats.nextCompletion(sendStartMs, sample.length, stats);
@@ -116,7 +124,8 @@ public class PerformanceRun {
                         Optional.of(Quickstart.CLICKSTREAM),
                         Optional.empty(),
                         Optional.empty(),
-                        records)),
+                        records,
+                        Format.AVRO)),
                 new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
                 new Stats(records, 5000)
         );
