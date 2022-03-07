@@ -4,6 +4,7 @@ import io.confluent.avro.random.generator.Generator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -50,22 +51,47 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
         final Object generatedObject = generator.generate();
         if (!(generatedObject instanceof GenericRecord)) {
             throw new RuntimeException(String.format(
-                    "Expected Avro Random Generator to return instance of GenericRecord, found %s instead",
-                    generatedObject.getClass().getName()
+                "Expected Avro Random Generator to return instance of GenericRecord, found %s instead",
+                generatedObject.getClass().getName()
             ));
         }
         return (GenericRecord) generatedObject;
     }
 
-    byte[] sample() throws IOException {
-        var record = get();
-        var outputStream = new ByteArrayOutputStream();
-        var schema = record.getSchema();
-        var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
-        Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-        datumWriter.write(record, encoder);
-        encoder.flush();
-        return outputStream.toByteArray();
+    String toJson(GenericRecord record) {
+        try {
+            var outputStream = new ByteArrayOutputStream();
+            var schema = record.getSchema();
+            var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+            Encoder encoder = EncoderFactory.get().jsonEncoder(record.getSchema(), outputStream);
+            datumWriter.write(record, encoder);
+            encoder.flush();
+            return outputStream.toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Error converting to json", e);
+        }
+    }
+
+    byte[] sample() {
+        if (config.format().equals(Format.AVRO)) {
+            return toBytes(get());
+        } else {
+            return toJson(get()).getBytes(StandardCharsets.UTF_8);
+        }
+    }
+
+    private byte[] toBytes(GenericRecord record) {
+        try {
+            var outputStream = new ByteArrayOutputStream();
+            var schema = record.getSchema();
+            var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+            Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+            datumWriter.write(record, encoder);
+            encoder.flush();
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Error converting to json", e);
+        }
     }
 
     public String key(GenericRecord payload) {
@@ -73,11 +99,12 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
     }
 
     record Config(
-            Optional<Long> randomSeed,
-            Optional<Quickstart> quickstart,
-            Optional<Path> schemaPath,
-            Optional<String> schemaString,
-            long count
+        Optional<Long> randomSeed,
+        Optional<Quickstart> quickstart,
+        Optional<Path> schemaPath,
+        Optional<String> schemaString,
+        long count,
+        Format format
     ) {
 
         Schema schema() {
@@ -131,13 +158,19 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
         }
     }
 
+    enum Format {
+        JSON, AVRO
+    }
+
     public static void main(String[] args) throws IOException {
         var pg = new PayloadGenerator(new PayloadGenerator.Config(
-                Optional.empty(),
-                Optional.of(Quickstart.CLICKSTREAM),
-                Optional.empty(),
-                Optional.empty(),
-                1000000));
+            Optional.empty(),
+            Optional.of(Quickstart.CLICKSTREAM),
+            Optional.empty(),
+            Optional.empty(),
+            1000000,
+            Format.AVRO
+        ));
         var bytes = pg.sample();
         Files.write(Path.of("test.avro"), bytes);
     }

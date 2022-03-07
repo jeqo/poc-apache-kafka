@@ -2,9 +2,11 @@ package kafka.cli.producer.datagen;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.io.IOException;
+import kafka.cli.producer.datagen.PayloadGenerator.Format;
 import kafka.cli.producer.datagen.ProducerDatagenCli.VersionProviderWithConfigProvider;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import picocli.CommandLine;
 
@@ -15,6 +17,7 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import picocli.CommandLine.IVersionProvider;
+import picocli.CommandLine.Option;
 
 @CommandLine.Command(
     name = "kproducerdatagen",
@@ -61,6 +64,10 @@ public class ProducerDatagenCli implements Callable<Integer> {
                 + "Must include connection to Kafka and Schema Registry", required = true)
         Path configPath;
 
+        @Option(names = {"-f",
+            "--format"}, description = "Record value format", defaultValue = "JSON")
+        Format format;
+
         int reportingInterval = 5_000;
         boolean shouldPrintMetrics = false;
 
@@ -72,10 +79,16 @@ public class ProducerDatagenCli implements Callable<Integer> {
             var producerConfig = new Properties();
             producerConfig.load(Files.newInputStream(configPath));
             var keySerializer = new StringSerializer();
-            var valueSerializer = new KafkaAvroSerializer();
-            valueSerializer.configure(producerConfig.keySet().stream()
-                .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+            Serializer<Object> valueSerializer;
+            if (format.equals(Format.AVRO)) {
+                valueSerializer = new KafkaAvroSerializer();
+                valueSerializer.configure(producerConfig.keySet().stream()
+                    .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
+            } else {
+                valueSerializer = (Serializer) new StringSerializer();
+            }
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer,
+                valueSerializer)) {
                 final var records = numRecords;
                 final var targetThroughput = throughput;
                 var pp = new PerformanceRun(
@@ -83,7 +96,7 @@ public class ProducerDatagenCli implements Callable<Integer> {
                         transactionDuration, shouldPrintMetrics), producer, new PayloadGenerator(
                     new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
                         Optional.empty(),
-                        Optional.empty(), records)),
+                        Optional.empty(), records, format)),
                     new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
                     new Stats(records, reportingInterval));
                 pp.start();
@@ -113,6 +126,10 @@ public class ProducerDatagenCli implements Callable<Integer> {
                 + "Must include connection to Kafka and Schema Registry", required = true)
         Path configPath;
 
+        @Option(names = {"-f",
+            "--format"}, description = "Record value format", defaultValue = "JSON")
+        Format format;
+
         int reportingInterval = 5_000;
 
         @Override
@@ -120,10 +137,16 @@ public class ProducerDatagenCli implements Callable<Integer> {
             var producerConfig = new Properties();
             producerConfig.load(Files.newInputStream(configPath));
             var keySerializer = new StringSerializer();
-            var valueSerializer = new KafkaAvroSerializer();
-            valueSerializer.configure(producerConfig.keySet().stream()
-                .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+            Serializer<Object> valueSerializer;
+            if (format.equals(Format.AVRO)) {
+                valueSerializer = new KafkaAvroSerializer();
+                valueSerializer.configure(producerConfig.keySet().stream()
+                    .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
+            } else {
+                valueSerializer = (Serializer) new StringSerializer();
+            }
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer,
+                valueSerializer)) {
                 final var maxRecords = numRecords;
                 final var maxInterval = interval;
                 var pp = new IntervalRun(
@@ -131,7 +154,7 @@ public class ProducerDatagenCli implements Callable<Integer> {
                     new PayloadGenerator(
                         new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
                             Optional.empty(),
-                            Optional.empty(), maxRecords)),
+                            Optional.empty(), maxRecords, format)),
                     new Stats(maxRecords, reportingInterval));
                 pp.start();
             }
@@ -154,21 +177,37 @@ public class ProducerDatagenCli implements Callable<Integer> {
                 + "Must include connection to Kafka and Schema Registry", required = true)
         Path configPath;
 
+        @Option(names = {"-f",
+            "--format"}, description = "Record value format", defaultValue = "JSON")
+        Format format;
+
         @Override
         public Integer call() throws Exception {
             var producerConfig = new Properties();
             producerConfig.load(Files.newInputStream(configPath));
             var keySerializer = new StringSerializer();
-            var valueSerializer = new KafkaAvroSerializer();
-            valueSerializer.configure(producerConfig.keySet().stream()
-                .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
-            try (var producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer)) {
+            Serializer<Object> valueSerializer;
+            if (format.equals(Format.AVRO)) {
+                valueSerializer = new KafkaAvroSerializer();
+                valueSerializer.configure(producerConfig.keySet().stream()
+                    .collect(Collectors.toMap(String::valueOf, producerConfig::get)), false);
+            } else {
+                valueSerializer = (Serializer) new StringSerializer();
+            }
+            try (var producer = new KafkaProducer<>(producerConfig, keySerializer,
+                valueSerializer)) {
                 var pg = new PayloadGenerator(
                     new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
                         Optional.empty(),
-                        Optional.empty(), 10));
+                        Optional.empty(), 10, format));
                 var record = pg.get();
-                var meta = producer.send(new ProducerRecord<>(topicName, pg.key(record), record))
+                Object value;
+                if (format.equals(Format.JSON)) {
+                    value = pg.toJson(record);
+                } else {
+                    value = record;
+                }
+                var meta = producer.send(new ProducerRecord<>(topicName, pg.key(record), value))
                     .get();
                 System.out.println("Record sent. " + meta);
             }
