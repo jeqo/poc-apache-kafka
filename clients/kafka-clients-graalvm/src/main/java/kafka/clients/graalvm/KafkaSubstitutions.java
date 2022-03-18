@@ -30,7 +30,7 @@ import org.apache.kafka.common.utils.AppInfoParser;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
-
+// Copied from: https://github.com/micronaut-projects/micronaut-kafka/blob/master/kafka/src/main/java/io/micronaut/configuration/kafka/graal/KafkaSubstitutions.java
 //CHECKSTYLE:OFF
 @AutomaticFeature
 final class ChecksumFeature implements Feature {
