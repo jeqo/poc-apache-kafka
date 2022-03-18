@@ -267,11 +267,5 @@
         ]
       }
     ]
-  },
-  {
-    "name": "com.fasterxml.jackson.core.JsonParser"
-  },
-  {
-    "name": "com.fasterxml.jackson.databind.ObjectMapper"
   }
 ]

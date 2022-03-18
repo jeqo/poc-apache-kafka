@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import org.apache.kafka.common.utils.ByteBufferUnmapper;
 import org.apache.kafka.common.utils.Java;
 
+// Copied from: https://github.com/micronaut-projects/micronaut-kafka/blob/0166116452a5e094a8db7877a52490ad23f2f5cf/kafka/src/main/java/io/micronaut/configuration/kafka/graal/ByteBufferUnmapperSubstitute.java
 @TargetClass(value = ByteBufferUnmapper.class)
 @SuppressWarnings("MissingJavadocType")
 public final class ByteBufferUnmapperSubstitute {

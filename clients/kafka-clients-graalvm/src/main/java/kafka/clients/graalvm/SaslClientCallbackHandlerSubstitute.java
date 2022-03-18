@@ -43,7 +43,7 @@ import org.apache.kafka.common.security.scram.internals.ScramMechanism;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Copy from: https://github.com/oracle/helidon/blob/785ce38ca06b268d16e387fb6498aaaa890695cc/messaging/kafka/src/main/java/io/helidon/messaging/connectors/kafka/SaslClientCallbackHandlerSubstitution.java
+// Copied from: https://github.com/oracle/helidon/blob/785ce38ca06b268d16e387fb6498aaaa890695cc/messaging/kafka/src/main/java/io/helidon/messaging/connectors/kafka/SaslClientCallbackHandlerSubstitution.java
 // Workaround for https://github.com/oracle/graal/issues/2745
 @TargetClass(value = SaslClientCallbackHandler.class)
 @SuppressWarnings("MissingJavadocType")
