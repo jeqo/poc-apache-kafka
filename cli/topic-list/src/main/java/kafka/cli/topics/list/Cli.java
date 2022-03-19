@@ -19,6 +19,8 @@ import static java.lang.System.out;
 
 @Command(
     name = "ktopiclist",
+    descriptionHeading = "Kafka CLI - Topic list",
+    description = "List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.",
     versionProvider = VersionProviderWithConfigProvider.class,
     mixinStandardHelpOptions = true
 )
