@@ -7,3 +7,42 @@ This information is available through multiple commands, e.g. `kafka-topics`, `k
 That's why I decided to compile it in one single tool.
 
 - [Documentation](./docs/ktopiclist.adoc)
+
+## Output structure
+
+- cluster
+  - id
+  - brokers
+    - id
+    - host
+    - rack
+- topics
+  - name
+  - topic
+    - name
+    - id
+    - partitions
+      - id
+      - leader
+      - replicas
+      - isr
+      - startOffset
+        - offset
+        - timestamp
+        - leaderEpoch
+      - endOffset
+        - offset
+        - timestamp
+        - leaderEpoch
+    - config
+      - name
+      - configEntry
+        - name
+        - value
+        - isReadOnly
+        - isSensitive
+        - isDefault
+        - documentation
+        - synonyms
+
+NOTE: Recommended using it with [jq](https://stedolan.github.io/jq/) and [jless](https://github.com/PaulJuliusMartinez/jless) to access JSON output.
