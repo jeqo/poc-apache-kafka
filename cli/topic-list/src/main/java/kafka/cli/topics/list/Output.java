@@ -5,12 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.ConfigEntry.ConfigSynonym;
 import org.apache.kafka.clients.admin.ListOffsetsResult.ListOffsetsResultInfo;
@@ -19,7 +13,15 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 
-public record Output(Map<String, Topic> topics) {
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public record Output(Cluster cluster, Map<String, Topic> topics) {
 
   static ObjectMapper json = new ObjectMapper()
       .registerModule(new Jdk8Module())
@@ -31,13 +33,21 @@ public record Output(Map<String, Topic> topics) {
 
   public String toJson(boolean pretty) throws JsonProcessingException {
     var node = json.createObjectNode();
-    topics.forEach((s, topic) -> node.set(s, topic.jsonNode()));
+
+    var topicsNode = json.createObjectNode();
+    topics.forEach((s, topic) -> topicsNode.set(s, topic.jsonNode()));
+
+    node.set("cluster", cluster.jsonNode());
+    node.set("topics", topicsNode);
 
     if (pretty) return json.writerWithDefaultPrettyPrinter().writeValueAsString(node);
     else return json.writeValueAsString(node);
   }
 
   static class Builder {
+
+    String clusterId;
+    Collection<org.apache.kafka.common.Node> brokers;
 
     final List<String> names;
 
@@ -78,7 +88,17 @@ public record Output(Map<String, Topic> topics) {
         );
         topics.put(name, topic);
       }
-      return new Output(topics);
+      return new Output(new Cluster(clusterId, brokers.stream().map(Node::from).toList()), topics);
+    }
+
+    public Builder withClusterId(String id) {
+      this.clusterId = id;
+      return this;
+    }
+
+    public Builder withBrokers(Collection<org.apache.kafka.common.Node> nodes) {
+      this.brokers = nodes;
+      return this;
     }
 
     public Builder withConfigs(Map<ConfigResource, org.apache.kafka.clients.admin.Config> configs) {
@@ -107,6 +127,16 @@ public record Output(Map<String, Topic> topics) {
     }
   }
 
+  public record Cluster(String id, List<Node> nodes) {
+    public JsonNode jsonNode() {
+      final var node = json.createObjectNode();
+      node.put("id", id);
+      final var brokers = node.putArray("brokers");
+      nodes.forEach(node1 -> brokers.add(node1.jsonNode()));
+      return node;
+    }
+  }
+
   public record Topic(
       String name,
       String id,
@@ -128,9 +158,9 @@ public record Output(Map<String, Topic> topics) {
 
   public record Partition(
       int id,
-      Node leader,
-      List<Node> replicas,
-      List<Node> isr,
+      Integer leader,
+      List<Integer> replicas,
+      List<Integer> isr,
       Offset startOffset,
       Offset endOffset
   ) {
@@ -142,9 +172,9 @@ public record Output(Map<String, Topic> topics) {
     ) {
       return new Partition(
           topicPartitionInfo.partition(),
-          Node.from(topicPartitionInfo.leader()),
-          topicPartitionInfo.replicas().stream().map(Node::from).toList(),
-          topicPartitionInfo.isr().stream().map(Node::from).toList(),
+          topicPartitionInfo.leader().id(),
+          topicPartitionInfo.replicas().stream().map(Node::from).map(Node::id).toList(),
+          topicPartitionInfo.isr().stream().map(Node::from).map(Node::id).toList(),
           Offset.from(startOffset), Offset.from(endOffset)
       );
     }
@@ -152,11 +182,11 @@ public record Output(Map<String, Topic> topics) {
     public JsonNode jsonNode() {
       var node = json.createObjectNode();
       node.put("id", id);
-      node.set("leader", leader.jsonNode());
+      node.put("leader", leader);
       var rs = node.putArray("replicas");
-      replicas.forEach(r -> rs.add(r.jsonNode()));
+      replicas.forEach(rs::add);
       var is = node.putArray("isr");
-      isr.forEach(r -> is.add(r.jsonNode()));
+      isr.forEach(is::add);
       node.set("startOffset", startOffset.jsonNode());
       node.set("endOffset", endOffset.jsonNode());
       return node;
