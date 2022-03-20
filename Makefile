@@ -4,6 +4,9 @@ clients_install:
 	cd clients && \
 	./mvnw clean install
 
-cli_topic_list_binary: clients_install
-	cd cli/topic-list && \
+JAVA_HOME := $(GRAALVM_HOME)
+export
+
+cli-binary-%: clients_install
+	cd cli/$(*) && \
 	./mvnw clean package -Pnative
