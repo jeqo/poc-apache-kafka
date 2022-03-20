@@ -18,10 +18,6 @@ class StreamsTestingAppTest {
 
   @Test
   void testApp() throws IOException {
-    testSimpleFromTo();
-  }
-
-  void testSimpleFromTo() throws IOException {
     try (final var driver = new TopologyTestDriver(buildSimpleFromTo(), loadConfig())) {
       // Given
       // - with topics

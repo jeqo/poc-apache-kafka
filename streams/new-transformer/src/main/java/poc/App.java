@@ -10,6 +10,10 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.processor.api.ContextualProcessor;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
+import org.apache.kafka.streams.processor.api.FixedKeyRecord;
+import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.Record;
 
 public class App {
@@ -27,14 +31,19 @@ public class App {
   private static Topology topology() {
     final var builder = new StreamsBuilder();
     final var input = builder.stream("words", Consumed.with(Serdes.String(), Serdes.String()));
-    input.processValues(() -> new ContextualProcessor<String, String, Void, String>() {
+    input.processValues(() -> new FixedKeyProcessor<String, String, String>() {
+          FixedKeyProcessorContext<String, String> context;
+
           @Override
-          public void process(Record<String, String> record) {
+          public void init(FixedKeyProcessorContext<String, String> context) {
+            this.context = context;
+          }
+
+          @Override
+          public void process(FixedKeyRecord<String, String> record) {
             for (var s : record.value().split(",")) {
-                context().forward(
-                    record
-                        .withKey((Void) null)
-                        .withValue("Hello " + s));
+              context.forward(
+                  record.withValue("Hello " + s));
             }
           }
         }, Named.as("test"))
