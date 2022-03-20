@@ -444,7 +444,6 @@
                   <goal>process-asciidoc</goal>
                 </goals>
                 <configuration>
-                  <sourceHighlighter>coderay</sourceHighlighter>
                   <backend>html5</backend>
                 </configuration>
               </execution>
@@ -455,7 +454,6 @@
                   <goal>process-asciidoc</goal>
                 </goals>
                 <configuration>
-                  <sourceHighlighter>coderay</sourceHighlighter>
                   <backend>manpage</backend>
                 </configuration>
               </execution>
