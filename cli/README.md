@@ -10,5 +10,4 @@ This module includes some experimental CLIs for Apache Kafka.
 
 ### Producer
 
-#### Performance - DataGen
-
+- [Producer DataGen](./producer-datagen)
