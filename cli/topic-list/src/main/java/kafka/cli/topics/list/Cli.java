@@ -17,76 +17,62 @@ import picocli.CommandLine.Option;
 
 import static java.lang.System.out;
 
-@Command(
-    name = "ktopiclist",
-    descriptionHeading = "Kafka CLI - Topic list",
-    description = "List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.",
-    versionProvider = VersionProviderWithConfigProvider.class,
-    mixinStandardHelpOptions = true
-)
+@Command(name = "kfk-topic-list", descriptionHeading = "Kafka CLI - Topic list", description = "List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.", versionProvider = VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true)
 public class Cli implements Callable<Integer> {
 
-  public static void main(String[] args) {
-    int exitCode = new CommandLine(new Cli()).execute(args);
-    System.exit(exitCode);
-  }
-
-  @Option(names = {"-t", "--topics"}, description = "list of topic names to include")
-  List<String> topics = new ArrayList<>();
-
-  @Option(names = {"-p", "--prefix"}, description = "Topic name prefix")
-  Optional<String> prefix = Optional.empty();
-
-  @Option(
-      names = {"-c", "--config"},
-      description = "Client configuration properties file." +
-          "Must include connection to Kafka and Schema Registry",
-      required = true)
-  Path configPath;
-
-  @Option(names = {"--pretty"}, defaultValue = "false", description = "Print pretty/formatted JSON")
-  boolean pretty;
-
-  @Override
-  public Integer call() throws Exception {
-    final var opts = new Opts(topics, prefix);
-
-    final var clientConfig = new Properties();
-    clientConfig.load(Files.newInputStream(configPath));
-
-    try (var adminClient = AdminClient.create(clientConfig)) {
-      final var helper = new Helper(adminClient);
-      final var output = helper.run(opts);
-      out.println(output.toJson(pretty));
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new Cli()).execute(args);
+        System.exit(exitCode);
     }
-    return 0;
-  }
 
-  record Opts(
-      List<String> topics,
-      Optional<String> prefix
-  ) {
+    @Option(names = { "-t", "--topics" }, description = "list of topic names to include")
+    List<String> topics = new ArrayList<>();
 
-    public boolean match(String name) {
-      return topics.contains(name) || prefix.map(name::startsWith).orElse(true);
-    }
-  }
+    @Option(names = { "-p", "--prefix" }, description = "Topic name prefix")
+    Optional<String> prefix = Optional.empty();
 
-  static class VersionProviderWithConfigProvider implements IVersionProvider {
+    @Option(names = { "-c", "--config" }, description = "Client configuration properties file."
+            + "Must include connection to Kafka and Schema Registry", required = true)
+    Path configPath;
+
+    @Option(names = { "--pretty" }, defaultValue = "false", description = "Print pretty/formatted JSON")
+    boolean pretty;
 
     @Override
-    public String[] getVersion() throws IOException {
-      final var url = VersionProviderWithConfigProvider.class.getClassLoader()
-          .getResource("cli.properties");
-      if (url == null) {
-        return new String[]{"No cli.properties file found in the classpath."};
-      }
-      final var properties = new Properties();
-      properties.load(url.openStream());
-      return new String[]{
-          properties.getProperty("appName") + " version " + properties.getProperty(
-              "appVersion") + "", "Built: " + properties.getProperty("appBuildTime"),
-      };
+    public Integer call() throws Exception {
+        final var opts = new Opts(topics, prefix);
+
+        final var clientConfig = new Properties();
+        clientConfig.load(Files.newInputStream(configPath));
+
+        try (var adminClient = AdminClient.create(clientConfig)) {
+            final var helper = new Helper(adminClient);
+            final var output = helper.run(opts);
+            out.println(output.toJson(pretty));
+        }
+        return 0;
     }
-  }
+
+    record Opts(List<String> topics, Optional<String> prefix) {
+
+        public boolean match(String name) {
+            return topics.contains(name) || prefix.map(name::startsWith).orElse(true);
+        }
+    }
+
+    static class VersionProviderWithConfigProvider implements IVersionProvider {
+
+        @Override
+        public String[] getVersion() throws IOException {
+            final var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            if (url == null) {
+                return new String[] { "No cli.properties file found in the classpath." };
+            }
+            final var properties = new Properties();
+            properties.load(url.openStream());
+            return new String[] {
+                    properties.getProperty("appName") + " version " + properties.getProperty("appVersion") + "",
+                    "Built: " + properties.getProperty("appBuildTime"), };
+        }
+    }
 }

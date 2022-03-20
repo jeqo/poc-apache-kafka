@@ -81,11 +81,6 @@
       <artifactId>jackson-datatype-jsr310</artifactId>
       <version>${jackson.version}</version>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>io.micronaut.serde</groupId>-->
-<!--      <artifactId>micronaut-serde-jackson</artifactId>-->
-<!--      <version>1.0.0-RC2</version>-->
-<!--    </dependency>-->
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -197,6 +192,22 @@
 
     <plugins>
       <plugin>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <version>2.17.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <configuration>
+              <configFile>${project.basedir}/etc/eclipse-formatter-config.xml</configFile>
+              <encoding>UTF-8</encoding>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
@@ -246,7 +257,7 @@
         <configuration>
           <attach>false</attach>
           <appendAssemblyId>false</appendAssemblyId>
-          <finalName>ktopiclist-${project.version}-${os.detected.classifier}</finalName>
+          <finalName>kfk-topic-list-${project.version}-${os.detected.classifier}</finalName>
           <outputDirectory>${app.distribution.directory}</outputDirectory>
           <workDirectory>${project.build.directory}/assembly/work</workDirectory>
           <skipAssembly>true</skipAssembly>
@@ -285,7 +296,7 @@
             </executions>
             <configuration>
               <buildDirectory>bin/</buildDirectory>
-              <imageName>ktopiclist-${project.version}</imageName>
+              <imageName>kfk-topic-list-${project.version}</imageName>
               <mainClass>kafka.cli.topics.list.Cli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
@@ -366,8 +377,8 @@
                   </github>
                 </release>
                 <distributions>
-                  <ktopiclist>
-                    <name>ktopiclist</name>
+                  <kfk-topic-list>
+                    <name>kfk-topic-list</name>
                     <type>NATIVE_IMAGE</type>
                     <artifacts>
                       <artifact>
@@ -391,7 +402,7 @@
                         <platform>osx-x86_64</platform>
                       </artifact>
                     </artifacts>
-                  </ktopiclist>
+                  </kfk-topic-list>
                 </distributions>
               </jreleaser>
             </configuration>
@@ -422,7 +433,7 @@
               <includePluginDependencies>true</includePluginDependencies>
               <mainClass>picocli.codegen.docgen.manpage.ManPageGenerator</mainClass>
               <arguments>
-                <argument>--outdir=${project.build.directory}/generated-picocli-docs</argument>
+                <argument>--outdir=docs</argument>
                 <argument>kafka.cli.topics.list.Cli</argument>
               </arguments>
             </configuration>
@@ -463,7 +474,7 @@
               </execution>
             </executions>
             <configuration>
-              <sourceDirectory>${project.build.directory}/generated-picocli-docs</sourceDirectory>
+              <sourceDirectory>docs</sourceDirectory>
             </configuration>
           </plugin>
         </plugins>
