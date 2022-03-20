@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "kfkctx", subcommands = {Cli.Create.class, Cli.ToProperties.class}) public class Cli
+@CommandLine.Command(name = "kfkctx", subcommands = {Cli.Create.class, Cli.ConfigProperties.class}) public class Cli
     implements Callable<Integer> {
 
     public static void main(String[] args) {
@@ -105,7 +105,7 @@ import java.util.concurrent.Callable;
 
 
     @CommandLine.Command(name = "properties", description = "Get properties configuration for context")
-    static class ToProperties implements Callable<Integer> {
+    static class ConfigProperties implements Callable<Integer> {
 
         @CommandLine.Parameters(index = "0", description = "Context name") String name;
         @CommandLine.Option(names = {"--test",
