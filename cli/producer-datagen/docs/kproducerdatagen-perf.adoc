@@ -1,0 +1,69 @@
+// tag::picocli-generated-full-manpage[]
+// tag::picocli-generated-man-section-header[]
+:doctype: manpage
+:revnumber: 
+:manmanual: Kproducerdatagen Manual
+:mansource: 
+:man-linkstyle: pass:[blue R < >]
+= kproducerdatagen-perf(1)
+
+// end::picocli-generated-man-section-header[]
+
+// tag::picocli-generated-man-section-name[]
+== Name
+
+kproducerdatagen-perf - run performance tests
+
+// end::picocli-generated-man-section-name[]
+
+// tag::picocli-generated-man-section-synopsis[]
+== Synopsis
+
+*kproducerdatagen perf* *-c*=_<configPath>_ [*-f*=_<format>_] [*-k*=_<throughput>_]
+                      *-n*=_<numRecords>_ *-q*=_<quickstart>_ *-t*=_<topicName>_
+
+// end::picocli-generated-man-section-synopsis[]
+
+// tag::picocli-generated-man-section-description[]
+== Description
+
+run performance tests
+
+// end::picocli-generated-man-section-description[]
+
+// tag::picocli-generated-man-section-options[]
+== Options
+
+*-c*, *--config*=_<configPath>_::
+  Client configuration properties file.Must include connection to Kafka and Schema Registry
+
+*-f*, *--format*=_<format>_::
+  Record value format
+
+*-k*, *--throughput*=_<throughput>_::
+  Number of target records per second to produce
+
+*-n*, *--num-records*=_<numRecords>_::
+  Number of records to produce
+
+*-q*, *--quickstart*=_<quickstart>_::
+  Quickstart name. For list of available quickstarts, run `quickstarts` subcommand
+
+*-t*, *--topic*=_<topicName>_::
+  target Kafka topic name
+
+// end::picocli-generated-man-section-options[]
+
+// tag::picocli-generated-man-section-arguments[]
+// end::picocli-generated-man-section-arguments[]
+
+// tag::picocli-generated-man-section-commands[]
+// end::picocli-generated-man-section-commands[]
+
+// tag::picocli-generated-man-section-exit-status[]
+// end::picocli-generated-man-section-exit-status[]
+
+// tag::picocli-generated-man-section-footer[]
+// end::picocli-generated-man-section-footer[]
+
+// end::picocli-generated-full-manpage[]
