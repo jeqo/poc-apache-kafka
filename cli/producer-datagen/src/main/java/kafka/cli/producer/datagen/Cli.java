@@ -1,9 +1,18 @@
 package kafka.cli.producer.datagen;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
-import kafka.cli.producer.datagen.ProducerDatagenCli.VersionProviderWithConfigProvider;
+import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
+import kafka.cli.producer.datagen.TopicAndSchema.Schema;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serializer;
@@ -16,30 +25,35 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
+
+import static java.lang.System.out;
 
 @CommandLine.Command(
     name = "kproducerdatagen",
     versionProvider = VersionProviderWithConfigProvider.class,
     mixinStandardHelpOptions = true,
-    description = "Kafka Performance Producer with Data generation",
+    descriptionHeading = "Kafka CLI - Producer Datagen",
+    description = "Kafka Producer with Data generation",
     subcommands = {
-        ProducerDatagenCli.Run.class,
-        ProducerDatagenCli.Interval.class,
-        ProducerDatagenCli.ProduceOnce.class,
-        ProducerDatagenCli.ListQuickstarts.class,
+        Cli.Run.class,
+        Cli.Interval.class,
+        Cli.ProduceOnce.class,
+        Cli.ListQuickstarts.class,
+        Cli.ListTopics.class
     })
-public class ProducerDatagenCli implements Callable<Integer> {
+public class Cli implements Callable<Integer> {
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new ProducerDatagenCli()).execute(args);
+        int exitCode = new CommandLine(new Cli()).execute(args);
         System.exit(exitCode);
     }
 
     @Override
     public Integer call() {
-        CommandLine.usage(this, System.out);
+        CommandLine.usage(this, out);
         return 0;
     }
 
@@ -209,7 +223,7 @@ public class ProducerDatagenCli implements Callable<Integer> {
                 }
                 var meta = producer.send(new ProducerRecord<>(topicName, pg.key(record), value))
                     .get();
-                System.out.println("Record sent. " + meta);
+                out.println("Record sent. " + meta);
             }
             return 0;
         }
@@ -218,11 +232,82 @@ public class ProducerDatagenCli implements Callable<Integer> {
     @CommandLine.Command(name = "quickstarts", description = "Lists available quickstarts")
     static class ListQuickstarts implements Callable<Integer> {
 
+        @Option(names = {
+            "--pretty"}, defaultValue = "false", description = "Print pretty/formatted JSON")
+        boolean pretty;
+
+        final ObjectMapper json = new ObjectMapper();
+
         @Override
-        public Integer call() {
-            System.out.println("Available quickstart:");
+        public Integer call() throws JsonProcessingException {
+            var qs = json.createArrayNode();
             for (Quickstart q : Quickstart.values()) {
-                System.out.printf("\t%s%n", q.name());
+                qs.add(q.name());
+            }
+
+            if (pretty) {
+                out.println(json.writerWithDefaultPrettyPrinter().writeValueAsString(qs));
+            } else {
+                out.println(json.writeValueAsString(qs));
+            }
+            return 0;
+        }
+    }
+
+    @Command(name = "topics", description = "List topics and schemas available in a cluster")
+    static class ListTopics implements Callable<Integer> {
+
+        @CommandLine.Option(names = {"-c", "--config"}, description =
+            "Client configuration properties file."
+                + "Must include connection to Kafka and Schema Registry", required = true)
+        Path configPath;
+
+        @Option(names = {
+            "--pretty"}, defaultValue = "false", description = "Print pretty/formatted JSON")
+        boolean pretty;
+
+        final ObjectMapper json = new ObjectMapper();
+
+        @Override
+        public Integer call() throws Exception {
+            final var props = new Properties();
+            props.load(Files.newInputStream(configPath));
+            final var kafkaAdminClient = AdminClient.create(props);
+            final var topics = kafkaAdminClient.listTopics().names().get();
+            final var schemaRegistryUrl = props.getProperty("schema.registry.url");
+            final Optional<SchemaRegistryClient> schemaRegistryClient;
+            if (schemaRegistryUrl != null && !schemaRegistryUrl.isBlank()) {
+                schemaRegistryClient = Optional.of(new CachedSchemaRegistryClient(
+                    schemaRegistryUrl,
+                    10,
+                    props.keySet().stream()
+                        .collect(Collectors.toMap(
+                            Object::toString,
+                            k -> props.getProperty(k.toString())
+                        ))
+                ));
+            } else {
+                schemaRegistryClient = Optional.empty();
+            }
+            final var result = new ArrayList<TopicAndSchema>(topics.size());
+            for (final var topic : topics) {
+                var subject = schemaRegistryClient.map(c -> {
+                        try {
+                            return c.getSchemas(topic, false, true);
+                        } catch (IOException | RestClientException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .map(parsedSchemas -> parsedSchemas.stream().map(Schema::from).toList())
+                    .orElse(List.of());
+                result.add(new TopicAndSchema(topic, subject));
+            }
+            final var array = json.createArrayNode();
+            result.forEach(t -> array.add(t.toJson()));
+            if (pretty) {
+                out.println(json.writerWithDefaultPrettyPrinter().writeValueAsString(array));
+            } else {
+                out.println(json.writeValueAsString(array));
             }
             return 0;
         }
@@ -232,7 +317,8 @@ public class ProducerDatagenCli implements Callable<Integer> {
 
         @Override
         public String[] getVersion() throws IOException {
-            final var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            final var url = VersionProviderWithConfigProvider.class.getClassLoader()
+                .getResource("cli.properties");
             if (url == null) {
                 return new String[]{"No cli.properties file found in the classpath."};
             }
