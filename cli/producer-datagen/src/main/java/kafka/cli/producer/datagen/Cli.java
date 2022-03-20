@@ -32,7 +32,7 @@ import picocli.CommandLine.Option;
 import static java.lang.System.out;
 
 @CommandLine.Command(
-    name = "kproducerdatagen",
+    name = "kfk-producer-datagen",
     versionProvider = VersionProviderWithConfigProvider.class,
     mixinStandardHelpOptions = true,
     descriptionHeading = "Kafka CLI - Producer Datagen",

@@ -1,56 +1,43 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: 
-:manmanual: Kproducerdatagen Manual
-:mansource: 
+:revnumber: kafka-cli-producer-datagen version 0.1.2-SNAPSHOT
+:manmanual: Kfk-producer-datagen Manual
+:mansource: kafka-cli-producer-datagen version 0.1.2-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
-= kproducerdatagen-perf(1)
+= kfk-producer-datagen(1)
 
 // end::picocli-generated-man-section-header[]
 
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kproducerdatagen-perf - run performance tests
+kfk-producer-datagen - Kafka Producer with Data generation
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kproducerdatagen perf* *-c*=_<configPath>_ [*-f*=_<format>_] [*-k*=_<throughput>_]
-                      *-n*=_<numRecords>_ *-q*=_<quickstart>_ *-t*=_<topicName>_
+*kfk-producer-datagen* [*-hV*] [COMMAND]
 
 // end::picocli-generated-man-section-synopsis[]
 
 // tag::picocli-generated-man-section-description[]
 == Description
 
-run performance tests
+Kafka Producer with Data generation
 
 // end::picocli-generated-man-section-description[]
 
 // tag::picocli-generated-man-section-options[]
 == Options
 
-*-c*, *--config*=_<configPath>_::
-  Client configuration properties file.Must include connection to Kafka and Schema Registry
+*-h*, *--help*::
+  Show this help message and exit.
 
-*-f*, *--format*=_<format>_::
-  Record value format
-
-*-k*, *--throughput*=_<throughput>_::
-  Number of target records per second to produce
-
-*-n*, *--num-records*=_<numRecords>_::
-  Number of records to produce
-
-*-q*, *--quickstart*=_<quickstart>_::
-  Quickstart name. For list of available quickstarts, run `quickstarts` subcommand
-
-*-t*, *--topic*=_<topicName>_::
-  target Kafka topic name
+*-V*, *--version*::
+  Print version information and exit.
 
 // end::picocli-generated-man-section-options[]
 
@@ -58,6 +45,23 @@ run performance tests
 // end::picocli-generated-man-section-arguments[]
 
 // tag::picocli-generated-man-section-commands[]
+== Commands
+
+xref:kfk-producer-datagen-perf.adoc[*perf*]::
+  run performance tests
+
+xref:kfk-producer-datagen-interval.adoc[*interval*]::
+  run producer with interval
+
+xref:kfk-producer-datagen-once.adoc[*once*]::
+  produce once
+
+xref:kfk-producer-datagen-quickstarts.adoc[*quickstarts*]::
+  Lists available quickstarts
+
+xref:kfk-producer-datagen-topics.adoc[*topics*]::
+  List topics and schemas available in a cluster
+
 // end::picocli-generated-man-section-commands[]
 
 // tag::picocli-generated-man-section-exit-status[]

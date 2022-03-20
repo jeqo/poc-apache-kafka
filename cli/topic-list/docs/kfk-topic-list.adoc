@@ -1,32 +1,32 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: 
-:manmanual: Kproducerdatagen Manual
-:mansource: 
+:revnumber: kafka-cli-topic-list version 0.1.2-SNAPSHOT
+:manmanual: Kfk-topic-list Manual
+:mansource: kafka-cli-topic-list version 0.1.2-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
-= kproducerdatagen-topics(1)
+= kfk-topic-list(1)
 
 // end::picocli-generated-man-section-header[]
 
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kproducerdatagen-topics - List topics and schemas available in a cluster
+kfk-topic-list - List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kproducerdatagen topics* [*--pretty*] *-c*=_<configPath>_
+*kfk-topic-list* [*-hV*] [*--pretty*] *-c*=_<configPath>_ [*-p*=_<prefix>_] [*-t*=_<topics>_]...
 
 // end::picocli-generated-man-section-synopsis[]
 
 // tag::picocli-generated-man-section-description[]
 == Description
 
-List topics and schemas available in a cluster
+List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.
 
 // end::picocli-generated-man-section-description[]
 
@@ -36,8 +36,20 @@ List topics and schemas available in a cluster
 *-c*, *--config*=_<configPath>_::
   Client configuration properties file.Must include connection to Kafka and Schema Registry
 
+*-h*, *--help*::
+  Show this help message and exit.
+
+*-p*, *--prefix*=_<prefix>_::
+  Topic name prefix
+
 *--pretty*::
   Print pretty/formatted JSON
+
+*-t*, *--topics*=_<topics>_::
+  list of topic names to include
+
+*-V*, *--version*::
+  Print version information and exit.
 
 // end::picocli-generated-man-section-options[]
 
