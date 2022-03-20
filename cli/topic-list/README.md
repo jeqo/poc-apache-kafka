@@ -1,5 +1,7 @@
 # `kfk-topic-list` - Kafka CLI: topic list
 
+[![cli:topic-list:build](https://github.com/jeqo/poc-apache-kafka/actions/workflows/cli-topic-list-build.yml/badge.svg)](https://github.com/jeqo/poc-apache-kafka/actions/workflows/cli-topic-list-build.yml)
+
 Command-line tool to get a JSON representation of the topics included in a Kafka cluster.
 Includes topic metadata, configuration, partitions, replica placement, and offsets.
 
