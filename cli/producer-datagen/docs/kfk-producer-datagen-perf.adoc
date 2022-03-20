@@ -2,32 +2,32 @@
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
 :revnumber: 
-:manmanual: Kproducerdatagen Manual
+:manmanual: Kfk-producer-datagen Manual
 :mansource: 
 :man-linkstyle: pass:[blue R < >]
-= kproducerdatagen-once(1)
+= kfk-producer-datagen-perf(1)
 
 // end::picocli-generated-man-section-header[]
 
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kproducerdatagen-once - produce once
+kfk-producer-datagen-perf - run performance tests
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kproducerdatagen once* *-c*=_<configPath>_ [*-f*=_<format>_] *-q*=_<quickstart>_
-                      *-t*=_<topicName>_
+*kfk-producer-datagen perf* *-c*=_<configPath>_ [*-f*=_<format>_] [*-k*=_<throughput>_]
+                          *-n*=_<numRecords>_ *-q*=_<quickstart>_ *-t*=_<topicName>_
 
 // end::picocli-generated-man-section-synopsis[]
 
 // tag::picocli-generated-man-section-description[]
 == Description
 
-produce once
+run performance tests
 
 // end::picocli-generated-man-section-description[]
 
@@ -39,6 +39,12 @@ produce once
 
 *-f*, *--format*=_<format>_::
   Record value format
+
+*-k*, *--throughput*=_<throughput>_::
+  Number of target records per second to produce
+
+*-n*, *--num-records*=_<numRecords>_::
+  Number of records to produce
 
 *-q*, *--quickstart*=_<quickstart>_::
   Quickstart name. For list of available quickstarts, run `quickstarts` subcommand

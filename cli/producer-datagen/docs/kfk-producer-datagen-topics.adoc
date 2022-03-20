@@ -2,32 +2,31 @@
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
 :revnumber: 
-:manmanual: Kproducerdatagen Manual
+:manmanual: Kfk-producer-datagen Manual
 :mansource: 
 :man-linkstyle: pass:[blue R < >]
-= kproducerdatagen-interval(1)
+= kfk-producer-datagen-topics(1)
 
 // end::picocli-generated-man-section-header[]
 
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kproducerdatagen-interval - run producer with interval
+kfk-producer-datagen-topics - List topics and schemas available in a cluster
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kproducerdatagen interval* *-c*=_<configPath>_ [*-f*=_<format>_] [*-i*=_<interval>_]
-                          *-n*=_<numRecords>_ *-q*=_<quickstart>_ *-t*=_<topicName>_
+*kfk-producer-datagen topics* [*--pretty*] *-c*=_<configPath>_
 
 // end::picocli-generated-man-section-synopsis[]
 
 // tag::picocli-generated-man-section-description[]
 == Description
 
-run producer with interval
+List topics and schemas available in a cluster
 
 // end::picocli-generated-man-section-description[]
 
@@ -37,20 +36,8 @@ run producer with interval
 *-c*, *--config*=_<configPath>_::
   Client configuration properties file.Must include connection to Kafka and Schema Registry
 
-*-f*, *--format*=_<format>_::
-  Record value format
-
-*-i*, *--interval*=_<interval>_::
-  Maximum interval between producer send
-
-*-n*, *--num-records*=_<numRecords>_::
-  Number of records to produce
-
-*-q*, *--quickstart*=_<quickstart>_::
-  Quickstart name. For list of available quickstarts, run `quickstarts` subcommand
-
-*-t*, *--topic*=_<topicName>_::
-  target Kafka topic name
+*--pretty*::
+  Print pretty/formatted JSON
 
 // end::picocli-generated-man-section-options[]
 

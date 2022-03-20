@@ -222,7 +222,7 @@
         <configuration>
           <attach>false</attach>
           <appendAssemblyId>false</appendAssemblyId>
-          <finalName>kproducerdatagen-${project.version}-${os.detected.classifier}</finalName>
+          <finalName>kfk-producer-datagen-${project.version}-${os.detected.classifier}</finalName>
           <outputDirectory>${app.distribution.directory}</outputDirectory>
           <workDirectory>${project.build.directory}/assembly/work</workDirectory>
           <skipAssembly>true</skipAssembly>
@@ -268,7 +268,7 @@
             </executions>
             <configuration>
               <buildDirectory>bin/</buildDirectory>
-              <imageName>kproducerdatagen-${project.version}</imageName>
+              <imageName>kfk-producer-datagen-${project.version}</imageName>
               <mainClass>kafka.cli.producer.datagen.Cli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
@@ -362,8 +362,8 @@
                 <!--                  </sdkman>-->
                 <!--                </packagers>-->
                 <distributions>
-                  <kproducerdatagen>
-                    <name>kproducerdatagen</name>
+                  <kfk-producer-datagen>
+                    <name>kfk-producer-datagen</name>
                     <type>NATIVE_IMAGE</type>
                     <artifacts>
                       <artifact>
@@ -387,7 +387,7 @@
                         <platform>osx-x86_64</platform>
                       </artifact>
                     </artifacts>
-                  </kproducerdatagen>
+                  </kfk-producer-datagen>
                 </distributions>
               </jreleaser>
             </configuration>
@@ -418,7 +418,7 @@
               <includePluginDependencies>true</includePluginDependencies>
               <mainClass>picocli.codegen.docgen.manpage.ManPageGenerator</mainClass>
               <arguments>
-                <argument>--outdir=${project.build.directory}/generated-picocli-docs</argument>
+                <argument>--outdir=docs</argument>
                 <argument>kafka.cli.producer.datagen.Cli</argument>
               </arguments>
             </configuration>
@@ -459,7 +459,7 @@
               </execution>
             </executions>
             <configuration>
-              <sourceDirectory>${project.build.directory}/generated-picocli-docs</sourceDirectory>
+              <sourceDirectory>docs</sourceDirectory>
             </configuration>
           </plugin>
         </plugins>
