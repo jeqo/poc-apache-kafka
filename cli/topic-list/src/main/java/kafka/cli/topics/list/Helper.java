@@ -40,9 +40,8 @@ public final class Helper {
 
         for (final var topic : builder.names) {
             final var description = descriptions.get(topic);
-            final var tps = description.partitions().stream()
-                .map(tpi -> new TopicPartition(topic, tpi.partition()))
-                .sorted(Comparator.comparingInt(TopicPartition::partition)).toList();
+            final var tps = description.partitions().stream().map(tpi -> new TopicPartition(topic, tpi.partition()))
+                    .sorted(Comparator.comparingInt(TopicPartition::partition)).toList();
             for (final var tp : tps) {
                 startOffsetRequest.put(tp, OffsetSpec.earliest());
                 endOffsetRequest.put(tp, OffsetSpec.latest());
@@ -55,7 +54,7 @@ public final class Helper {
         final var configs = adminClient.describeConfigs(builder.configResources()).all().get();
 
         return builder.withClusterId(describeClusterResult.clusterId().get())
-            .withBrokers(describeClusterResult.nodes().get()).withTopicDescriptions(descriptions)
-            .withStartOffsets(startOffsets).withEndOffsets(endOffsets).withConfigs(configs).build();
+                .withBrokers(describeClusterResult.nodes().get()).withTopicDescriptions(descriptions)
+                .withStartOffsets(startOffsets).withEndOffsets(endOffsets).withConfigs(configs).build();
     }
 }

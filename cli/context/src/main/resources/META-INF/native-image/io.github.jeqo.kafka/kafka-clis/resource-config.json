@@ -2,6 +2,9 @@
   "resources": {
     "includes": [
       {
+        "pattern": "^.*\\.avro$"
+      },
+      {
         "pattern": "cli.properties"
       }
     ]

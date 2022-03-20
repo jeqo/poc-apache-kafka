@@ -1,4 +1,4 @@
-# `ktopiclist` - Kafka CLI topic list
+# `kfk-topic-list` - Kafka CLI: topic list
 
 Command-line tool to get a JSON representation of the topics included in a Kafka cluster.
 Includes topic metadata, configuration, partitions, replica placement, and offsets.
@@ -6,7 +6,7 @@ Includes topic metadata, configuration, partitions, replica placement, and offse
 This information is available through multiple commands, e.g. `kafka-topics`, `kafka-configs`, etc.
 That's why I decided to compile it in one single tool.
 
-- [Documentation](./docs/ktopiclist.adoc)
+- [Documentation](./docs/kfk-topic-list.adoc)
 
 ## Output structure
 

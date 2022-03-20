@@ -9,15 +9,18 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "kfkctx", subcommands = {Cli.Create.class, Cli.ConfigProperties.class}) public class Cli
-    implements Callable<Integer> {
+@CommandLine.Command(name = "kfk-ctx", versionProvider = Cli.VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true, subcommands = {
+        Cli.Create.class,
+        Cli.ConfigProperties.class }, descriptionHeading = "Kafka CLI - Context", description = "Manage Kafka connection properties as contexts.")
+public class Cli implements Callable<Integer> {
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new Cli()).execute(args);
         System.exit(exitCode);
     }
 
-    @Override public Integer call() throws Exception {
+    @Override
+    public Integer call() throws Exception {
         var contexts = Contexts.from(Files.readAllBytes(contextConfig()));
         System.out.println(contexts.names());
         return 0;
@@ -52,40 +55,38 @@ import java.util.concurrent.Callable;
         return home;
     }
 
-    @CommandLine.Command(name = "create", description = "Register context.") static class Create
-        implements Callable<Integer> {
+    @CommandLine.Command(name = "create", description = "Register context. Destination: ~/.kafka/config")
+    static class Create implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name") String name;
+        @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
+        String name;
+        @CommandLine.Parameters(index = "1", description = "Kafka bootstrap servers. e.g. `localhost:9092`")
+        String bootstrapServers;
 
-        @CommandLine.Parameters(index = "1", description = "Kafka bootstrap servers") String
-            bootstrapServers;
-
-        @CommandLine.Option(names = {
-            "--auth"}, description = "Authentication type", required = true, defaultValue = "PLAINTEXT")
+        @CommandLine.Option(names = "--auth", description = "Authentication type (default: ${DEFAULT-VALUE}). Valid values: ${COMPLETION-CANDIDATES}", required = true, defaultValue = "PLAINTEXT")
         Contexts.KafkaAuth.AuthType authType;
-        @CommandLine.Option(names = {"--username",
-            "-u"}, description = "Username for SASL authentication") String username;
-        @CommandLine.Option(names = {"--password",
-            "-p"}, description = "Password for SASL authentication", arity = "0..1", interactive = true)
+        @CommandLine.Option(names = { "--username", "-u" }, description = "Username for SASL authentication")
+        String username;
+        @CommandLine.Option(names = { "--password", "-p" }, description = "Password for SASL authentication", arity = "0..1", interactive = true)
         String password;
 
-        @Override public Integer call() throws Exception {
+        @Override
+        public Integer call() throws Exception {
             var contexts = Contexts.from(Files.readAllBytes(contextConfig()));
 
             final Contexts.KafkaAuth auth;
             switch (authType) {
                 case SASL_PLAIN -> auth = new Contexts.UsernamePasswordAuth(authType, username,
-                    passwordHelper().encrypt(password));
+                        passwordHelper().encrypt(password));
                 default -> auth = new Contexts.NoAuth();
             }
-            final var ctx =
-                new Contexts.Context(name, new Contexts.KafkaCluster(bootstrapServers, auth));
+            final var ctx = new Contexts.Context(name, new Contexts.KafkaCluster(bootstrapServers, auth));
 
             contexts.add(ctx);
             save(contexts);
 
             System.out.printf("Context %s with bootstrap-servers %s saved.", ctx.name(),
-                ctx.cluster().bootstrapServers());
+                    ctx.cluster().bootstrapServers());
             return 0;
         }
 
@@ -97,21 +98,23 @@ import java.util.concurrent.Callable;
             final var salt = PasswordHelper.generateKey();
             Files.writeString(saltPath, salt);
             return new PasswordHelper(salt);
-        } else {
+        }
+        else {
             final var salt = Files.readString(saltPath);
             return new PasswordHelper(salt);
         }
     }
 
-
     @CommandLine.Command(name = "properties", description = "Get properties configuration for context")
     static class ConfigProperties implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name") String name;
-        @CommandLine.Option(names = {"--test",
-            "-t"}, description = "Test properties") boolean test;
+        @CommandLine.Parameters(index = "0", description = "Context name")
+        String name;
+        @CommandLine.Option(names = { "--test", "-t" }, description = "Test properties")
+        boolean test;
 
-        @Override public Integer call() throws Exception {
+        @Override
+        public Integer call() throws Exception {
             var contexts = Contexts.from(Files.readAllBytes(contextConfig()));
             var ctx = contexts.get(name);
             final Properties props = ctx.properties(passwordHelper());
@@ -121,9 +124,9 @@ import java.util.concurrent.Callable;
                 try (final var admin = AdminClient.create(props)) {
                     final var clusterId = admin.describeCluster().clusterId().get();
                     System.err.printf("Connection to cluster %s succeed%n", clusterId);
-                    admin.describeCluster().nodes().get()
-                        .forEach(node -> System.err.println("Node: " + node));
-                } catch (Exception e) {
+                    admin.describeCluster().nodes().get().forEach(node -> System.err.println("Node: " + node));
+                }
+                catch (Exception e) {
                     System.err.println("Connection to cluster failed");
                     e.printStackTrace();
                     return 1;
@@ -132,6 +135,22 @@ import java.util.concurrent.Callable;
             return 0;
         }
 
+    }
+
+    static class VersionProviderWithConfigProvider implements CommandLine.IVersionProvider {
+
+        @Override
+        public String[] getVersion() throws IOException {
+            final var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            if (url == null) {
+                return new String[]{ "No cli.properties file found in the classpath." };
+            }
+            final var properties = new Properties();
+            properties.load(url.openStream());
+            return new String[]{
+                    properties.getProperty("appName") + " version " + properties.getProperty("appVersion") + "",
+                    "Built: " + properties.getProperty("appBuildTime"), };
+        }
     }
 
 }
