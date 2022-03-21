@@ -376,6 +376,13 @@
                     <overwrite>true</overwrite>
                   </github>
                 </release>
+                <packagers>
+                  <brew>
+                    <active>RELEASE</active>
+                    <continueOnError>true</continueOnError>
+                    <multiPlatform>true</multiPlatform>
+                  </brew>
+                </packagers>
                 <distributions>
                   <kfk-topic-list>
                     <name>kfk-topic-list</name>

@@ -352,6 +352,13 @@
                                         <overwrite>true</overwrite>
                                     </github>
                                 </release>
+                                <packagers>
+                                    <brew>
+                                        <active>RELEASE</active>
+                                        <continueOnError>true</continueOnError>
+                                        <multiPlatform>true</multiPlatform>
+                                    </brew>
+                                </packagers>
                                 <distributions>
                                     <kfk-ctx>
                                         <name>kfk-ctx</name>
