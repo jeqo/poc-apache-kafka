@@ -124,12 +124,12 @@ static class Builder {
 
     }
 
-    public record Topic(String name, String id, int partitionNumber, int replicationFactor, boolean isInternal, List<Partition> partitions, Config config) {
+    public record Topic(String name, String id, int partitionCount, int replicationFactor, boolean isInternal, List<Partition> partitions, Config config) {
 
     public JsonNode jsonNode() {
         var node = json.createObjectNode();
         node.put("name", name).put("id", id).put("isInternal", isInternal)
-                .put("partitionNumber", partitionNumber).put("replication-factor", replicationFactor);
+                .put("partitionCount", partitionCount).put("replication-factor", replicationFactor);
         var ps = node.putArray("partitions");
         partitions.forEach(p -> ps.add(p.jsonNode()));
         node.set("config", config.jsonNode());
