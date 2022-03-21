@@ -350,17 +350,13 @@
                     <overwrite>true</overwrite>
                   </github>
                 </release>
-                <!--                <packagers>-->
-                <!--                  <brew>-->
-                <!--                    <active>RELEASE</active>-->
-                <!--                    <continueOnError>true</continueOnError>-->
-                <!--                    <multiPlatform>true</multiPlatform>-->
-                <!--                  </brew>-->
-                <!--                  <sdkman>-->
-                <!--                    <active>RELEASE</active>-->
-                <!--                    <continueOnError>true</continueOnError>-->
-                <!--                  </sdkman>-->
-                <!--                </packagers>-->
+                <packagers>
+                  <brew>
+                    <active>RELEASE</active>
+                    <continueOnError>true</continueOnError>
+                    <multiPlatform>true</multiPlatform>
+                  </brew>
+                </packagers>
                 <distributions>
                   <kfk-producer-datagen>
                     <name>kfk-producer-datagen</name>
