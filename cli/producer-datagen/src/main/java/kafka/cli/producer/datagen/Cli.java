@@ -1,6 +1,5 @@
 package kafka.cli.producer.datagen;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
@@ -9,6 +8,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import kafka.cli.producer.datagen.PayloadGenerator.Config;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
 import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
 import kafka.cli.producer.datagen.TopicAndSchema.Schema;
@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
@@ -41,7 +42,7 @@ import static java.lang.System.out;
         Cli.Run.class,
         Cli.Interval.class,
         Cli.ProduceOnce.class,
-        Cli.ListQuickstarts.class,
+        Cli.Sample.class,
         Cli.ListTopics.class
     })
 public class Cli implements Callable<Integer> {
@@ -63,9 +64,6 @@ public class Cli implements Callable<Integer> {
         @CommandLine.Option(names = {"-t",
             "--topic"}, description = "target Kafka topic name", required = true)
         String topicName;
-        @CommandLine.Option(names = {"-q",
-            "--quickstart"}, description = "Quickstart name. For list of available quickstarts, run `quickstarts` subcommand", required = true)
-        Quickstart quickstart;
         @CommandLine.Option(names = {"-n",
             "--num-records"}, description = "Number of records to produce", required = true)
         long numRecords;
@@ -77,6 +75,9 @@ public class Cli implements Callable<Integer> {
             "Client configuration properties file."
                 + "Must include connection to Kafka and Schema Registry", required = true)
         Path configPath;
+
+        @ArgGroup(multiplicity = "1")
+        SchemaSourceOption schemaSource;
 
         @Option(names = {"-f",
             "--format"}, description = "Record value format", defaultValue = "JSON")
@@ -108,8 +109,7 @@ public class Cli implements Callable<Integer> {
                 var pp = new PerformanceRun(
                     new PerformanceRun.Config(records, topicName, transactionEnabled,
                         transactionDuration, shouldPrintMetrics), producer, new PayloadGenerator(
-                    new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                        Optional.empty(),
+                    new PayloadGenerator.Config(Optional.empty(), schemaSource.quickstart, schemaSource.schemaPath,
                         Optional.empty(), records, format)),
                     new ThroughputThrottler(System.currentTimeMillis(), targetThroughput),
                     new Stats(records, reportingInterval));
@@ -125,9 +125,6 @@ public class Cli implements Callable<Integer> {
         @CommandLine.Option(names = {"-t",
             "--topic"}, description = "target Kafka topic name", required = true)
         String topicName;
-        @CommandLine.Option(names = {"-q",
-            "--quickstart"}, description = "Quickstart name. For list of available quickstarts, run `quickstarts` subcommand", required = true)
-        Quickstart quickstart;
         @CommandLine.Option(names = {"-n",
             "--num-records"}, description = "Number of records to produce", required = true)
         long numRecords;
@@ -143,6 +140,9 @@ public class Cli implements Callable<Integer> {
         @Option(names = {"-f",
             "--format"}, description = "Record value format", defaultValue = "JSON")
         Format format;
+
+        @ArgGroup(multiplicity = "1")
+        SchemaSourceOption schemaSource;
 
         int reportingInterval = 5_000;
 
@@ -163,12 +163,13 @@ public class Cli implements Callable<Integer> {
                 valueSerializer)) {
                 final var maxRecords = numRecords;
                 final var maxInterval = interval;
+                final var payloadGenerator = new PayloadGenerator(
+                        new Config(Optional.empty(), schemaSource.quickstart,
+                                schemaSource.schemaPath,
+                                Optional.empty(), maxRecords, format));
                 var pp = new IntervalRun(
                     new IntervalRun.Config(topicName, maxRecords, maxInterval), producer,
-                    new PayloadGenerator(
-                        new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                            Optional.empty(),
-                            Optional.empty(), maxRecords, format)),
+                        payloadGenerator,
                     new Stats(maxRecords, reportingInterval));
                 pp.start();
             }
@@ -182,14 +183,13 @@ public class Cli implements Callable<Integer> {
         @CommandLine.Option(names = {"-t",
             "--topic"}, description = "target Kafka topic name", required = true)
         String topicName;
-        @CommandLine.Option(names = {"-q",
-            "--quickstart"}, description = "Quickstart name. For list of available quickstarts, run `quickstarts` subcommand", required = true)
-        Quickstart quickstart;
-
         @CommandLine.Option(names = {"-c", "--config"}, description =
             "Client configuration properties file."
                 + "Must include connection to Kafka and Schema Registry", required = true)
         Path configPath;
+
+        @ArgGroup(multiplicity = "1")
+        SchemaSourceOption schemaSource;
 
         @Option(names = {"-f",
             "--format"}, description = "Record value format", defaultValue = "JSON")
@@ -211,8 +211,7 @@ public class Cli implements Callable<Integer> {
             try (var producer = new KafkaProducer<>(producerConfig, keySerializer,
                 valueSerializer)) {
                 var pg = new PayloadGenerator(
-                    new PayloadGenerator.Config(Optional.empty(), Optional.of(quickstart),
-                        Optional.empty(),
+                    new PayloadGenerator.Config(Optional.empty(), schemaSource.quickstart, schemaSource.schemaPath,
                         Optional.empty(), 10, format));
                 var record = pg.get();
                 Object value;
@@ -229,26 +228,26 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    @CommandLine.Command(name = "quickstarts", description = "Lists available quickstarts")
-    static class ListQuickstarts implements Callable<Integer> {
+    @Command(name = "sample", description = "Get a sample of the quickstart")
+    static class Sample implements Callable<Integer> {
+        @ArgGroup(multiplicity = "1")
+        SchemaSourceOption exclusive;
 
         @Option(names = {
-            "--pretty"}, defaultValue = "false", description = "Print pretty/formatted JSON")
+                "--pretty"}, defaultValue = "false", description = "Print pretty/formatted JSON")
         boolean pretty;
 
         final ObjectMapper json = new ObjectMapper();
+        @Override public Integer call() throws Exception {
+            final var payloadGenerator = new PayloadGenerator(
+                    new Config(Optional.empty(), exclusive.quickstart, exclusive.schemaPath,
+                            Optional.empty(), 1, Format.JSON));
 
-        @Override
-        public Integer call() throws JsonProcessingException {
-            var qs = json.createArrayNode();
-            for (Quickstart q : Quickstart.values()) {
-                qs.add(q.name());
-            }
-
+            final var sample = json.readTree(payloadGenerator.sample());
             if (pretty) {
-                out.println(json.writerWithDefaultPrettyPrinter().writeValueAsString(qs));
+                out.println(json.writerWithDefaultPrettyPrinter().writeValueAsString(sample));
             } else {
-                out.println(json.writeValueAsString(qs));
+                out.println(json.writeValueAsString(sample));
             }
             return 0;
         }
@@ -311,6 +310,15 @@ public class Cli implements Callable<Integer> {
             }
             return 0;
         }
+    }
+
+    static class SchemaSourceOption {
+        @Option(names = {"-q",
+                "--quickstart"}, description = "Quickstart name. Valid values:  ${COMPLETION-CANDIDATES}")
+        Optional<Quickstart> quickstart;
+        @Option(names = {"-s",
+                "--schema"}, description = "Path to Avro schema to use for generating records.")
+        Optional<Path> schemaPath;
     }
 
     static class VersionProviderWithConfigProvider implements IVersionProvider {
