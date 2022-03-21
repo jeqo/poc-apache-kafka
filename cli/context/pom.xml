@@ -6,7 +6,7 @@
 
     <groupId>io.github.jeqo.kafka</groupId>
     <artifactId>kafka-cli-context</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
 
     <name>kafka-cli-context</name>
     <description>Kafka: CLI: Context: Manage Kafka cluster contexts.</description>
