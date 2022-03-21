@@ -66,11 +66,11 @@ public class Cli implements Callable<Integer> {
         public String[] getVersion() throws IOException {
             final var url = VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
             if (url == null) {
-                return new String[] { "No cli.properties file found in the classpath." };
+                return new String[]{ "No cli.properties file found in the classpath." };
             }
             final var properties = new Properties();
             properties.load(url.openStream());
-            return new String[] {
+            return new String[]{
                     properties.getProperty("appName") + " version " + properties.getProperty("appVersion") + "",
                     "Built: " + properties.getProperty("appBuildTime"), };
         }
