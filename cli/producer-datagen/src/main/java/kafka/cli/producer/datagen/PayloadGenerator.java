@@ -1,5 +1,6 @@
 package kafka.cli.producer.datagen;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.avro.random.generator.Generator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,7 +16,6 @@ import org.apache.avro.Schema.Parser;
 import org.apache.avro.SchemaParseException;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.kafka.common.config.ConfigException;
 
@@ -60,10 +60,10 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
 
     String toJson(GenericRecord record) {
         try {
-            var outputStream = new ByteArrayOutputStream();
-            var schema = record.getSchema();
-            var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
-            Encoder encoder = EncoderFactory.get().jsonEncoder(record.getSchema(), outputStream);
+            final var outputStream = new ByteArrayOutputStream();
+            final var schema = record.getSchema();
+            final var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+            final var encoder = EncoderFactory.get().jsonEncoder(record.getSchema(), outputStream);
             datumWriter.write(record, encoder);
             encoder.flush();
             return outputStream.toString();
@@ -82,10 +82,10 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
 
     private byte[] toBytes(GenericRecord record) {
         try {
-            var outputStream = new ByteArrayOutputStream();
-            var schema = record.getSchema();
-            var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
-            Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+            final var outputStream = new ByteArrayOutputStream();
+            final var schema = record.getSchema();
+            final var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+            final var encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
             datumWriter.write(record, encoder);
             encoder.flush();
             return outputStream.toByteArray();
@@ -165,13 +165,13 @@ public class PayloadGenerator implements Supplier<GenericRecord> {
     public static void main(String[] args) throws IOException {
         var pg = new PayloadGenerator(new PayloadGenerator.Config(
             Optional.empty(),
-            Optional.of(Quickstart.CLICKSTREAM),
             Optional.empty(),
+            Optional.of(Path.of("cli/producer-datagen/src/main/resources/inventory.avro")),
             Optional.empty(),
             1000000,
-            Format.AVRO
+            Format.JSON
         ));
         var bytes = pg.sample();
-        Files.write(Path.of("test.avro"), bytes);
+        System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(new ObjectMapper().readTree(new String(bytes))));
     }
 }
