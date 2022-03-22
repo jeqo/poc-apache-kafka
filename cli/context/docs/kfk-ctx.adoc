@@ -1,9 +1,9 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: No cli.properties file found in the classpath.
+:revnumber: kafka-cli-context version 0.1.3-SNAPSHOT
 :manmanual: Kfk-ctx Manual
-:mansource: No cli.properties file found in the classpath.
+:mansource: kafka-cli-context version 0.1.3-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
 = kfk-ctx(1)
 
