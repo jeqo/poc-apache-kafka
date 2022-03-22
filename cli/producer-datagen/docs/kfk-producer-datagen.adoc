@@ -1,9 +1,9 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: kafka-cli-producer-datagen version 0.1.2-SNAPSHOT
+:revnumber: kafka-cli-producer-datagen version 0.1.5-SNAPSHOT
 :manmanual: Kfk-producer-datagen Manual
-:mansource: kafka-cli-producer-datagen version 0.1.2-SNAPSHOT
+:mansource: kafka-cli-producer-datagen version 0.1.5-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
 = kfk-producer-datagen(1)
 
@@ -56,8 +56,8 @@ xref:kfk-producer-datagen-interval.adoc[*interval*]::
 xref:kfk-producer-datagen-once.adoc[*once*]::
   produce once
 
-xref:kfk-producer-datagen-quickstarts.adoc[*quickstarts*]::
-  Lists available quickstarts
+xref:kfk-producer-datagen-sample.adoc[*sample*]::
+  Get a sample of the quickstart
 
 xref:kfk-producer-datagen-topics.adoc[*topics*]::
   List topics and schemas available in a cluster

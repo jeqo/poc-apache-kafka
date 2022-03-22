@@ -19,8 +19,8 @@ kfk-producer-datagen-once - produce once
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-producer-datagen once* *-c*=_<configPath>_ [*-f*=_<format>_] *-q*=_<quickstart>_
-                          *-t*=_<topicName>_
+*kfk-producer-datagen once* *-c*=_<configPath>_ [*-f*=_<format>_] *-t*=_<topicName>_
+                          (*-q*=_<quickstart>_ | *-s*=_<schemaPath>_)
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -41,7 +41,10 @@ produce once
   Record value format
 
 *-q*, *--quickstart*=_<quickstart>_::
-  Quickstart name. For list of available quickstarts, run `quickstarts` subcommand
+  Quickstart name. Valid values:  CLICKSTREAM_CODES, CLICKSTREAM, CLICKSTREAM_USERS, ORDERS, RATINGS, USERS, USERS_, PAGEVIEWS, STOCK_TRADES, INVENTORY, PRODUCT, PURCHASES, TRANSACTIONS, STORES, CREDIT_CARDS
+
+*-s*, *--schema*=_<schemaPath>_::
+  Path to Avro schema to use for generating records.
 
 *-t*, *--topic*=_<topicName>_::
   target Kafka topic name
