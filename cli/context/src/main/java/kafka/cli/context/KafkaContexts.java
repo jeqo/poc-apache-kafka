@@ -16,27 +16,27 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public record Contexts(Map<String, Context> contextMap) {
+public record KafkaContexts(Map<String, KafkaContext> contextMap) {
     static final ObjectMapper json = new ObjectMapper();
 
     static byte[] empty() throws JsonProcessingException {
         return json.writeValueAsBytes(json.createArrayNode());
     }
 
-    static Contexts from(byte[] bytes) throws IOException {
+    static KafkaContexts from(byte[] bytes) throws IOException {
         final var tree = json.readTree(bytes);
         if (!tree.isArray())
             throw new IllegalArgumentException("JSON is not an array");
 
 
         final var array = (ArrayNode) tree;
-        final var contexts = new HashMap<String, Context>(array.size());
+        final var contexts = new HashMap<String, KafkaContext>(array.size());
         for (final var node : array) {
-            final var context = Context.parse(node);
+            final var context = KafkaContext.parse(node);
             contexts.put(context.name(), context);
         }
 
-        return new Contexts(contexts);
+        return new KafkaContexts(contexts);
     }
 
     public Set<String> names() {
@@ -50,19 +50,19 @@ public record Contexts(Map<String, Context> contextMap) {
         return json.writeValueAsBytes(array);
     }
 
-    public void add(Context ctx) {
+    public void add(KafkaContext ctx) {
         contextMap.put(ctx.name, ctx);
     }
 
-    public Context get(String name) {
+    public KafkaContext get(String name) {
         return contextMap.get(name);
     }
 
-    record Context(String name, KafkaCluster cluster) {
+    record KafkaContext(String name, KafkaCluster cluster) {
 
-        static Context parse(JsonNode node) {
+        static KafkaContext parse(JsonNode node) {
             final var name = node.get("name").textValue();
-            return new Context(name, KafkaCluster.parse(node.get("cluster")));
+            return new KafkaContext(name, KafkaCluster.parse(node.get("cluster")));
         }
 
         public JsonNode toJson() {
@@ -80,7 +80,7 @@ public record Contexts(Map<String, Context> contextMap) {
                     props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
                         SecurityProtocol.SASL_SSL.name);
                     props.put(SaslConfigs.SASL_MECHANISM, PlainSaslServer.PLAIN_MECHANISM);
-                    var auth = (Contexts.UsernamePasswordAuth) cluster.auth();
+                    var auth = (KafkaContexts.UsernamePasswordAuth) cluster.auth();
                     props.setProperty(SaslConfigs.SASL_JAAS_CONFIG,
                         "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";".formatted(
                             auth.username(), passwordHelper.decrypt(auth.password())));
