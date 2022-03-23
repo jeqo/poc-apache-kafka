@@ -19,7 +19,8 @@ kfk-cluster-state - List Kafka topics with metadata, partitions, replica placeme
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-cluster-state* [*-hV*] [*--pretty*] *-c*=_<configPath>_ [*-p*=_<prefix>_] [*-t*=_<topics>_]...
+*kfk-cluster-state* [*-hV*] [*--pretty*] *-c*=_<configPath>_ [*-p*=_<prefix>_]
+                  [*-t*=_<topics>_]...
 
 // end::picocli-generated-man-section-synopsis[]
 
