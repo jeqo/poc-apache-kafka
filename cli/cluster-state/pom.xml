@@ -4,10 +4,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.jeqo.kafka</groupId>
-  <artifactId>kafka-cli-topic-list</artifactId>
+  <artifactId>kafka-cli-cluster-state</artifactId>
   <version>0.1.5-SNAPSHOT</version>
 
-  <name>kafka-cli-topic-list</name>
+  <name>kafka-cli-cluster-state</name>
   <description>Kafka: CLI: Topic List: Expand Kafka topic listing with Offsets and more.</description>
   <inceptionYear>2022</inceptionYear>
   <url>https://github.com/jeqo/poc-apache-kafka</url>
@@ -22,7 +22,7 @@
   <licenses>
     <license>
       <name>Apache-2.0</name>
-      <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/topic-list/LICENSE</url>
+      <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/cluster-state/LICENSE</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -257,7 +257,7 @@
         <configuration>
           <attach>false</attach>
           <appendAssemblyId>false</appendAssemblyId>
-          <finalName>kfk-topic-list-${project.version}-${os.detected.classifier}</finalName>
+          <finalName>kfk-cluster-state-${project.version}-${os.detected.classifier}</finalName>
           <outputDirectory>${app.distribution.directory}</outputDirectory>
           <workDirectory>${project.build.directory}/assembly/work</workDirectory>
           <skipAssembly>true</skipAssembly>
@@ -296,7 +296,7 @@
             </executions>
             <configuration>
               <buildDirectory>bin/</buildDirectory>
-              <imageName>kfk-topic-list-${project.version}</imageName>
+              <imageName>kfk-cluster-state-${project.version}</imageName>
               <mainClass>kafka.cli.topics.list.Cli</mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
@@ -359,7 +359,7 @@
             <configuration>
               <jreleaser>
                 <project>
-                  <name>kafka-cli-topic-list</name>
+                  <name>kafka-cli-cluster-state</name>
                   <java>
                     <mainClass>kafka.cli.topics.list.Cli</mainClass>
                   </java>
@@ -371,8 +371,8 @@
                   <github>
                     <owner>jeqo</owner>
                     <name>poc-apache-kafka</name>
-                    <tagName>cli-topic-list-v{{projectVersion}}</tagName>
-                    <releaseName>cli:topic-list v{{projectVersion}}</releaseName>
+                    <tagName>cli-cluster-state-v{{projectVersion}}</tagName>
+                    <releaseName>cli:cluster-state v{{projectVersion}}</releaseName>
                     <overwrite>true</overwrite>
                   </github>
                 </release>
@@ -384,8 +384,8 @@
                   </brew>
                 </packagers>
                 <distributions>
-                  <kfk-topic-list>
-                    <name>kfk-topic-list</name>
+                  <kfk-cluster-state>
+                    <name>kfk-cluster-state</name>
                     <type>NATIVE_IMAGE</type>
                     <artifacts>
                       <artifact>
@@ -409,7 +409,7 @@
                         <platform>osx-x86_64</platform>
                       </artifact>
                     </artifacts>
-                  </kfk-topic-list>
+                  </kfk-cluster-state>
                 </distributions>
               </jreleaser>
             </configuration>
