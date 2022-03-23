@@ -17,7 +17,7 @@ import picocli.CommandLine.Option;
 
 import static java.lang.System.out;
 
-@Command(name = "kfk-topic-list", descriptionHeading = "Kafka CLI - Topic list", description = "List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.", versionProvider = VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true)
+@Command(name = "kfk-cluster-state", descriptionHeading = "Kafka CLI - Topic list", description = "List Kafka topics with metadata, partitions, replica placement, configuration, and offsets at once.", versionProvider = VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true)
 public class Cli implements Callable<Integer> {
 
     public static void main(String[] args) {
