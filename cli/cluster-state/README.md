@@ -1,4 +1,4 @@
-# `kfk-cluster-state` - Kafka CLI: topic list
+# `kfk-cluster-state` - Kafka CLI: cluster state
 
 [![cli:cluster-state:build](https://github.com/jeqo/poc-apache-kafka/actions/workflows/cli-cluster-state-build.yml/badge.svg)](https://github.com/jeqo/poc-apache-kafka/actions/workflows/cli-cluster-state-build.yml)
 
