@@ -125,16 +125,21 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    static PasswordHelper passwordHelper() throws IOException {
-        final var saltPath = baseDir().resolve(".salt");
-        if (!Files.exists(saltPath)) {
-            final var salt = PasswordHelper.generateKey();
-            Files.writeString(saltPath, salt);
-            return new PasswordHelper(salt);
+    static PasswordHelper passwordHelper() {
+        try {
+            final var saltPath = baseDir().resolve(".salt");
+            if (!Files.exists(saltPath)) {
+                final var salt = PasswordHelper.generateKey();
+                Files.writeString(saltPath, salt);
+                return new PasswordHelper(salt);
+            }
+            else {
+                final var salt = Files.readString(saltPath);
+                return new PasswordHelper(salt);
+            }
         }
-        else {
-            final var salt = Files.readString(saltPath);
-            return new PasswordHelper(salt);
+        catch (IOException e) {
+            throw new IllegalStateException("Password helper not loading", e);
         }
     }
 
@@ -187,7 +192,7 @@ public class Cli implements Callable<Integer> {
                                         @Override
                                         protected PasswordAuthentication getPasswordAuthentication() {
                                             final var basicAuth = (UsernamePasswordAuth) auth;
-                                            return new PasswordAuthentication(basicAuth.username(), basicAuth.password().toCharArray());
+                                            return new PasswordAuthentication(basicAuth.username(), passwordHelper().decrypt(basicAuth.password()).toCharArray());
                                         }
                                     })
                                     .build();
@@ -286,5 +291,4 @@ public class Cli implements Callable<Integer> {
                     "Built: " + properties.getProperty("appBuildTime"), };
         }
     }
-
 }

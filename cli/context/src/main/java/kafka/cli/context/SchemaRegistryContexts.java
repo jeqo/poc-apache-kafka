@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
-import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,11 +68,11 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
 
         public Properties properties(PasswordHelper passwordHelper) {
             final var props = new Properties();
-            props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG,
+            props.put("schema.registry.url",
                 cluster.urls());
             switch (cluster.auth().type()) {
                 case BASIC_AUTH -> {
-                    props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
+                    props.put("basic.auth.credentials.source", "USER_INFO");
                     var auth = (SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth();
                     props.put("basic.auth.user.info",
                         "%s:%s".formatted(auth.username(), passwordHelper.decrypt(auth.password())));
