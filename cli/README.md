@@ -4,9 +4,10 @@ This module includes some experimental CLIs for Apache Kafka.
 
 ## CLIs
 
-### Topics 
+### Cluster
 
-- [Topic List](./cluster-state)
+- [Cluster State](./cluster-state)
+- [Context](./context)
 
 ### Producer
 

@@ -12,14 +12,14 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx-create - Register context. Destination: ~/.kafka/config
+kfk-ctx-create - Register context. Destination: ~/.kafka/kafka.json
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-ctx create* [*-p*[=_<password>_]] [*--auth*=_<authType>_] [*-u*=_<username>_] _<name>_
+*kfk-ctx create* [*--auth*=_<authType>_] [[*-u*=_<username>_] [*-p*[=_<password>_]]] _<name>_
                _<bootstrapServers>_
 
 // end::picocli-generated-man-section-synopsis[]
@@ -27,7 +27,7 @@ kfk-ctx-create - Register context. Destination: ~/.kafka/config
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Register context. Destination: ~/.kafka/config
+Register context. Destination: ~/.kafka/kafka.json
 
 // end::picocli-generated-man-section-description[]
 
@@ -38,10 +38,10 @@ Register context. Destination: ~/.kafka/config
   Authentication type (default: PLAINTEXT). Valid values: PLAINTEXT, SASL_PLAIN
 
 *-p*, *--password*[=_<password>_]::
-  Password for SASL authentication
+  Password authentication
 
 *-u*, *--username*=_<username>_::
-  Username for SASL authentication
+  Username authentication
 
 // end::picocli-generated-man-section-options[]
 
