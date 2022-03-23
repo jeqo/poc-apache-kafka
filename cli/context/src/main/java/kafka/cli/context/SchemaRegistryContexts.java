@@ -5,38 +5,31 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.apache.kafka.common.security.plain.internals.PlainSaslServer;
-
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public record Contexts(Map<String, Context> contextMap) {
+public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextMap) {
     static final ObjectMapper json = new ObjectMapper();
 
-    static byte[] empty() throws JsonProcessingException {
-        return json.writeValueAsBytes(json.createArrayNode());
-    }
-
-    static Contexts from(byte[] bytes) throws IOException {
+    static SchemaRegistryContexts from(byte[] bytes) throws IOException {
         final var tree = json.readTree(bytes);
         if (!tree.isArray())
             throw new IllegalArgumentException("JSON is not an array");
 
 
         final var array = (ArrayNode) tree;
-        final var contexts = new HashMap<String, Context>(array.size());
+        final var contexts = new HashMap<String, SchemaRegistryContext>(array.size());
         for (final var node : array) {
-            final var context = Context.parse(node);
+            final var context = SchemaRegistryContext.parse(node);
             contexts.put(context.name(), context);
         }
 
-        return new Contexts(contexts);
+        return new SchemaRegistryContexts(contexts);
     }
 
     public Set<String> names() {
@@ -50,19 +43,23 @@ public record Contexts(Map<String, Context> contextMap) {
         return json.writeValueAsBytes(array);
     }
 
-    public void add(Context ctx) {
+    public void add(SchemaRegistryContext ctx) {
         contextMap.put(ctx.name, ctx);
     }
 
-    public Context get(String name) {
+    public SchemaRegistryContext get(String name) {
         return contextMap.get(name);
     }
 
-    record Context(String name, KafkaCluster cluster) {
+    public boolean has(String contextName) {
+        return contextMap.containsKey(contextName);
+    }
 
-        static Context parse(JsonNode node) {
+    record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {
+
+        static SchemaRegistryContext parse(JsonNode node) {
             final var name = node.get("name").textValue();
-            return new Context(name, KafkaCluster.parse(node.get("cluster")));
+            return new SchemaRegistryContext(name, SchemaRegistryCluster.parse(node.get("cluster")));
         }
 
         public JsonNode toJson() {
@@ -71,19 +68,16 @@ public record Contexts(Map<String, Context> contextMap) {
             return node;
         }
 
-        public Properties properties(PasswordHelper passwordHelper) throws IOException {
+        public Properties properties(PasswordHelper passwordHelper) {
             final var props = new Properties();
-            props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-                cluster.bootstrapServers());
+            props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG,
+                cluster.urls());
             switch (cluster.auth().type()) {
-                case SASL_PLAIN -> {
-                    props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
-                        SecurityProtocol.SASL_SSL.name);
-                    props.put(SaslConfigs.SASL_MECHANISM, PlainSaslServer.PLAIN_MECHANISM);
-                    var auth = (Contexts.UsernamePasswordAuth) cluster.auth();
-                    props.setProperty(SaslConfigs.SASL_JAAS_CONFIG,
-                        "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";".formatted(
-                            auth.username(), passwordHelper.decrypt(auth.password())));
+                case BASIC_AUTH -> {
+                    props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
+                    var auth = (SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth();
+                    props.put("basic.auth.user.info",
+                        "%s:%s".formatted(auth.username(), passwordHelper.decrypt(auth.password())));
                 }
                 default -> {
                 }
@@ -93,27 +87,27 @@ public record Contexts(Map<String, Context> contextMap) {
     }
 
 
-    record KafkaCluster(String bootstrapServers, KafkaAuth auth) {
-        static KafkaCluster parse(JsonNode cluster) {
-            return new KafkaCluster(cluster.get("bootstrapServers").textValue(),
-                KafkaAuth.parse(cluster.get("auth")));
+    record SchemaRegistryCluster(String urls, SchemaRegistryAuth auth) {
+        static SchemaRegistryCluster parse(JsonNode cluster) {
+            return new SchemaRegistryCluster(cluster.get("urls").textValue(),
+                SchemaRegistryAuth.parse(cluster.get("auth")));
         }
 
         public JsonNode toJson() {
-            final var node = json.createObjectNode().put("bootstrapServers", bootstrapServers);
+            final var node = json.createObjectNode().put("urls", urls);
             node.set("auth", auth.toJson());
             return node;
         }
     }
 
 
-    interface KafkaAuth {
+    interface SchemaRegistryAuth {
         AuthType type();
 
-        static KafkaAuth parse(JsonNode auth) {
+        static SchemaRegistryAuth parse(JsonNode auth) {
             final var type = AuthType.valueOf(auth.get("type").textValue());
             return switch (type) {
-                case SASL_PLAIN -> new UsernamePasswordAuth(type,
+                case BASIC_AUTH -> new UsernamePasswordAuth(type,
                     auth.get("username").textValue(), auth.get("password").textValue());
                 default -> new NoAuth();
             };
@@ -123,25 +117,25 @@ public record Contexts(Map<String, Context> contextMap) {
             return json.createObjectNode().put("type", type().name());
         }
 
-        enum AuthType {PLAINTEXT, SASL_PLAIN}
+        enum AuthType {NO_AUTH, BASIC_AUTH}
     }
 
 
-    record NoAuth() implements KafkaAuth {
+    record NoAuth() implements SchemaRegistryAuth {
         @Override public AuthType type() {
-            return AuthType.PLAINTEXT;
+            return AuthType.NO_AUTH;
         }
     }
 
 
     record UsernamePasswordAuth(AuthType authType, String username, String password)
-        implements KafkaAuth {
+        implements SchemaRegistryAuth {
         @Override public AuthType type() {
             return authType;
         }
 
         @Override public JsonNode toJson() {
-            var node = (ObjectNode) KafkaAuth.super.toJson();
+            var node = (ObjectNode) SchemaRegistryAuth.super.toJson();
             return node.put("username", username).put("password", password);
         }
     }
