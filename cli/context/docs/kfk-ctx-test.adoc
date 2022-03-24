@@ -1,67 +1,52 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: kafka-cli-context version 0.2.2-SNAPSHOT
+:revnumber: 
 :manmanual: Kfk-ctx Manual
-:mansource: kafka-cli-context version 0.2.2-SNAPSHOT
+:mansource: 
 :man-linkstyle: pass:[blue R < >]
-= kfk-ctx(1)
+= kfk-ctx-test(1)
 
 // end::picocli-generated-man-section-header[]
 
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx - Manage Kafka connection properties as contexts.
+kfk-ctx-test - Test contexts
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-ctx* [*-hV*] [COMMAND]
+*kfk-ctx test* [*-sr*=_<schemeRegistryContext>_] _<name>_
 
 // end::picocli-generated-man-section-synopsis[]
 
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Manage Kafka connection properties as contexts.
+Test contexts
 
 // end::picocli-generated-man-section-description[]
 
 // tag::picocli-generated-man-section-options[]
 == Options
 
-*-h*, *--help*::
-  Show this help message and exit.
-
-*-V*, *--version*::
-  Print version information and exit.
+*-sr, --schema-registry*=_<schemeRegistryContext>_::
+  Schema Registry context name
 
 // end::picocli-generated-man-section-options[]
 
 // tag::picocli-generated-man-section-arguments[]
+== Arguments
+
+_<name>_::
+  Context name
+
 // end::picocli-generated-man-section-arguments[]
 
 // tag::picocli-generated-man-section-commands[]
-== Commands
-
-xref:kfk-ctx-create.adoc[*create*]::
-  Register context. Destination: ~/.kafka/kafka.json
-
-xref:kfk-ctx-test.adoc[*test*]::
-  Test contexts
-
-xref:kfk-ctx-properties.adoc[*properties*]::
-  Get properties configuration for context
-
-xref:kfk-ctx-kcat.adoc[*kcat*]::
-  kcat command with properties from context
-
-xref:kfk-ctx-sr.adoc[*sr*]::
-  Manage Schema Registry connection properties as contexts.
-
 // end::picocli-generated-man-section-commands[]
 
 // tag::picocli-generated-man-section-exit-status[]

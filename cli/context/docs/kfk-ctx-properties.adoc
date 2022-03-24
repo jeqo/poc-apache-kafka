@@ -19,7 +19,7 @@ kfk-ctx-properties - Get properties configuration for context
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-ctx properties* [*-t*] [*-sr*=_<schemeRegistryContext>_] _<name>_
+*kfk-ctx properties* [*-sr*=_<schemeRegistryContext>_] _<name>_
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -35,9 +35,6 @@ Get properties configuration for context
 
 *-sr, --schema-registry*=_<schemeRegistryContext>_::
   Schema Registry context name
-
-*-t*, *--test*::
-  Test properties
 
 // end::picocli-generated-man-section-options[]
 
