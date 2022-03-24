@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
@@ -64,6 +65,11 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
 
     public void remove(String name) {
         contextMap.remove(name);
+    }
+
+    public Map<String, String> namesAndBootstrapServers() {
+        return contextMap.keySet().stream()
+                .collect(Collectors.toMap(k -> k, k -> contextMap.get(k).cluster().bootstrapServers()));
     }
 
     record KafkaContext(String name, KafkaCluster cluster) {

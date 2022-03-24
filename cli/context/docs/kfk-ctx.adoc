@@ -1,9 +1,9 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: kafka-cli-context version 0.2.3-SNAPSHOT
+:revnumber: kafka-cli-context version 0.2.4-SNAPSHOT
 :manmanual: Kfk-ctx Manual
-:mansource: kafka-cli-context version 0.2.3-SNAPSHOT
+:mansource: kafka-cli-context version 0.2.4-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
 = kfk-ctx(1)
 
@@ -19,7 +19,7 @@ kfk-ctx - Manage Kafka connection properties as contexts.
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-ctx* [*-hV*] [COMMAND]
+*kfk-ctx* [*-hvV*] [COMMAND]
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -36,6 +36,9 @@ Manage Kafka connection properties as contexts.
 *-h*, *--help*::
   Show this help message and exit.
 
+*-v*, *--verbose*::
+  
+
 *-V*, *--version*::
   Print version information and exit.
 
@@ -49,6 +52,9 @@ Manage Kafka connection properties as contexts.
 
 xref:kfk-ctx-create.adoc[*create*]::
   Register context. Destination: ~/.kafka/kafka.json
+
+xref:kfk-ctx-delete.adoc[*delete*]::
+  Removes context. Destination: ~/.kafka/kafka.json
 
 xref:kfk-ctx-test.adoc[*test*]::
   Test contexts
