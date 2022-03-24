@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextMap) {
     static final ObjectMapper json = new ObjectMapper();
@@ -55,6 +56,11 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
 
     public void remove(String name) {
         contextMap.remove(name);
+    }
+
+    public Map<String, String> namesAndUrls() {
+        return contextMap.keySet().stream()
+                .collect(Collectors.toMap(k -> k, k -> contextMap.get(k).cluster().urls()));
     }
 
     record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {

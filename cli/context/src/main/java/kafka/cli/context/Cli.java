@@ -43,6 +43,9 @@ import static kafka.cli.context.Helper.schemaRegistryContextConfig;
         SchemaRegistryContextsCommand.class }, descriptionHeading = "Kafka CLI - Context", description = "Manage Kafka connection properties as contexts.")
 public class Cli implements Callable<Integer> {
 
+    @Option(names = { "-v", "--verbose" })
+    boolean verbose;
+
     public static void main(String[] args) {
         int exitCode = new CommandLine(new Cli()).execute(args);
         System.exit(exitCode);
@@ -51,7 +54,12 @@ public class Cli implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
-        System.out.println(contexts.names());
+        if (verbose) {
+            System.out.println(contexts.namesAndBootstrapServers());
+        }
+        else {
+            System.out.println(contexts.names());
+        }
         return 0;
     }
 
@@ -256,10 +264,17 @@ public class Cli implements Callable<Integer> {
             SchemaRegistryContextsCommand.CreateCommand.class,
             SchemaRegistryContextsCommand.DeleteCommand.class }, description = "Manage Schema Registry connection properties as contexts.")
     static class SchemaRegistryContextsCommand implements Callable<Integer> {
+        @Option(names = { "-v", "--verbose" })
+        boolean verbose;
+
         @Override
         public Integer call() throws Exception {
             var contexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
-            System.out.println(contexts.names());
+            if (verbose) {
+                System.out.println(contexts.namesAndUrls());
+            } else {
+                System.out.println(contexts.names());
+            }
             return 0;
         }
 
