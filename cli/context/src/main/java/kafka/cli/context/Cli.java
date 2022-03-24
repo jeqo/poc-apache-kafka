@@ -272,7 +272,8 @@ public class Cli implements Callable<Integer> {
             var contexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
             if (verbose) {
                 System.out.println(contexts.namesAndUrls());
-            } else {
+            }
+            else {
                 System.out.println(contexts.names());
             }
             return 0;
