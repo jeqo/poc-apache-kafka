@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 public record KafkaContexts(Map<String, KafkaContext> contextMap) {
     static final ObjectMapper json = new ObjectMapper();
@@ -40,8 +38,8 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
         return new KafkaContexts(contexts);
     }
 
-    public Set<String> names() {
-        return contextMap.keySet();
+    public String names() throws JsonProcessingException {
+        return json.writeValueAsString(contextMap.keySet());
     }
 
     public byte[] serialize() throws JsonProcessingException {
@@ -67,9 +65,10 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
         contextMap.remove(name);
     }
 
-    public Map<String, String> namesAndBootstrapServers() {
-        return contextMap.keySet().stream()
-                .collect(Collectors.toMap(k -> k, k -> contextMap.get(k).cluster().bootstrapServers()));
+    public String namesAndBootstrapServers() throws JsonProcessingException {
+        final var node = json.createObjectNode();
+        contextMap.forEach((k, v) -> node.put(k, v.cluster().bootstrapServers()));
+        return json.writeValueAsString(node);
     }
 
     record KafkaContext(String name, KafkaCluster cluster) {
@@ -110,14 +109,14 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
                 case SASL_PLAIN -> """
                         kcat -b %s -X ***REMOVED*** -X sasl.mechanisms=PLAIN \\
                          -X sasl.username=%s -X sasl.password=%s \\
-                         -X api.version.request=true """
+                         -X api.version.request=true\040"""
                         .formatted(
                                 cluster.bootstrapServers,
                                 ((UsernamePasswordAuth) cluster.auth()).username,
                                 passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password)
                         );
                 default -> """
-                        kcat -b %s """.formatted(cluster.bootstrapServers);
+                        kcat -b %s\040""".formatted(cluster.bootstrapServers);
             };
         }
     }
@@ -175,5 +174,4 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
             return node.put("username", username).put("password", password);
         }
     }
-
 }

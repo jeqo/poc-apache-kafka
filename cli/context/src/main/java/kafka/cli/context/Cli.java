@@ -29,20 +29,23 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Option;
 
+import static java.lang.System.out;
+import static kafka.cli.context.Cli.KFK_CTX_CMD;
 import static kafka.cli.context.Helper.kafkaContextConfig;
 import static kafka.cli.context.Helper.passwordHelper;
 import static kafka.cli.context.Helper.save;
 import static kafka.cli.context.Helper.schemaRegistryContextConfig;
 
-@CommandLine.Command(name = "kfk-ctx", versionProvider = Cli.VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true, subcommands = {
+@CommandLine.Command(name = KFK_CTX_CMD, versionProvider = Cli.VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true, subcommands = {
         CreateCommand.class,
         DeleteCommand.class,
         TestCommand.class,
         PropertiesCommand.class,
         KCatCommand.class,
-        SchemaRegistryContextsCommand.class }, descriptionHeading = "Kafka CLI - Context", description = "Manage Kafka connection properties as contexts.")
+        SchemaRegistryContextsCommand.class }, description = "Manage Kafka connection as contexts.")
 public class Cli implements Callable<Integer> {
 
+    public static final String KFK_CTX_CMD = "kfk-ctx";
     @Option(names = { "-v", "--verbose" })
     boolean verbose;
 
@@ -55,23 +58,23 @@ public class Cli implements Callable<Integer> {
     public Integer call() throws Exception {
         var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
         if (verbose) {
-            System.out.println(contexts.namesAndBootstrapServers());
+            out.println(contexts.namesAndBootstrapServers());
         }
         else {
-            System.out.println(contexts.names());
+            out.println(contexts.names());
         }
         return 0;
     }
 
-    @CommandLine.Command(name = "create", description = "Register context. Destination: ~/.kafka/kafka.json")
+    @CommandLine.Command(name = "create", description = "Register a Kafka context. Destination: ~/.kafka/kafka.json")
     static class CreateCommand implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
+        @CommandLine.Parameters(index = "0", description = "Kafka context name. e.g. `local`")
         String name;
-        @CommandLine.Parameters(index = "1", description = "Kafka bootstrap servers. e.g. `localhost:9092`")
+        @CommandLine.Parameters(index = "1", description = "Bootstrap servers. e.g. `localhost:9092`")
         String bootstrapServers;
 
-        @CommandLine.Option(names = "--auth", description = "Authentication type (default: ${DEFAULT-VALUE}). Valid values: ${COMPLETION-CANDIDATES}", required = true, defaultValue = "PLAINTEXT")
+        @CommandLine.Option(names = "--auth", description = "Authentication method (default: ${DEFAULT-VALUE}). Valid values: ${COMPLETION-CANDIDATES}", required = true, defaultValue = "PLAINTEXT")
         KafkaContexts.KafkaAuth.AuthType authType;
 
         @ArgGroup(exclusive = false)
@@ -93,7 +96,7 @@ public class Cli implements Callable<Integer> {
             contexts.add(ctx);
             save(contexts);
 
-            System.out.printf("Context %s with bootstrap-servers %s saved.", ctx.name(),
+            out.printf("Kafka context `%s` with bootstrap-servers [%s] is saved.", ctx.name(),
                     ctx.cluster().bootstrapServers());
             return 0;
         }
@@ -102,7 +105,7 @@ public class Cli implements Callable<Integer> {
     @CommandLine.Command(name = "delete", description = "Removes context. Destination: ~/.kafka/kafka.json")
     static class DeleteCommand implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
+        @CommandLine.Parameters(index = "0", description = "Kafka context name. e.g. `local`")
         String name;
 
         @Override
@@ -114,21 +117,21 @@ public class Cli implements Callable<Integer> {
                 contexts.remove(name);
                 save(contexts);
 
-                System.out.printf("Kafka Context %s with bootstrap servers: %s saved.%n", ctx.name(),
+                out.printf("Kafka context `%s` with bootstrap servers: [%s] is deleted.%n", ctx.name(),
                         ctx.cluster().bootstrapServers());
                 return 0;
             }
             else {
-                System.out.printf("Kafka Context %s is not registered.%n", name);
+                out.printf("Kafka context `%s` is not registered.%n", name);
                 return 1;
             }
         }
     }
 
-    @CommandLine.Command(name = "properties", description = "Get properties configuration for context")
+    @CommandLine.Command(name = "properties", description = "Get properties configurations for contexts")
     static class PropertiesCommand implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name")
+        @CommandLine.Parameters(index = "0", description = "Kafka context name")
         String name;
 
         @Option(names = { "--schema-registry", "-sr" }, description = "Schema Registry context name")
@@ -139,7 +142,7 @@ public class Cli implements Callable<Integer> {
             final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
             final var ctx = contexts.get(name);
             final var props = ctx.properties(passwordHelper());
-            props.store(System.out, "Kafka client properties generated by kfk-ctx");
+            props.store(out, "Kafka client properties generated by " + KFK_CTX_CMD);
 
             if (schemeRegistryContext.isPresent()) {
                 final var srContexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
@@ -147,10 +150,11 @@ public class Cli implements Callable<Integer> {
                     final var srCtx = srContexts.get(schemeRegistryContext.get());
                     final var srProps = srCtx.properties(passwordHelper());
 
-                    srProps.store(System.out, "Schema Registry client properties generated by kfk-ctx");
+                    srProps.store(out, "Schema Registry client properties generated by " + KFK_CTX_CMD);
                 }
                 else {
-                    System.err.printf("WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be included",
+                    System.err.printf("WARN: Schema Registry context %s does not exist. "
+                                    + "Schema Registry connection properties will not be included",
                             schemeRegistryContext.get());
                 }
             }
@@ -158,10 +162,10 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    @CommandLine.Command(name = "test", description = "Test contexts")
+    @CommandLine.Command(name = "test", description = "Test cluster contexts")
     static class TestCommand implements Callable<Integer> {
 
-        @CommandLine.Parameters(index = "0", description = "Context name")
+        @CommandLine.Parameters(index = "0", description = "Kafka context name")
         String name;
 
         @Option(names = { "--schema-registry", "-sr" }, description = "Schema Registry context name")
@@ -173,21 +177,23 @@ public class Cli implements Callable<Integer> {
             final var ctx = contexts.get(name);
             final var props = ctx.properties(passwordHelper());
 
+            final var bootstrapServers = props.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
             try (final var admin = AdminClient.create(props)) {
                 final var clusterId = admin.describeCluster().clusterId().get();
-                System.err.printf("Connection to cluster %s (id=%s) succeed%n", props.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG), clusterId);
+                System.err.printf("Connection to Kafka `%s` [%s] (id=%s) succeed%n", name, bootstrapServers, clusterId);
                 admin.describeCluster().nodes().get().forEach(node -> System.err.println("Node: " + node));
             }
             catch (Exception e) {
-                System.err.println("Connection to cluster failed");
+                System.err.printf("Connection to Kafka `%s` [%s] failed%n", name, bootstrapServers);
                 e.printStackTrace();
                 return 1;
             }
 
             if (schemeRegistryContext.isPresent()) {
                 final var srContexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
-                if (srContexts.has(schemeRegistryContext.get())) {
-                    final var srCtx = srContexts.get(schemeRegistryContext.get());
+                final var sr = schemeRegistryContext.get();
+                if (srContexts.has(sr)) {
+                    final var srCtx = srContexts.get(sr);
 
                     final var auth = srCtx.cluster().auth();
                     final var httpClient = switch (auth.type()) {
@@ -209,16 +215,17 @@ public class Cli implements Callable<Integer> {
                             .build(),
                             BodyHandlers.discarding());
                     if (response.statusCode() == 200) {
-                        System.err.printf("Connection to schema registry cluster %s succeed%n", urls);
+                        System.err.printf("Connection to Schema Registry `%s` [%s] succeed%n", sr, urls);
                     }
                     else {
-                        System.err.printf("Connection to schema registry cluster %s failed%n", urls);
+                        System.err.printf("Connection to Schema Registry `%s` URL(s): [%s] failed%n", sr, urls);
                         return 1;
                     }
                 }
                 else {
-                    System.err.printf("WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be tested",
-                            schemeRegistryContext.get());
+                    System.err.printf("WARN: Schema Registry context %s does not exist. "
+                                    + "Schema Registry connection properties will not be tested",
+                            sr);
                 }
             }
             return 0;
@@ -246,7 +253,7 @@ public class Cli implements Callable<Integer> {
                     final var srCtx = srContexts.get(schemeRegistryContext.get());
                     final var srProps = srCtx.kcat(passwordHelper());
 
-                    System.out.println(kcat + srProps);
+                    out.println(kcat + srProps);
                 }
                 else {
                     System.err.printf("WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be included",
@@ -254,7 +261,7 @@ public class Cli implements Callable<Integer> {
                 }
             }
             else {
-                System.out.println(kcat);
+                out.println(kcat);
             }
             return 0;
         }
@@ -271,10 +278,10 @@ public class Cli implements Callable<Integer> {
         public Integer call() throws Exception {
             var contexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
             if (verbose) {
-                System.out.println(contexts.namesAndUrls());
+                out.println(contexts.namesAndUrls());
             }
             else {
-                System.out.println(contexts.names());
+                out.println(contexts.names());
             }
             return 0;
         }
@@ -307,7 +314,7 @@ public class Cli implements Callable<Integer> {
                 contexts.add(ctx);
                 save(contexts);
 
-                System.out.printf("Context %s with URLs %s saved.", ctx.name(),
+                out.printf("Schema Registry context `%s` with URL(s): [%s] is saved.", ctx.name(),
                         ctx.cluster().urls());
                 return 0;
             }
@@ -328,12 +335,12 @@ public class Cli implements Callable<Integer> {
                     contexts.remove(name);
                     save(contexts);
 
-                    System.out.printf("Schema Registry Context %s with URLs %s saved.%n", ctx.name(),
+                    out.printf("Schema Registry context `%s` with URL(s): [%s] is deleted.%n", ctx.name(),
                             ctx.cluster().urls());
                     return 0;
                 }
                 else {
-                    System.out.printf("Schema Registry Context %s is not registered.%n", name);
+                    out.printf("Schema Registry Context %s is not registered.%n", name);
                     return 1;
                 }
             }
