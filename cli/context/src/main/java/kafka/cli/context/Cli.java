@@ -229,9 +229,9 @@ public class Cli implements Callable<Integer> {
                     };
                     final var urls = srCtx.cluster().urls();
                     final var response = httpClient.send(HttpRequest.newBuilder()
-                                    .uri(URI.create(urls))
-                                    .GET()
-                                    .build(),
+                            .uri(URI.create(urls))
+                            .GET()
+                            .build(),
                             BodyHandlers.discarding());
                     if (response.statusCode() == 200) {
                         System.err.printf("Connection to schema registry cluster %s succeed%n", urls);

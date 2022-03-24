@@ -94,18 +94,16 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
         public String kcat(PasswordHelper passwordHelper) {
             return switch (cluster.auth().type()) {
                 case SASL_PLAIN -> """
-                        kafkacat -b %s -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN
-                         -X sasl.username=%s -X sasl.password=%s
-                         -X api.version.request=true
-                        """
+                        kcat -b %s -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \\
+                         -X sasl.username=%s -X sasl.password=%s \\
+                         -X api.version.request=true """
                         .formatted(
                                 cluster.bootstrapServers,
                                 ((UsernamePasswordAuth) cluster.auth()).username,
                                 passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password)
                         );
                 default -> """
-                        kcat -b %s
-                        """.formatted(cluster.bootstrapServers);
+                        kcat -b %s """.formatted(cluster.bootstrapServers);
             };
         }
     }

@@ -87,10 +87,10 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
             var urls = cluster().urls();
             final var https = "https://";
             return switch (cluster.auth().type()) {
-                case BASIC_AUTH -> https + "%s:%s".formatted(((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
+                case BASIC_AUTH -> "\\\n -r " + https + "%s:%s".formatted(((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
                         passwordHelper.decrypt(((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
-                        + urls.substring(https.length());
-                case NO_AUTH -> " -r " + cluster.auth();
+                        + "@" + urls.substring(https.length()) + " -s value=avro";
+                case NO_AUTH -> "\\\n -r " + cluster.auth() + " -s value=avro";
             };
         }
     }
