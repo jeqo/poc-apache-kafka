@@ -82,13 +82,31 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
                     props.put(SaslConfigs.SASL_MECHANISM, PlainSaslServer.PLAIN_MECHANISM);
                     var auth = (KafkaContexts.UsernamePasswordAuth) cluster.auth();
                     props.setProperty(SaslConfigs.SASL_JAAS_CONFIG,
-                        "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";".formatted(
-                            auth.username(), passwordHelper.decrypt(auth.password())));
+                            "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";".formatted(
+                                    auth.username(), passwordHelper.decrypt(auth.password())));
                 }
                 default -> {
                 }
             }
             return props;
+        }
+
+        public String kcat(PasswordHelper passwordHelper) {
+            return switch (cluster.auth().type()) {
+                case SASL_PLAIN -> """
+                        kafkacat -b %s -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN
+                         -X sasl.username=%s -X sasl.password=%s
+                         -X api.version.request=true
+                        """
+                        .formatted(
+                                cluster.bootstrapServers,
+                                ((UsernamePasswordAuth) cluster.auth()).username,
+                                passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password)
+                        );
+                default -> """
+                        kcat -b %s
+                        """.formatted(cluster.bootstrapServers);
+            };
         }
     }
 
