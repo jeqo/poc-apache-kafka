@@ -212,7 +212,6 @@ public class Cli implements Callable<Integer> {
                 final var srContexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
                 if (srContexts.has(schemeRegistryContext.get())) {
                     final var srCtx = srContexts.get(schemeRegistryContext.get());
-                    final var srProps = srCtx.properties(passwordHelper());
 
                     final var auth = srCtx.cluster().auth();
                     final var httpClient = switch (auth.type()) {
