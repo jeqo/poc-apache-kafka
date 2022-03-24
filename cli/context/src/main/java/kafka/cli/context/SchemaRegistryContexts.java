@@ -75,12 +75,23 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
                     props.put("basic.auth.credentials.source", "USER_INFO");
                     var auth = (SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth();
                     props.put("basic.auth.user.info",
-                        "%s:%s".formatted(auth.username(), passwordHelper.decrypt(auth.password())));
+                            "%s:%s".formatted(auth.username(), passwordHelper.decrypt(auth.password())));
                 }
                 default -> {
                 }
             }
             return props;
+        }
+
+        public String kcat(PasswordHelper passwordHelper) {
+            var urls = cluster().urls();
+            final var https = "https://";
+            return switch (cluster.auth().type()) {
+                case BASIC_AUTH -> https + "%s:%s".formatted(((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
+                        passwordHelper.decrypt(((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
+                        + urls.substring(https.length());
+                case NO_AUTH -> " -r " + cluster.auth();
+            };
         }
     }
 
