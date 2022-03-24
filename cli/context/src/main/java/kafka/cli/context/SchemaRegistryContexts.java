@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextMap) {
     static final ObjectMapper json = new ObjectMapper();
@@ -31,8 +29,8 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
         return new SchemaRegistryContexts(contexts);
     }
 
-    public Set<String> names() {
-        return contextMap.keySet();
+    public String names() throws JsonProcessingException {
+        return json.writeValueAsString(contextMap.keySet());
     }
 
     public byte[] serialize() throws JsonProcessingException {
@@ -58,9 +56,10 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
         contextMap.remove(name);
     }
 
-    public Map<String, String> namesAndUrls() {
-        return contextMap.keySet().stream()
-                .collect(Collectors.toMap(k -> k, k -> contextMap.get(k).cluster().urls()));
+    public String namesAndUrls() throws JsonProcessingException {
+        final var node = json.createObjectNode();
+        contextMap.forEach((k, v) -> node.put(k, v.cluster().urls()));
+        return json.writeValueAsString(node);
     }
 
     record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {
