@@ -53,6 +53,10 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
         return contextMap.containsKey(contextName);
     }
 
+    public void remove(String name) {
+        contextMap.remove(name);
+    }
+
     record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {
 
         static SchemaRegistryContext parse(JsonNode node) {
