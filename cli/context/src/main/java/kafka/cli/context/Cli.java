@@ -8,6 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Optional;
 import kafka.cli.context.Cli.CreateCommand;
+import kafka.cli.context.Cli.DeleteCommand;
 import kafka.cli.context.Cli.KCatCommand;
 import kafka.cli.context.Cli.PropertiesCommand;
 import kafka.cli.context.Cli.TestCommand;
@@ -23,14 +24,19 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Option;
 
+import static kafka.cli.context.Helper.kafkaContextConfig;
+import static kafka.cli.context.Helper.passwordHelper;
+import static kafka.cli.context.Helper.save;
+import static kafka.cli.context.Helper.schemaRegistryContextConfig;
+
 @CommandLine.Command(name = "kfk-ctx", versionProvider = Cli.VersionProviderWithConfigProvider.class, mixinStandardHelpOptions = true, subcommands = {
         CreateCommand.class,
+        DeleteCommand.class,
         TestCommand.class,
         PropertiesCommand.class,
         KCatCommand.class,
@@ -49,52 +55,6 @@ public class Cli implements Callable<Integer> {
         return 0;
     }
 
-    static void save(KafkaContexts contexts) throws IOException {
-        Files.write(kafkaContextConfig(), contexts.serialize());
-    }
-
-    static void save(SchemaRegistryContexts contexts) throws IOException {
-        Files.write(schemaRegistryContextConfig(), contexts.serialize());
-    }
-
-    static Path kafkaContextConfig() throws IOException {
-        final Path home = baseDir();
-
-        final var context = home.resolve("kafka.json");
-        if (!Files.isRegularFile(context)) {
-            System.err.println("Kafka Content configuration file doesn't exist, creating one...");
-            Files.write(context, KafkaContexts.empty());
-        }
-
-        return context;
-    }
-
-    static Path schemaRegistryContextConfig() throws IOException {
-        final Path home = baseDir();
-
-        final var context = home.resolve("schema-registry.json");
-        if (!Files.isRegularFile(context)) {
-            System.err.println("Schema Registry Content configuration file doesn't exist, creating one...");
-            Files.write(context, KafkaContexts.empty());
-        }
-
-        return context;
-    }
-
-    private static Path baseDir() throws IOException {
-        final var homePath = System.getProperty("user.home");
-        if (homePath.isBlank()) {
-            throw new IllegalStateException("Can't find user's home. ${HOME} is empty");
-        }
-
-        final var home = Path.of(homePath, ".kafka");
-        if (!Files.isDirectory(home)) {
-            System.err.println("Kafka Context directory doesn't exist, creating one...");
-            Files.createDirectories(home);
-        }
-        return home;
-    }
-
     @CommandLine.Command(name = "create", description = "Register context. Destination: ~/.kafka/kafka.json")
     static class CreateCommand implements Callable<Integer> {
 
@@ -111,7 +71,7 @@ public class Cli implements Callable<Integer> {
 
         @Override
         public Integer call() throws Exception {
-            var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
+            final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
 
             final KafkaContexts.KafkaAuth auth = switch (authType) {
                 case SASL_PLAIN -> new KafkaContexts.UsernamePasswordAuth(
@@ -131,21 +91,29 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    static PasswordHelper passwordHelper() {
-        try {
-            final var saltPath = baseDir().resolve(".salt");
-            if (!Files.exists(saltPath)) {
-                final var salt = PasswordHelper.generateKey();
-                Files.writeString(saltPath, salt);
-                return new PasswordHelper(salt);
+    @CommandLine.Command(name = "delete", description = "Removes context. Destination: ~/.kafka/kafka.json")
+    static class DeleteCommand implements Callable<Integer> {
+
+        @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
+        String name;
+
+        @Override
+        public Integer call() throws Exception {
+            var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
+
+            if (contexts.has(name)) {
+                final var ctx = contexts.get(name);
+                contexts.remove(name);
+                save(contexts);
+
+                System.out.printf("Kafka Context %s with bootstrap servers: %s saved.%n", ctx.name(),
+                        ctx.cluster().bootstrapServers());
+                return 0;
             }
             else {
-                final var salt = Files.readString(saltPath);
-                return new PasswordHelper(salt);
+                System.out.printf("Kafka Context %s is not registered.%n", name);
+                return 1;
             }
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Password helper not loading", e);
         }
     }
 
@@ -285,7 +253,8 @@ public class Cli implements Callable<Integer> {
     }
 
     @CommandLine.Command(name = "sr", subcommands = {
-            SchemaRegistryContextsCommand.Create.class }, description = "Manage Schema Registry connection properties as contexts.")
+            SchemaRegistryContextsCommand.CreateCommand.class,
+            SchemaRegistryContextsCommand.DeleteCommand.class }, description = "Manage Schema Registry connection properties as contexts.")
     static class SchemaRegistryContextsCommand implements Callable<Integer> {
         @Override
         public Integer call() throws Exception {
@@ -295,7 +264,7 @@ public class Cli implements Callable<Integer> {
         }
 
         @CommandLine.Command(name = "create", description = "Register context. Destination: ~/.kafka/schema-registry.json")
-        static class Create implements Callable<Integer> {
+        static class CreateCommand implements Callable<Integer> {
 
             @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
             String name;
@@ -312,12 +281,11 @@ public class Cli implements Callable<Integer> {
             public Integer call() throws Exception {
                 var contexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
 
-                final SchemaRegistryAuth auth;
-                switch (authType) {
-                    case BASIC_AUTH -> auth = new SchemaRegistryContexts.UsernamePasswordAuth(authType, usernamePasswordOptions.username,
+                final SchemaRegistryAuth auth = switch (authType) {
+                    case BASIC_AUTH -> new SchemaRegistryContexts.UsernamePasswordAuth(authType, usernamePasswordOptions.username,
                             passwordHelper().encrypt(usernamePasswordOptions.password));
-                    default -> auth = new SchemaRegistryContexts.NoAuth();
-                }
+                    default -> new SchemaRegistryContexts.NoAuth();
+                };
                 final var ctx = new SchemaRegistryContext(name, new SchemaRegistryCluster(urls, auth));
 
                 contexts.add(ctx);
@@ -326,6 +294,32 @@ public class Cli implements Callable<Integer> {
                 System.out.printf("Context %s with URLs %s saved.", ctx.name(),
                         ctx.cluster().urls());
                 return 0;
+            }
+        }
+
+        @CommandLine.Command(name = "delete", description = "Removes context. Destination: ~/.kafka/schema-registry.json")
+        static class DeleteCommand implements Callable<Integer> {
+
+            @CommandLine.Parameters(index = "0", description = "Context name. e.g. `local`")
+            String name;
+
+            @Override
+            public Integer call() throws Exception {
+                final var contexts = SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
+
+                if (contexts.has(name)) {
+                    final var ctx = contexts.get(name);
+                    contexts.remove(name);
+                    save(contexts);
+
+                    System.out.printf("Schema Registry Context %s with URLs %s saved.%n", ctx.name(),
+                            ctx.cluster().urls());
+                    return 0;
+                }
+                else {
+                    System.out.printf("Schema Registry Context %s is not registered.%n", name);
+                    return 1;
+                }
             }
         }
     }

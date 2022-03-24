@@ -58,6 +58,14 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
         return contextMap.get(name);
     }
 
+    public boolean has(String name) {
+        return contextMap.containsKey(name);
+    }
+
+    public void remove(String name) {
+        contextMap.remove(name);
+    }
+
     record KafkaContext(String name, KafkaCluster cluster) {
 
         static KafkaContext parse(JsonNode node) {
