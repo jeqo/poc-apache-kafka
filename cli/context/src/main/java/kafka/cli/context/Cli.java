@@ -23,6 +23,7 @@ import kafka.cli.context.SchemaRegistryContexts.SchemaRegistryContext;
 import kafka.cli.context.SchemaRegistryContexts.UsernamePasswordAuth;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DescribeClusterOptions;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Option;
@@ -202,8 +203,8 @@ public class Cli implements Callable<Integer> {
 
         final var bootstrapServers = props.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
         try (final var admin = AdminClient.create(props)) {
-          final var clusterId = admin.describeCluster().clusterId().get();
-          System.err.printf(
+          final var clusterId = admin.describeCluster(new DescribeClusterOptions().timeoutMs(10_000)).clusterId().get();
+          out.printf(
               "Connection to Kafka `%s` [%s] (id=%s) succeed%n", name, bootstrapServers, clusterId);
           admin
               .describeCluster()
@@ -211,7 +212,7 @@ public class Cli implements Callable<Integer> {
               .get()
               .forEach(node -> System.err.println("Node: " + node));
         } catch (Exception e) {
-          System.err.printf("Connection to Kafka `%s` [%s] failed%n", name, bootstrapServers);
+          out.printf("Connection to Kafka `%s` [%s] failed%n", name, bootstrapServers);
           e.printStackTrace();
           return 1;
         }
@@ -246,14 +247,14 @@ public class Cli implements Callable<Integer> {
                     HttpRequest.newBuilder().uri(URI.create(urls)).GET().build(),
                     BodyHandlers.discarding());
             if (response.statusCode() == 200) {
-              System.err.printf("Connection to Schema Registry `%s` [%s] succeed%n", sr, urls);
+              out.printf("Connection to Schema Registry `%s` [%s] succeed%n", sr, urls);
             } else {
-              System.err.printf(
+              out.printf(
                   "Connection to Schema Registry `%s` URL(s): [%s] failed%n", sr, urls);
               return 1;
             }
           } else {
-            System.err.printf(
+            out.printf(
                 "WARN: Schema Registry context %s does not exist. "
                     + "Schema Registry connection properties will not be tested",
                 sr);
