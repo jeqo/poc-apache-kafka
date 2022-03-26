@@ -10,7 +10,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-// Mostly from: https://github.com/apache/kafka/blob/d706d6cac4622153973d131417e809ee57c60de0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
+// Mostly from:
+// https://github.com/apache/kafka/blob/d706d6cac4622153973d131417e809ee57c60de0/tools/src/main/java/org/apache/kafka/tools/ProducerPerformance.java
 public class PerformanceRun {
 
   final Config config;
