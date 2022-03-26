@@ -15,7 +15,8 @@ public class IntervalRun {
   public IntervalRun(
       Config config,
       KafkaProducer<String, Object> producer,
-      PayloadGenerator payloadGenerator, Stats stats) {
+      PayloadGenerator payloadGenerator,
+      Stats stats) {
     this.config = config;
     this.producer = producer;
     this.payloadGenerator = payloadGenerator;
@@ -72,10 +73,5 @@ public class IntervalRun {
     payloadGenerator.random.setSeed(seed);
   }
 
-  public record Config(
-      String topicName,
-      long maxRecords,
-      long maxInterval
-  ) {
-  }
+  public record Config(String topicName, long maxRecords, long maxInterval) {}
 }
