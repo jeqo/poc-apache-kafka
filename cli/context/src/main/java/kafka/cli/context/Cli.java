@@ -203,7 +203,11 @@ public class Cli implements Callable<Integer> {
 
         final var bootstrapServers = props.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
         try (final var admin = AdminClient.create(props)) {
-          final var clusterId = admin.describeCluster(new DescribeClusterOptions().timeoutMs(10_000)).clusterId().get();
+          final var clusterId =
+              admin
+                  .describeCluster(new DescribeClusterOptions().timeoutMs(10_000))
+                  .clusterId()
+                  .get();
           out.printf(
               "Connection to Kafka `%s` [%s] (id=%s) succeed%n", name, bootstrapServers, clusterId);
           admin
@@ -249,8 +253,7 @@ public class Cli implements Callable<Integer> {
             if (response.statusCode() == 200) {
               out.printf("Connection to Schema Registry `%s` [%s] succeed%n", sr, urls);
             } else {
-              out.printf(
-                  "Connection to Schema Registry `%s` URL(s): [%s] failed%n", sr, urls);
+              out.printf("Connection to Schema Registry `%s` URL(s): [%s] failed%n", sr, urls);
               return 1;
             }
           } else {
