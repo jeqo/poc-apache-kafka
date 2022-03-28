@@ -2,8 +2,18 @@ package kafka.cli.context;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
-import static kafka.cli.context.Cli.*;
-import static kafka.cli.context.Helper.*;
+import static kafka.cli.context.Cli.CreateCommand;
+import static kafka.cli.context.Cli.DeleteCommand;
+import static kafka.cli.context.Cli.EnvCommand;
+import static kafka.cli.context.Cli.KCatCommand;
+import static kafka.cli.context.Cli.KFK_CTX_CMD;
+import static kafka.cli.context.Cli.PropertiesCommand;
+import static kafka.cli.context.Cli.SchemaRegistryContextsCommand;
+import static kafka.cli.context.Cli.TestCommand;
+import static kafka.cli.context.Helper.kafkaContextConfig;
+import static kafka.cli.context.Helper.passwordHelper;
+import static kafka.cli.context.Helper.save;
+import static kafka.cli.context.Helper.schemaRegistryContextConfig;
 
 import java.io.IOException;
 import java.net.Authenticator;
@@ -38,6 +48,7 @@ import picocli.CommandLine.Option;
       TestCommand.class,
       PropertiesCommand.class,
       KCatCommand.class,
+      EnvCommand.class,
       SchemaRegistryContextsCommand.class
     },
     description = "Manage Kafka connection as contexts.")
@@ -271,6 +282,48 @@ public class Cli implements Callable<Integer> {
     }
   }
 
+  @CommandLine.Command(name = "env", description = "env command with properties from context")
+  static class EnvCommand implements Callable<Integer> {
+
+    @CommandLine.Parameters(index = "0", description = "Context name")
+    String name;
+
+    @Option(
+        names = {"--schema-registry", "-sr"},
+        description = "Schema Registry context name")
+    Optional<String> schemeRegistryContext;
+
+    @Override
+    public Integer call() throws Exception {
+      final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
+      if (contexts.has(name)) {
+        final var ctx = contexts.get(name);
+        final var env = ctx.env(passwordHelper());
+
+        if (schemeRegistryContext.isPresent()) {
+          final var srContexts =
+              SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
+          if (srContexts.has(schemeRegistryContext.get())) {
+            final var srCtx = srContexts.get(schemeRegistryContext.get());
+            final var srProps = srCtx.env(passwordHelper());
+
+            out.println(env + "\n" + srProps);
+          } else {
+            System.err.printf(
+                "WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be included",
+                schemeRegistryContext.get());
+          }
+        } else {
+          out.println(env);
+        }
+      } else {
+        err.printf("Kafka context `%s` is not found%n", name);
+        return 1;
+      }
+      return 0;
+    }
+  }
+
   @CommandLine.Command(name = "kcat", description = "kcat command with properties from context")
   static class KCatCommand implements Callable<Integer> {
 
@@ -285,24 +338,29 @@ public class Cli implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
       final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
-      final var ctx = contexts.get(name);
-      final var kcat = ctx.kcat(passwordHelper());
+      if (contexts.has(name)) {
+        final var ctx = contexts.get(name);
+        final var kcat = ctx.kcat(passwordHelper());
 
-      if (schemeRegistryContext.isPresent()) {
-        final var srContexts =
-            SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
-        if (srContexts.has(schemeRegistryContext.get())) {
-          final var srCtx = srContexts.get(schemeRegistryContext.get());
-          final var srProps = srCtx.kcat(passwordHelper());
+        if (schemeRegistryContext.isPresent()) {
+          final var srContexts =
+              SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
+          if (srContexts.has(schemeRegistryContext.get())) {
+            final var srCtx = srContexts.get(schemeRegistryContext.get());
+            final var srProps = srCtx.kcat(passwordHelper());
 
-          out.println(kcat + srProps);
+            out.println(kcat + srProps);
+          } else {
+            System.err.printf(
+                "WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be included",
+                schemeRegistryContext.get());
+          }
         } else {
-          System.err.printf(
-              "WARN: Schema Registry context %s does not exist. Schema Registry connection properties will not be included",
-              schemeRegistryContext.get());
+          out.println(kcat);
         }
       } else {
-        out.println(kcat);
+        err.printf("Kafka context `%s` is not found%n", name);
+        return 1;
       }
       return 0;
     }
@@ -348,7 +406,7 @@ public class Cli implements Callable<Integer> {
           description =
               "Authentication type (default: ${DEFAULT-VALUE}). Valid values: ${COMPLETION-CANDIDATES}",
           required = true,
-          defaultValue = "PLAINTEXT")
+          defaultValue = "NO_AUTH")
       SchemaRegistryAuth.AuthType authType;
 
       @ArgGroup(exclusive = false)

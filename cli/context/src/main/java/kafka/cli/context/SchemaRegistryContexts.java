@@ -102,7 +102,23 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
             + "@"
             + urls.substring(https.length())
             + " -s value=avro";
-        case NO_AUTH -> "\\\n -r " + cluster.auth() + " -s value=avro";
+        case NO_AUTH -> "\\\n -r " + urls + " -s value=avro";
+      };
+    }
+
+    public String env(PasswordHelper passwordHelper) {
+      var urls = cluster().urls();
+      return switch (cluster.auth().type()) {
+        case BASIC_AUTH -> """
+                export SCHEMA_REGISTRY_URL=%s
+                export SCHEMA_REGISTRY_USERNAME=%s
+                export SCHEMA_REGISTRY_PASSWORD=%s"""
+            .formatted(
+                urls,
+                ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
+                passwordHelper.decrypt(
+                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()));
+        case NO_AUTH -> "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
       };
     }
   }

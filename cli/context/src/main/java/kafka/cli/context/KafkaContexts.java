@@ -113,6 +113,22 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
             .formatted(cluster.bootstrapServers);
       };
     }
+
+    public String env(PasswordHelper passwordHelper) {
+      return switch (cluster.auth().type()) {
+        case SASL_PLAIN -> """
+                         export KAFKA_BOOTSTRAP_SERVERS=%s
+                         export KAFKA_USERNAME=%s
+                         export KAFKA_PASSWORD=%s"""
+            .formatted(
+                cluster.bootstrapServers,
+                ((UsernamePasswordAuth) cluster.auth()).username,
+                passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password));
+        default -> """
+                        export KAFKA_BOOTSTRAP_SERVERS=%s"""
+            .formatted(cluster.bootstrapServers);
+      };
+    }
   }
 
   record KafkaCluster(String bootstrapServers, KafkaAuth auth) {
