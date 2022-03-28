@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.github.jeqo.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>kafka-clients-graalvm</artifactId>
