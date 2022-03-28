@@ -4,10 +4,12 @@
   <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-clients</artifactId>
   <version>0.1.1-SNAPSHOT</version>
-
-  <name>kafka-cli</name>
-
   <packaging>pom</packaging>
+
+  <name>kafka-clients</name>
+  <description>Kafka Client experimental libraries</description>
+  <url>https://github.com/${project.github.repository}</url>
+  <inceptionYear>2021</inceptionYear>
 
   <properties>
     <project.github.repository>jeqo/poc-apache-kafka</project.github.repository>
