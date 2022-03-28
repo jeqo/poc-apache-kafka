@@ -17,6 +17,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.ResolvingDecoder;
 
+// From https://github.com/quarkusio/quarkus/blob/48e433663123e2085159172a51976d5499eccf88/extensions/avro/runtime/src/main/java/io/quarkus/avro/runtime/graal/AvroSubstitutions.java
 @TargetClass(className = "org.apache.avro.generic.GenericDatumReader")
 final class Target_org_apache_avro_generic_GenericDatumReader {
 
@@ -82,5 +83,5 @@ final class Target_org_apache_avro_reflect_ReflectionUtil {
     }
 }
 
-class AvroSubstitutions {
+public class AvroSubstitutions {
 }
