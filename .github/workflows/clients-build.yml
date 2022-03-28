@@ -20,7 +20,7 @@ jobs:
       - name: 'Set up Java'
         uses: actions/setup-java@v2
         with:
-          java-version: 16
+          java-version: 11
           distribution: 'zulu'
 
       - name: 'Cache Maven packages'
