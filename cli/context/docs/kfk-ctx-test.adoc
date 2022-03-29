@@ -12,7 +12,7 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx-test - Test contexts
+kfk-ctx-test - Test cluster contexts
 
 // end::picocli-generated-man-section-name[]
 
@@ -26,7 +26,7 @@ kfk-ctx-test - Test contexts
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Test contexts
+Test cluster contexts
 
 // end::picocli-generated-man-section-description[]
 
@@ -42,7 +42,7 @@ Test contexts
 == Arguments
 
 _<name>_::
-  Context name
+  Kafka context name
 
 // end::picocli-generated-man-section-arguments[]
 

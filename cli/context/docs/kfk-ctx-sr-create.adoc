@@ -35,7 +35,7 @@ Register context. Destination: ~/.kafka/schema-registry.json
 == Options
 
 *--auth*=_<authType>_::
-  Authentication type (default: PLAINTEXT). Valid values: NO_AUTH, BASIC_AUTH
+  Authentication type (default: NO_AUTH). Valid values: NO_AUTH, BASIC_AUTH
 
 *-p*, *--password*[=_<password>_]::
   Password authentication
