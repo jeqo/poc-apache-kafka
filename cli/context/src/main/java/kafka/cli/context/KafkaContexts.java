@@ -103,25 +103,25 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
         case SASL_PLAIN -> """
                         kcat -b %s -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \\
                          -X sasl.username=$KAFKA_USERNAME -X sasl.password=$KAFKA_PASSWORD \\
-                         -X api.version.request=true\040""".formatted(cluster.bootstrapServers);
+                         -X api.version.request=true\040"""
+            .formatted(cluster.bootstrapServers);
         default -> "kcat -b %s ".formatted(cluster.bootstrapServers);
       };
     }
 
     public String env(PasswordHelper passwordHelper, boolean includeAuth) {
       return switch (cluster.auth().type()) {
-        case SASL_PLAIN -> includeAuth ? """
+        case SASL_PLAIN -> includeAuth
+            ? """
             export KAFKA_BOOTSTRAP_SERVERS=%s
             export KAFKA_USERNAME=%s
             export KAFKA_PASSWORD=%s"""
-            .formatted(
-                cluster.bootstrapServers,
-                ((UsernamePasswordAuth) cluster.auth()).username,
-                passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password))
-            : "export KAFKA_BOOTSTRAP_SERVERS=%s"
-                .formatted(cluster.bootstrapServers);
-        default -> "export KAFKA_BOOTSTRAP_SERVERS=%s"
-            .formatted(cluster.bootstrapServers);
+                .formatted(
+                    cluster.bootstrapServers,
+                    ((UsernamePasswordAuth) cluster.auth()).username,
+                    passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password))
+            : "export KAFKA_BOOTSTRAP_SERVERS=%s".formatted(cluster.bootstrapServers);
+        default -> "export KAFKA_BOOTSTRAP_SERVERS=%s".formatted(cluster.bootstrapServers);
       };
     }
   }

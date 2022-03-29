@@ -105,15 +105,16 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
     public String env(PasswordHelper passwordHelper, boolean includeAuth) {
       var urls = cluster().urls();
       return switch (cluster.auth().type()) {
-        case BASIC_AUTH -> includeAuth ? """
+        case BASIC_AUTH -> includeAuth
+            ? """
             export SCHEMA_REGISTRY_URL=%s
             export SCHEMA_REGISTRY_USERNAME=%s
             export SCHEMA_REGISTRY_PASSWORD=%s"""
-            .formatted(
-                urls,
-                ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
-                passwordHelper.decrypt(
-                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
+                .formatted(
+                    urls,
+                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
+                    passwordHelper.decrypt(
+                        ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
             : "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
         case NO_AUTH -> "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
       };

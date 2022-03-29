@@ -298,7 +298,9 @@ public class Cli implements Callable<Integer> {
         description = "Schema Registry context name")
     Optional<String> schemeRegistryContext;
 
-    @Option(names = {"--auth"}, description = "Include auth env variables")
+    @Option(
+        names = {"--auth"},
+        description = "Include auth env variables")
     boolean includeAuth;
 
     @Override
