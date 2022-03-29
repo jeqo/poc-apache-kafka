@@ -37,7 +37,7 @@ Removes context. Destination: ~/.kafka/kafka.json
 == Arguments
 
 _<name>_::
-  Context name. e.g. `local`
+  Kafka context name. e.g. `local`
 
 // end::picocli-generated-man-section-arguments[]
 

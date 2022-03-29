@@ -12,7 +12,7 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx-create - Register context. Destination: ~/.kafka/kafka.json
+kfk-ctx-create - Register a Kafka context. Destination: ~/.kafka/kafka.json
 
 // end::picocli-generated-man-section-name[]
 
@@ -27,7 +27,7 @@ kfk-ctx-create - Register context. Destination: ~/.kafka/kafka.json
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Register context. Destination: ~/.kafka/kafka.json
+Register a Kafka context. Destination: ~/.kafka/kafka.json
 
 // end::picocli-generated-man-section-description[]
 
@@ -35,7 +35,7 @@ Register context. Destination: ~/.kafka/kafka.json
 == Options
 
 *--auth*=_<authType>_::
-  Authentication type (default: PLAINTEXT). Valid values: PLAINTEXT, SASL_PLAIN
+  Authentication method (default: PLAINTEXT). Valid values: PLAINTEXT, SASL_PLAIN
 
 *-p*, *--password*[=_<password>_]::
   Password authentication
@@ -49,10 +49,10 @@ Register context. Destination: ~/.kafka/kafka.json
 == Arguments
 
 _<name>_::
-  Context name. e.g. `local`
+  Kafka context name. e.g. `local`
 
 _<bootstrapServers>_::
-  Kafka bootstrap servers. e.g. `localhost:9092`
+  Bootstrap servers. e.g. `localhost:9092`
 
 // end::picocli-generated-man-section-arguments[]
 

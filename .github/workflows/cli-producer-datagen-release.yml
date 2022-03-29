@@ -103,10 +103,6 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: 'Build deps'
-        working-directory: clients/
-        run: ./mvnw -B --file pom.xml install
-
       - name: 'Build Native Image'
         working-directory: cli/producer-datagen/
         run: ./mvnw -B --file pom.xml -Pnative package
@@ -181,10 +177,6 @@ jobs:
 
       - name: 'Check artifacts'
         run: ls cli/producer-datagen/artifacts
-
-      - name: 'Build deps'
-        working-directory: clients/
-        run: ./mvnw -B --file pom.xml install
 
       - name: 'Release with JReleaser'
         env:

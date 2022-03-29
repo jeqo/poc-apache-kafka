@@ -1,9 +1,9 @@
 // tag::picocli-generated-full-manpage[]
 // tag::picocli-generated-man-section-header[]
 :doctype: manpage
-:revnumber: kafka-cli-context version 0.2.4-SNAPSHOT
+:revnumber: kafka-cli-context version 0.2.8-SNAPSHOT
 :manmanual: Kfk-ctx Manual
-:mansource: kafka-cli-context version 0.2.4-SNAPSHOT
+:mansource: kafka-cli-context version 0.2.8-SNAPSHOT
 :man-linkstyle: pass:[blue R < >]
 = kfk-ctx(1)
 
@@ -12,7 +12,7 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx - Manage Kafka connection properties as contexts.
+kfk-ctx - Manage Kafka connection as contexts.
 
 // end::picocli-generated-man-section-name[]
 
@@ -26,7 +26,7 @@ kfk-ctx - Manage Kafka connection properties as contexts.
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Manage Kafka connection properties as contexts.
+Manage Kafka connection as contexts.
 
 // end::picocli-generated-man-section-description[]
 
@@ -51,19 +51,22 @@ Manage Kafka connection properties as contexts.
 == Commands
 
 xref:kfk-ctx-create.adoc[*create*]::
-  Register context. Destination: ~/.kafka/kafka.json
+  Register a Kafka context. Destination: ~/.kafka/kafka.json
 
 xref:kfk-ctx-delete.adoc[*delete*]::
   Removes context. Destination: ~/.kafka/kafka.json
 
 xref:kfk-ctx-test.adoc[*test*]::
-  Test contexts
+  Test cluster contexts
 
 xref:kfk-ctx-properties.adoc[*properties*]::
-  Get properties configuration for context
+  Get properties configurations for contexts
 
 xref:kfk-ctx-kcat.adoc[*kcat*]::
   kcat command with properties from context
+
+xref:kfk-ctx-env.adoc[*env*]::
+  env command with properties from context
 
 xref:kfk-ctx-sr.adoc[*sr*]::
   Manage Schema Registry connection properties as contexts.

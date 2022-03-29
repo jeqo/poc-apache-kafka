@@ -12,7 +12,7 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-ctx-properties - Get properties configuration for context
+kfk-ctx-properties - Get properties configurations for contexts
 
 // end::picocli-generated-man-section-name[]
 
@@ -26,7 +26,7 @@ kfk-ctx-properties - Get properties configuration for context
 // tag::picocli-generated-man-section-description[]
 == Description
 
-Get properties configuration for context
+Get properties configurations for contexts
 
 // end::picocli-generated-man-section-description[]
 
@@ -42,7 +42,7 @@ Get properties configuration for context
 == Arguments
 
 _<name>_::
-  Context name
+  Kafka context name
 
 // end::picocli-generated-man-section-arguments[]
 
