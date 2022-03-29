@@ -4,6 +4,33 @@
 
 - [Documentation](./docs/kfk-ctx.adoc)
 
+## Install
+
+### Brew
+
+Add tap:
+
+```shell
+brew tap jeqo/tap
+```
+
+Install `kfk-ctx`:
+
+```shell
+brew install kfk-ctx
+```
+
+### Manual
+
+Find the latest release at: <https://github.com/jeqo/poc-apache-kafka/releases>
+
+```shell
+VERSION=0.2.10
+wget https://github.com/jeqo/poc-apache-kafka/releases/download/cli-context-v$VERSION/kfk-ctx-$VERSION-linux-x86_64.tar.gz
+tar xf kfk-ctx-$VERSION-linux-x86_64.tar.gz
+mv kfk-ctx-0.2.10-linux-x86_64/bin/kfk-ctx /usr/local/bin/.
+```
+
 ## How to use
 
 ### Create and test contexts
