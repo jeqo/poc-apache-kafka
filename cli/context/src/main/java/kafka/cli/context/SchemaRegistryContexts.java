@@ -88,17 +88,13 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
       return props;
     }
 
-    public String kcat(PasswordHelper passwordHelper) {
+    public String kcat() {
       var urls = cluster().urls();
       final var https = "https://";
       return switch (cluster.auth().type()) {
         case BASIC_AUTH -> "\\\n -r "
             + https
-            + "%s:%s"
-                .formatted(
-                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
-                    passwordHelper.decrypt(
-                        ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
+            + "$SCHEMA_REGISTRY_USERNAME:$SCHEMA_REGISTRY_PASSWORD"
             + "@"
             + urls.substring(https.length())
             + " -s value=avro";
@@ -106,18 +102,19 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
       };
     }
 
-    public String env(PasswordHelper passwordHelper) {
+    public String env(PasswordHelper passwordHelper, boolean includeAuth) {
       var urls = cluster().urls();
       return switch (cluster.auth().type()) {
-        case BASIC_AUTH -> """
-                export SCHEMA_REGISTRY_URL=%s
-                export SCHEMA_REGISTRY_USERNAME=%s
-                export SCHEMA_REGISTRY_PASSWORD=%s"""
+        case BASIC_AUTH -> includeAuth ? """
+            export SCHEMA_REGISTRY_URL=%s
+            export SCHEMA_REGISTRY_USERNAME=%s
+            export SCHEMA_REGISTRY_PASSWORD=%s"""
             .formatted(
                 urls,
                 ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
                 passwordHelper.decrypt(
-                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()));
+                    ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
+            : "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
         case NO_AUTH -> "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
       };
     }
