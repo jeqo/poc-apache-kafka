@@ -101,24 +101,29 @@ public class Cli implements Callable<Integer> {
     public Integer call() throws Exception {
       final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
 
-      final KafkaContexts.KafkaAuth auth =
-          switch (authType) {
-            case SASL_PLAIN -> new KafkaContexts.UsernamePasswordAuth(
-                authType,
-                usernamePasswordOptions.username,
-                passwordHelper().encrypt(usernamePasswordOptions.password));
-            default -> new KafkaContexts.NoAuth();
-          };
-      final var ctx =
-          new KafkaContext(name, new KafkaContexts.KafkaCluster(bootstrapServers, auth));
+      try {
+        final KafkaContexts.KafkaAuth auth =
+            switch (authType) {
+              case SASL_PLAIN -> new KafkaContexts.UsernamePasswordAuth(
+                  authType,
+                  usernamePasswordOptions.username,
+                  passwordHelper().encrypt(usernamePasswordOptions.password()));
+              default -> new KafkaContexts.NoAuth();
+            };
+        final var ctx =
+            new KafkaContext(name, new KafkaContexts.KafkaCluster(bootstrapServers, auth));
 
-      contexts.add(ctx);
-      save(contexts);
+        contexts.add(ctx);
+        save(contexts);
 
-      out.printf(
-          "Kafka context `%s` with bootstrap-servers [%s] is saved.",
-          ctx.name(), ctx.cluster().bootstrapServers());
-      return 0;
+        out.printf(
+            "Kafka context `%s` with bootstrap-servers [%s] is saved.",
+            ctx.name(), ctx.cluster().bootstrapServers());
+        return 0;
+      } catch (IllegalArgumentException e) {
+        err.println("ERROR: " + e.getMessage());
+        return 1;
+      }
     }
   }
 
@@ -293,19 +298,22 @@ public class Cli implements Callable<Integer> {
         description = "Schema Registry context name")
     Optional<String> schemeRegistryContext;
 
+    @Option(names = {"--auth"}, description = "Include auth env variables")
+    boolean includeAuth;
+
     @Override
     public Integer call() throws Exception {
       final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
       if (contexts.has(name)) {
         final var ctx = contexts.get(name);
-        final var env = ctx.env(passwordHelper());
+        final var env = ctx.env(passwordHelper(), includeAuth);
 
         if (schemeRegistryContext.isPresent()) {
           final var srContexts =
               SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
           if (srContexts.has(schemeRegistryContext.get())) {
             final var srCtx = srContexts.get(schemeRegistryContext.get());
-            final var srProps = srCtx.env(passwordHelper());
+            final var srProps = srCtx.env(passwordHelper(), includeAuth);
 
             out.println(env + "\n" + srProps);
           } else {
@@ -340,14 +348,14 @@ public class Cli implements Callable<Integer> {
       final var contexts = KafkaContexts.from(Files.readAllBytes(kafkaContextConfig()));
       if (contexts.has(name)) {
         final var ctx = contexts.get(name);
-        final var kcat = ctx.kcat(passwordHelper());
+        final var kcat = ctx.kcat();
 
         if (schemeRegistryContext.isPresent()) {
           final var srContexts =
               SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
           if (srContexts.has(schemeRegistryContext.get())) {
             final var srCtx = srContexts.get(schemeRegistryContext.get());
-            final var srProps = srCtx.kcat(passwordHelper());
+            final var srProps = srCtx.kcat();
 
             out.println(kcat + srProps);
           } else {
@@ -416,24 +424,28 @@ public class Cli implements Callable<Integer> {
       public Integer call() throws Exception {
         var contexts =
             SchemaRegistryContexts.from(Files.readAllBytes(schemaRegistryContextConfig()));
+        try {
+          final SchemaRegistryAuth auth =
+              switch (authType) {
+                case BASIC_AUTH -> new SchemaRegistryContexts.UsernamePasswordAuth(
+                    authType,
+                    usernamePasswordOptions.username,
+                    passwordHelper().encrypt(usernamePasswordOptions.password()));
+                default -> new SchemaRegistryContexts.NoAuth();
+              };
+          final var ctx = new SchemaRegistryContext(name, new SchemaRegistryCluster(urls, auth));
 
-        final SchemaRegistryAuth auth =
-            switch (authType) {
-              case BASIC_AUTH -> new SchemaRegistryContexts.UsernamePasswordAuth(
-                  authType,
-                  usernamePasswordOptions.username,
-                  passwordHelper().encrypt(usernamePasswordOptions.password));
-              default -> new SchemaRegistryContexts.NoAuth();
-            };
-        final var ctx = new SchemaRegistryContext(name, new SchemaRegistryCluster(urls, auth));
+          contexts.add(ctx);
+          save(contexts);
 
-        contexts.add(ctx);
-        save(contexts);
-
-        out.printf(
-            "Schema Registry context `%s` with URL(s): [%s] is saved.",
-            ctx.name(), ctx.cluster().urls());
-        return 0;
+          out.printf(
+              "Schema Registry context `%s` with URL(s): [%s] is saved.",
+              ctx.name(), ctx.cluster().urls());
+          return 0;
+        } catch (IllegalArgumentException e) {
+          err.println("ERROR: " + e.getMessage());
+          return 1;
+        }
       }
     }
 
@@ -479,6 +491,13 @@ public class Cli implements Callable<Integer> {
         arity = "0..1",
         interactive = true)
     String password;
+
+    public String password() {
+      if (password == null || password.isBlank()) {
+        throw new IllegalArgumentException("Password is empty");
+      }
+      return password;
+    }
   }
 
   static class VersionProviderWithConfigProvider implements CommandLine.IVersionProvider {
