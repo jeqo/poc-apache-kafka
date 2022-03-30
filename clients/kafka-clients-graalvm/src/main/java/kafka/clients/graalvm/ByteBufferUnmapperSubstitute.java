@@ -24,40 +24,40 @@ import java.nio.ByteBuffer;
 import org.apache.kafka.common.utils.ByteBufferUnmapper;
 import org.apache.kafka.common.utils.Java;
 
-// Copied from: https://github.com/micronaut-projects/micronaut-kafka/blob/0166116452a5e094a8db7877a52490ad23f2f5cf/kafka/src/main/java/io/micronaut/configuration/kafka/graal/ByteBufferUnmapperSubstitute.java
+// Copied from:
+// https://github.com/micronaut-projects/micronaut-kafka/blob/0166116452a5e094a8db7877a52490ad23f2f5cf/kafka/src/main/java/io/micronaut/configuration/kafka/graal/ByteBufferUnmapperSubstitute.java
 @TargetClass(value = ByteBufferUnmapper.class)
 @SuppressWarnings("MissingJavadocType")
 public final class ByteBufferUnmapperSubstitute {
 
-    @Substitute
-    public static void unmap(String resourceDescription, ByteBuffer buffer) throws IOException {
-        if (!buffer.isDirect()) {
-            throw new IllegalArgumentException("Unmapping only works with direct buffers");
-        }
-
-        try {
-            if (Java.IS_JAVA9_COMPATIBLE) {
-                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-                Method m = unsafeClass.getMethod("cleaner", void.class, ByteBuffer.class);
-                Field f = unsafeClass.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                Object theUnsafe = f.get(null);
-                m.invoke(theUnsafe, buffer);
-            } else {
-                Class<?> directBufferClass = Class.forName("java.nio.DirectByteBuffer");
-                Method cleanerMethod = directBufferClass.getMethod("cleaner");
-                cleanerMethod.setAccessible(true);
-                Object cleaner = cleanerMethod.invoke(buffer);
-                if (cleaner != null) {
-                    Class<?> cleanerClass = Class.forName("sun.misc.Cleaner");
-                    Method cleanMethod = cleanerClass.getMethod("clean");
-                    cleanMethod.setAccessible(true);
-                    cleanMethod.invoke(cleaner);
-                }
-            }
-        } catch (Throwable throwable) {
-            throw new IOException("Unable to unmap the mapped buffer: " + resourceDescription, throwable);
-        }
+  @Substitute
+  public static void unmap(String resourceDescription, ByteBuffer buffer) throws IOException {
+    if (!buffer.isDirect()) {
+      throw new IllegalArgumentException("Unmapping only works with direct buffers");
     }
 
+    try {
+      if (Java.IS_JAVA9_COMPATIBLE) {
+        Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+        Method m = unsafeClass.getMethod("cleaner", void.class, ByteBuffer.class);
+        Field f = unsafeClass.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        Object theUnsafe = f.get(null);
+        m.invoke(theUnsafe, buffer);
+      } else {
+        Class<?> directBufferClass = Class.forName("java.nio.DirectByteBuffer");
+        Method cleanerMethod = directBufferClass.getMethod("cleaner");
+        cleanerMethod.setAccessible(true);
+        Object cleaner = cleanerMethod.invoke(buffer);
+        if (cleaner != null) {
+          Class<?> cleanerClass = Class.forName("sun.misc.Cleaner");
+          Method cleanMethod = cleanerClass.getMethod("clean");
+          cleanMethod.setAccessible(true);
+          cleanMethod.invoke(cleaner);
+        }
+      }
+    } catch (Throwable throwable) {
+      throw new IOException("Unable to unmap the mapped buffer: " + resourceDescription, throwable);
+    }
+  }
 }

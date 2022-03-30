@@ -1,4 +1,4 @@
-package kafka.cli.context;
+package kafka.context;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
