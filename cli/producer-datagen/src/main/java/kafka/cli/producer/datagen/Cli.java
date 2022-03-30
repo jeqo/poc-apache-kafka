@@ -17,12 +17,12 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import kafka.context.KafkaContexts;
-import kafka.context.SchemaRegistryContexts;
 import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
 import kafka.cli.producer.datagen.PayloadGenerator.Config;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
 import kafka.cli.producer.datagen.TopicAndSchema.Schema;
+import kafka.context.KafkaContexts;
+import kafka.context.SchemaRegistryContexts;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -386,39 +386,35 @@ public class Cli implements Callable<Integer> {
     ContextOption contextOption;
 
     public Properties load() throws IOException {
-      return configPath.map(path -> {
-            try {
-              final var p = new Properties();
-              p.load(Files.newInputStream(path));
-              return p;
-            } catch (Exception e) {
-              throw new IllegalArgumentException(
-                  "ERROR: properties file at %s is failing to load".formatted(path));
-            }
-          })
-          .orElseGet(() -> {
-            try {
-              return contextOption.load();
-            } catch (IOException e) {
-              throw new IllegalArgumentException("ERROR: loading contexts");
-            }
-          });
+      return configPath
+          .map(
+              path -> {
+                try {
+                  final var p = new Properties();
+                  p.load(Files.newInputStream(path));
+                  return p;
+                } catch (Exception e) {
+                  throw new IllegalArgumentException(
+                      "ERROR: properties file at %s is failing to load".formatted(path));
+                }
+              })
+          .orElseGet(
+              () -> {
+                try {
+                  return contextOption.load();
+                } catch (IOException e) {
+                  throw new IllegalArgumentException("ERROR: loading contexts");
+                }
+              });
     }
   }
 
   static class ContextOption {
 
-    @Option(
-        names = "--kafka",
-        description = "Kafka context name",
-        required = true
-    )
+    @Option(names = "--kafka", description = "Kafka context name", required = true)
     String kafkaContextName;
 
-    @Option(
-        names = "--sr",
-        description = "Schema Registry context name"
-    )
+    @Option(names = "--sr", description = "Schema Registry context name")
     Optional<String> srContextName;
 
     public Properties load() throws IOException {
@@ -437,14 +433,15 @@ public class Cli implements Callable<Integer> {
             final var srProps = sr.properties();
             props.putAll(srProps);
           } else {
-            err.printf("WARN: Schema Registry context `%s` not found. Proceeding without it.%n",
-                srName);
+            err.printf(
+                "WARN: Schema Registry context `%s` not found. Proceeding without it.%n", srName);
           }
         }
 
         return props;
       } else {
-        err.printf("ERROR: Kafka context `%s` not found. Check that context already exist.%n",
+        err.printf(
+            "ERROR: Kafka context `%s` not found. Check that context already exist.%n",
             kafkaContextName);
         return null;
       }
