@@ -1,7 +1,6 @@
-package kafka.cli.context;
+package kafka.context;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class PasswordHelperTest {
@@ -15,6 +14,6 @@ class PasswordHelperTest {
     var enc = h.encrypt(strToEncrypt);
     var dec = h.decrypt(enc);
     System.out.println(dec);
-    assertEquals(strToEncrypt, dec);
+    Assertions.assertEquals(strToEncrypt, dec);
   }
 }
