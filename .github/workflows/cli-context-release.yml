@@ -43,11 +43,11 @@ jobs:
             NEXT_VERSION=$COMPUTED_NEXT_VERSION
           fi
           ./mvnw -B --file pom.xml versions:set versions:commit -DnewVersion=$RELEASE_VERSION
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Action"
           rm docs/*
           ./mvnw -B --file pom.xml package -Pdocs
           git add docs
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Action"
           git commit -a -m "🏁 Releasing version $RELEASE_VERSION"
           git push origin HEAD:main
           git rev-parse HEAD > HEAD
