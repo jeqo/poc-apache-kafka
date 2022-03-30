@@ -19,9 +19,10 @@ kfk-producer-datagen-perf - run performance tests
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-producer-datagen perf* *-c*=_<configPath>_ [*-f*=_<format>_] [*-k*=_<throughput>_]
-                          *-n*=_<numRecords>_ *-t*=_<topicName>_ (*-q*=_<quickstart>_ |
-                          *-s*=_<schemaPath>_)
+*kfk-producer-datagen perf* [*-f*=_<format>_] [*-k*=_<throughput>_] *-n*=_<numRecords>_
+                          *-t*=_<topicName>_ (*-c*=_<configPath>_ |
+                          [*--kafka*=_<kafkaContextName>_ [*--sr*=_<srContextName>_]])
+                          (*-q*=_<quickstart>_ | *-s*=_<schemaPath>_)
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -44,6 +45,9 @@ run performance tests
 *-k*, *--throughput*=_<throughput>_::
   Number of target records per second to produce
 
+*--kafka*=_<kafkaContextName>_::
+  Kafka context name
+
 *-n*, *--num-records*=_<numRecords>_::
   Number of records to produce
 
@@ -52,6 +56,9 @@ run performance tests
 
 *-s*, *--schema*=_<schemaPath>_::
   Path to Avro schema to use for generating records.
+
+*--sr*=_<srContextName>_::
+  Schema Registry context name
 
 *-t*, *--topic*=_<topicName>_::
   target Kafka topic name
