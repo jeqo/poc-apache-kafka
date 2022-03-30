@@ -28,7 +28,7 @@ Find the latest release at: <https://github.com/jeqo/poc-apache-kafka/releases>
 VERSION=0.2.10
 wget https://github.com/jeqo/poc-apache-kafka/releases/download/cli-context-v$VERSION/kfk-ctx-$VERSION-linux-x86_64.tar.gz
 tar xf kfk-ctx-$VERSION-linux-x86_64.tar.gz
-mv kfk-ctx-0.2.10-linux-x86_64/bin/kfk-ctx /usr/local/bin/.
+mv kfk-ctx-$VERSION-linux-x86_64/bin/kfk-ctx /usr/local/bin/.
 ```
 
 ## How to use
