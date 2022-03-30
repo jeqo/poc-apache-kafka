@@ -43,112 +43,117 @@ import org.apache.kafka.common.security.scram.internals.ScramMechanism;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Copied from: https://github.com/oracle/helidon/blob/785ce38ca06b268d16e387fb6498aaaa890695cc/messaging/kafka/src/main/java/io/helidon/messaging/connectors/kafka/SaslClientCallbackHandlerSubstitution.java
+// Copied from:
+// https://github.com/oracle/helidon/blob/785ce38ca06b268d16e387fb6498aaaa890695cc/messaging/kafka/src/main/java/io/helidon/messaging/connectors/kafka/SaslClientCallbackHandlerSubstitution.java
 // Workaround for https://github.com/oracle/graal/issues/2745
 @TargetClass(value = SaslClientCallbackHandler.class)
 @SuppressWarnings("MissingJavadocType")
 public final class SaslClientCallbackHandlerSubstitute implements AuthenticateCallbackHandler {
 
-    @Alias
-    private String mechanism;
+  @Alias private String mechanism;
 
-    @Inject
-    private Logger logger;
+  @Inject private Logger logger;
 
-    @Inject
-    private Subject subject;
+  @Inject private Subject subject;
 
-    @Substitute
-    public SaslClientCallbackHandlerSubstitute() {
-        logger = LoggerFactory.getLogger(LoginManager.class);
+  @Substitute
+  public SaslClientCallbackHandlerSubstitute() {
+    logger = LoggerFactory.getLogger(LoginManager.class);
+  }
+
+  @Override
+  @Substitute
+  public void configure(
+      Map<String, ?> configs, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
+    this.mechanism = saslMechanism;
+    this.subject = null;
+
+    int entrySize = jaasConfigEntries.size();
+    if (entrySize == 0) {
+      logger.warn("Missing JAAS config entry, missing or malformed sasl.jaas.config property.");
+      return;
+    } else if (entrySize > 1) {
+      logger.warn(
+          "Multiple JAAS config entries, Kafka client's sasl.jaas.config can have only one JAAS config entry.");
+      return;
     }
 
-    @Override
-    @Substitute
-    public void configure(Map<String, ?> configs, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
-        this.mechanism = saslMechanism;
-        this.subject = null;
+    AppConfigurationEntry jaasConfigEntry = jaasConfigEntries.get(0);
+    String jaasLoginModuleName = jaasConfigEntry.getLoginModuleName();
+    subject = new Subject();
 
-        int entrySize = jaasConfigEntries.size();
-        if (entrySize == 0) {
-            logger.warn("Missing JAAS config entry, missing or malformed sasl.jaas.config property.");
-            return;
-        } else if (entrySize > 1) {
-            logger.warn("Multiple JAAS config entries, Kafka client's sasl.jaas.config can have only one JAAS config entry.");
-            return;
+    try {
+      Class.forName(jaasLoginModuleName)
+          .asSubclass(LoginModule.class)
+          .getDeclaredConstructor()
+          .newInstance()
+          .initialize(subject, this, new HashMap<>(), jaasConfigEntry.getOptions());
+    } catch (ReflectiveOperationException e) {
+      throw new KafkaException("Can't instantiate JAAS login module" + jaasLoginModuleName, e);
+    }
+  }
+
+  @Override
+  @Substitute
+  public void handle(Callback[] callbacks) throws UnsupportedCallbackException {
+    // Subject.getSubject doesn't return proper subject in native image
+    // Remove substitution when https://github.com/oracle/graal/issues/2745 is fixed
+    // Subject subject = Subject.getSubject(AccessController.getContext());
+
+    for (Callback callback : callbacks) {
+      if (callback instanceof NameCallback) {
+        NameCallback nc = (NameCallback) callback;
+        if (subject != null && !subject.getPublicCredentials(String.class).isEmpty()) {
+          nc.setName(subject.getPublicCredentials(String.class).iterator().next());
+        } else {
+          nc.setName(nc.getDefaultName());
         }
-
-        AppConfigurationEntry jaasConfigEntry = jaasConfigEntries.get(0);
-        String jaasLoginModuleName = jaasConfigEntry.getLoginModuleName();
-        subject = new Subject();
-
-        try {
-            Class.forName(jaasLoginModuleName)
-                    .asSubclass(LoginModule.class)
-                    .getDeclaredConstructor()
-                    .newInstance()
-                    .initialize(subject, this, new HashMap<>(), jaasConfigEntry.getOptions());
-        } catch (ReflectiveOperationException e) {
-            throw new KafkaException("Can't instantiate JAAS login module" + jaasLoginModuleName, e);
+      } else if (callback instanceof PasswordCallback) {
+        if (subject != null && !subject.getPrivateCredentials(String.class).isEmpty()) {
+          char[] password =
+              subject.getPrivateCredentials(String.class).iterator().next().toCharArray();
+          ((PasswordCallback) callback).setPassword(password);
+        } else {
+          String errorMessage =
+              "Could not login: the client is being asked for a password, but the Kafka"
+                  + " client code does not currently support obtaining a password from the user.";
+          throw new UnsupportedCallbackException(callback, errorMessage);
         }
-    }
-
-    @Override
-    @Substitute
-    public void handle(Callback[] callbacks) throws UnsupportedCallbackException {
-        // Subject.getSubject doesn't return proper subject in native image
-        // Remove substitution when https://github.com/oracle/graal/issues/2745 is fixed
-        // Subject subject = Subject.getSubject(AccessController.getContext());
-
-        for (Callback callback : callbacks) {
-            if (callback instanceof NameCallback) {
-                NameCallback nc = (NameCallback) callback;
-                if (subject != null && !subject.getPublicCredentials(String.class).isEmpty()) {
-                    nc.setName(subject.getPublicCredentials(String.class).iterator().next());
-                } else {
-                    nc.setName(nc.getDefaultName());
-                }
-            } else if (callback instanceof PasswordCallback) {
-                if (subject != null && !subject.getPrivateCredentials(String.class).isEmpty()) {
-                    char[] password = subject.getPrivateCredentials(String.class).iterator().next().toCharArray();
-                    ((PasswordCallback) callback).setPassword(password);
-                } else {
-                    String errorMessage = "Could not login: the client is being asked for a password, but the Kafka"
-                            + " client code does not currently support obtaining a password from the user.";
-                    throw new UnsupportedCallbackException(callback, errorMessage);
-                }
-            } else if (callback instanceof RealmCallback) {
-                RealmCallback rc = (RealmCallback) callback;
-                rc.setText(rc.getDefaultText());
-            } else if (callback instanceof AuthorizeCallback) {
-                AuthorizeCallback ac = (AuthorizeCallback) callback;
-                String authId = ac.getAuthenticationID();
-                String authzId = ac.getAuthorizationID();
-                ac.setAuthorized(authId.equals(authzId));
-                if (ac.isAuthorized()) {
-                    ac.setAuthorizedID(authzId);
-                }
-            } else if (callback instanceof ScramExtensionsCallback) {
-                if (ScramMechanism.isScram(mechanism) && subject != null && !subject.getPublicCredentials(Map.class).isEmpty()) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, String> extensions =
-                            (Map<String, String>) subject.getPublicCredentials(Map.class).iterator().next();
-                    ((ScramExtensionsCallback) callback).extensions(extensions);
-                }
-            } else if (callback instanceof SaslExtensionsCallback) {
-                if (!SaslConfigs.GSSAPI_MECHANISM.equals(mechanism)
-                        && subject != null && !subject.getPublicCredentials(SaslExtensions.class).isEmpty()) {
-                    SaslExtensions extensions = subject.getPublicCredentials(SaslExtensions.class).iterator().next();
-                    ((SaslExtensionsCallback) callback).extensions(extensions);
-                }
-            } else {
-                throw new UnsupportedCallbackException(callback, "Unrecognized SASL ClientCallback");
-            }
+      } else if (callback instanceof RealmCallback) {
+        RealmCallback rc = (RealmCallback) callback;
+        rc.setText(rc.getDefaultText());
+      } else if (callback instanceof AuthorizeCallback) {
+        AuthorizeCallback ac = (AuthorizeCallback) callback;
+        String authId = ac.getAuthenticationID();
+        String authzId = ac.getAuthorizationID();
+        ac.setAuthorized(authId.equals(authzId));
+        if (ac.isAuthorized()) {
+          ac.setAuthorizedID(authzId);
         }
+      } else if (callback instanceof ScramExtensionsCallback) {
+        if (ScramMechanism.isScram(mechanism)
+            && subject != null
+            && !subject.getPublicCredentials(Map.class).isEmpty()) {
+          @SuppressWarnings("unchecked")
+          Map<String, String> extensions =
+              (Map<String, String>) subject.getPublicCredentials(Map.class).iterator().next();
+          ((ScramExtensionsCallback) callback).extensions(extensions);
+        }
+      } else if (callback instanceof SaslExtensionsCallback) {
+        if (!SaslConfigs.GSSAPI_MECHANISM.equals(mechanism)
+            && subject != null
+            && !subject.getPublicCredentials(SaslExtensions.class).isEmpty()) {
+          SaslExtensions extensions =
+              subject.getPublicCredentials(SaslExtensions.class).iterator().next();
+          ((SaslExtensionsCallback) callback).extensions(extensions);
+        }
+      } else {
+        throw new UnsupportedCallbackException(callback, "Unrecognized SASL ClientCallback");
+      }
     }
+  }
 
-    @Override
-    @Substitute
-    public void close() {
-    }
+  @Override
+  @Substitute
+  public void close() {}
 }

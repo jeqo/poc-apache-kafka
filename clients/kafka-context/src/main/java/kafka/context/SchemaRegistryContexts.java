@@ -1,4 +1,6 @@
-package kafka.cli.context;
+package kafka.context;
+
+import static kafka.context.ContextHelper.passwordHelper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -6,16 +8,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.net.PasswordAuthentication;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextMap) {
+
   static final ObjectMapper json = new ObjectMapper();
+
+  public static SchemaRegistryContexts load(Path baseDir) throws IOException {
+    return from(Files.readAllBytes(schemaRegistryContextConfig(baseDir)));
+  }
+
+  public static SchemaRegistryContexts load() throws IOException {
+    return load(ContextHelper.baseDir());
+  }
+
+  public static void save(SchemaRegistryContexts contexts) throws IOException {
+    Files.write(schemaRegistryContextConfig(ContextHelper.baseDir()), contexts.serialize());
+  }
+
+  static Path schemaRegistryContextConfig(Path home) throws IOException {
+    final var context = home.resolve("schema-registry.json");
+    if (!Files.isRegularFile(context)) {
+      System.err.println(
+          "Schema Registry Content configuration file doesn't exist, creating one...");
+      Files.write(context, KafkaContexts.empty());
+    }
+
+    return context;
+  }
 
   static SchemaRegistryContexts from(byte[] bytes) throws IOException {
     final var tree = json.readTree(bytes);
-    if (!tree.isArray()) throw new IllegalArgumentException("JSON is not an array");
+    if (!tree.isArray()) {
+      throw new IllegalArgumentException("JSON is not an array");
+    }
 
     final var array = (ArrayNode) tree;
     final var contexts = new HashMap<String, SchemaRegistryContext>(array.size());
@@ -59,7 +90,7 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
     return json.writeValueAsString(node);
   }
 
-  record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {
+  public record SchemaRegistryContext(String name, SchemaRegistryCluster cluster) {
 
     static SchemaRegistryContext parse(JsonNode node) {
       final var name = node.get("name").textValue();
@@ -72,7 +103,7 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
       return node;
     }
 
-    public Properties properties(PasswordHelper passwordHelper) {
+    public Properties properties() {
       final var props = new Properties();
       props.put("schema.registry.url", cluster.urls());
       switch (cluster.auth().type()) {
@@ -81,7 +112,7 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
           var auth = (SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth();
           props.put(
               "basic.auth.user.info",
-              "%s:%s".formatted(auth.username(), passwordHelper.decrypt(auth.password())));
+              "%s:%s".formatted(auth.username(), passwordHelper().decrypt(auth.password())));
         }
         default -> {}
       }
@@ -102,7 +133,7 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
       };
     }
 
-    public String env(PasswordHelper passwordHelper, boolean includeAuth) {
+    public String env(boolean includeAuth) {
       var urls = cluster().urls();
       return switch (cluster.auth().type()) {
         case BASIC_AUTH -> includeAuth
@@ -113,15 +144,17 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
                 .formatted(
                     urls,
                     ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).username(),
-                    passwordHelper.decrypt(
-                        ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth()).password()))
+                    passwordHelper()
+                        .decrypt(
+                            ((SchemaRegistryContexts.UsernamePasswordAuth) cluster.auth())
+                                .password()))
             : "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
         case NO_AUTH -> "export SCHEMA_REGISTRY_URL=%s".formatted(urls);
       };
     }
   }
 
-  record SchemaRegistryCluster(String urls, SchemaRegistryAuth auth) {
+  public record SchemaRegistryCluster(String urls, SchemaRegistryAuth auth) {
     static SchemaRegistryCluster parse(JsonNode cluster) {
       return new SchemaRegistryCluster(
           cluster.get("urls").textValue(), SchemaRegistryAuth.parse(cluster.get("auth")));
@@ -134,7 +167,7 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
     }
   }
 
-  interface SchemaRegistryAuth {
+  public interface SchemaRegistryAuth {
     AuthType type();
 
     static SchemaRegistryAuth parse(JsonNode auth) {
@@ -156,15 +189,24 @@ public record SchemaRegistryContexts(Map<String, SchemaRegistryContext> contextM
     }
   }
 
-  record NoAuth() implements SchemaRegistryAuth {
+  public record NoAuth() implements SchemaRegistryAuth {
     @Override
     public AuthType type() {
       return AuthType.NO_AUTH;
     }
   }
 
-  record UsernamePasswordAuth(AuthType authType, String username, String password)
+  public record UsernamePasswordAuth(AuthType authType, String username, String password)
       implements SchemaRegistryAuth {
+
+    public static SchemaRegistryAuth build(AuthType authType, String username, String password) {
+      return new UsernamePasswordAuth(authType, username, passwordHelper().encrypt(password));
+    }
+
+    public PasswordAuthentication passwordAuth() {
+      return new PasswordAuthentication(username, passwordHelper().decrypt(password).toCharArray());
+    }
+
     @Override
     public AuthType type() {
       return authType;

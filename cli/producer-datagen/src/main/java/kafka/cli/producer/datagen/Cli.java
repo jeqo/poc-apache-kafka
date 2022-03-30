@@ -1,5 +1,6 @@
 package kafka.cli.producer.datagen;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import kafka.context.KafkaContexts;
+import kafka.context.SchemaRegistryContexts;
 import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
 import kafka.cli.producer.datagen.PayloadGenerator.Config;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
@@ -78,13 +81,8 @@ public class Cli implements Callable<Integer> {
         defaultValue = "-1")
     long throughput = -1L;
 
-    @CommandLine.Option(
-        names = {"-c", "--config"},
-        description =
-            "Client configuration properties file."
-                + "Must include connection to Kafka and Schema Registry",
-        required = true)
-    Path configPath;
+    @ArgGroup(multiplicity = "1")
+    PropertiesOption propertiesOption;
 
     @ArgGroup(multiplicity = "1")
     SchemaSourceOption schemaSource;
@@ -103,8 +101,8 @@ public class Cli implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-      var producerConfig = new Properties();
-      producerConfig.load(Files.newInputStream(configPath));
+      var producerConfig = propertiesOption.load();
+      if (producerConfig == null) return 1;
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -165,13 +163,8 @@ public class Cli implements Callable<Integer> {
         defaultValue = "5000")
     long interval;
 
-    @CommandLine.Option(
-        names = {"-c", "--config"},
-        description =
-            "Client configuration properties file."
-                + "Must include connection to Kafka and Schema Registry",
-        required = true)
-    Path configPath;
+    @ArgGroup(multiplicity = "1")
+    PropertiesOption propertiesOption;
 
     @Option(
         names = {"-f", "--format"},
@@ -186,8 +179,8 @@ public class Cli implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-      var producerConfig = new Properties();
-      producerConfig.load(Files.newInputStream(configPath));
+      var producerConfig = propertiesOption.load();
+      if (producerConfig == null) return 1;
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -232,13 +225,8 @@ public class Cli implements Callable<Integer> {
         required = true)
     String topicName;
 
-    @CommandLine.Option(
-        names = {"-c", "--config"},
-        description =
-            "Client configuration properties file."
-                + "Must include connection to Kafka and Schema Registry",
-        required = true)
-    Path configPath;
+    @ArgGroup(multiplicity = "1")
+    PropertiesOption propertiesOption;
 
     @ArgGroup(multiplicity = "1")
     SchemaSourceOption schemaSource;
@@ -251,8 +239,8 @@ public class Cli implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-      var producerConfig = new Properties();
-      producerConfig.load(Files.newInputStream(configPath));
+      var producerConfig = propertiesOption.load();
+      if (producerConfig == null) return 1;
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -326,13 +314,8 @@ public class Cli implements Callable<Integer> {
   @Command(name = "topics", description = "List topics and schemas available in a cluster")
   static class ListTopics implements Callable<Integer> {
 
-    @CommandLine.Option(
-        names = {"-c", "--config"},
-        description =
-            "Client configuration properties file."
-                + "Must include connection to Kafka and Schema Registry",
-        required = true)
-    Path configPath;
+    @ArgGroup(multiplicity = "1")
+    PropertiesOption propertiesOption;
 
     @Option(
         names = {"--pretty"},
@@ -344,8 +327,8 @@ public class Cli implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-      final var props = new Properties();
-      props.load(Files.newInputStream(configPath));
+      var props = propertiesOption.load();
+      if (props == null) return 1;
       final var kafkaAdminClient = AdminClient.create(props);
       final var topics = kafkaAdminClient.listTopics().names().get();
       final var schemaRegistryUrl = props.getProperty("schema.registry.url");
@@ -390,7 +373,86 @@ public class Cli implements Callable<Integer> {
     }
   }
 
+  static class PropertiesOption {
+
+    @CommandLine.Option(
+        names = {"-c", "--config"},
+        description =
+            "Client configuration properties file."
+                + "Must include connection to Kafka and Schema Registry")
+    Optional<Path> configPath;
+
+    @ArgGroup(exclusive = false)
+    ContextOption contextOption;
+
+    public Properties load() throws IOException {
+      return configPath.map(path -> {
+            try {
+              final var p = new Properties();
+              p.load(Files.newInputStream(path));
+              return p;
+            } catch (Exception e) {
+              throw new IllegalArgumentException(
+                  "ERROR: properties file at %s is failing to load".formatted(path));
+            }
+          })
+          .orElseGet(() -> {
+            try {
+              return contextOption.load();
+            } catch (IOException e) {
+              throw new IllegalArgumentException("ERROR: loading contexts");
+            }
+          });
+    }
+  }
+
+  static class ContextOption {
+
+    @Option(
+        names = "--kafka",
+        description = "Kafka context name",
+        required = true
+    )
+    String kafkaContextName;
+
+    @Option(
+        names = "--sr",
+        description = "Schema Registry context name"
+    )
+    Optional<String> srContextName;
+
+    public Properties load() throws IOException {
+      final var kafkas = KafkaContexts.load();
+      final var props = new Properties();
+      if (kafkas.has(kafkaContextName)) {
+        final var kafka = kafkas.get(kafkaContextName);
+        final var kafkaProps = kafka.properties();
+        props.putAll(kafkaProps);
+
+        if (srContextName.isPresent()) {
+          final var srs = SchemaRegistryContexts.load();
+          final var srName = srContextName.get();
+          if (srs.has(srName)) {
+            final var sr = srs.get(srName);
+            final var srProps = sr.properties();
+            props.putAll(srProps);
+          } else {
+            err.printf("WARN: Schema Registry context `%s` not found. Proceeding without it.%n",
+                srName);
+          }
+        }
+
+        return props;
+      } else {
+        err.printf("ERROR: Kafka context `%s` not found. Check that context already exist.%n",
+            kafkaContextName);
+        return null;
+      }
+    }
+  }
+
   static class SchemaSourceOption {
+
     @Option(
         names = {"-q", "--quickstart"},
         description = "Quickstart name. Valid values:  ${COMPLETION-CANDIDATES}")

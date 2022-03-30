@@ -1,5 +1,6 @@
 package kafka.cli.topics.list;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 import java.io.IOException;
@@ -10,9 +11,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
+import kafka.context.KafkaContexts;
 import kafka.cli.topics.list.Cli.VersionProviderWithConfigProvider;
 import org.apache.kafka.clients.admin.AdminClient;
 import picocli.CommandLine;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
@@ -41,13 +44,8 @@ public class Cli implements Callable<Integer> {
       description = "Topic name prefix")
   Optional<String> prefix = Optional.empty();
 
-  @Option(
-      names = {"-c", "--config"},
-      description =
-          "Client configuration properties file."
-              + "Must include connection to Kafka and Schema Registry",
-      required = true)
-  Path configPath;
+  @ArgGroup(multiplicity = "1")
+  PropertiesOption propertiesOption;
 
   @Option(
       names = {"--pretty"},
@@ -59,8 +57,7 @@ public class Cli implements Callable<Integer> {
   public Integer call() throws Exception {
     final var opts = new Opts(topics, prefix);
 
-    final var clientConfig = new Properties();
-    clientConfig.load(Files.newInputStream(configPath));
+    final var clientConfig = propertiesOption.load();
 
     try (var adminClient = AdminClient.create(clientConfig)) {
       final var helper = new Helper(adminClient);
@@ -74,6 +71,66 @@ public class Cli implements Callable<Integer> {
 
     public boolean match(String name) {
       return topics.contains(name) || prefix.map(name::startsWith).orElse(true);
+    }
+  }
+
+
+  static class PropertiesOption {
+
+    @CommandLine.Option(
+        names = {"-c", "--config"},
+        description =
+            "Client configuration properties file."
+                + "Must include connection to Kafka")
+    Optional<Path> configPath;
+
+    @ArgGroup(exclusive = false)
+    ContextOption contextOption;
+
+    public Properties load() {
+      return configPath.map(path -> {
+            try {
+              final var p = new Properties();
+              p.load(Files.newInputStream(path));
+              return p;
+            } catch (Exception e) {
+              throw new IllegalArgumentException(
+                  "ERROR: properties file at %s is failing to load".formatted(path));
+            }
+          })
+          .orElseGet(() -> {
+            try {
+              return contextOption.load();
+            } catch (IOException e) {
+              throw new IllegalArgumentException("ERROR: loading contexts");
+            }
+          });
+    }
+  }
+
+  static class ContextOption {
+
+    @Option(
+        names = "--kafka",
+        description = "Kafka context name",
+        required = true
+    )
+    String kafkaContextName;
+
+    public Properties load() throws IOException {
+      final var kafkas = KafkaContexts.load();
+      final var props = new Properties();
+      if (kafkas.has(kafkaContextName)) {
+        final var kafka = kafkas.get(kafkaContextName);
+        final var kafkaProps = kafka.properties();
+        props.putAll(kafkaProps);
+
+        return props;
+      } else {
+        err.printf("ERROR: Kafka context `%s` not found. Check that context already exist.%n",
+            kafkaContextName);
+        return null;
+      }
     }
   }
 
