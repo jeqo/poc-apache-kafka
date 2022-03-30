@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-import kafka.context.KafkaContexts;
 import kafka.cli.topics.list.Cli.VersionProviderWithConfigProvider;
+import kafka.context.KafkaContexts;
 import org.apache.kafka.clients.admin.AdminClient;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
@@ -74,47 +74,43 @@ public class Cli implements Callable<Integer> {
     }
   }
 
-
   static class PropertiesOption {
 
     @CommandLine.Option(
         names = {"-c", "--config"},
-        description =
-            "Client configuration properties file."
-                + "Must include connection to Kafka")
+        description = "Client configuration properties file." + "Must include connection to Kafka")
     Optional<Path> configPath;
 
     @ArgGroup(exclusive = false)
     ContextOption contextOption;
 
     public Properties load() {
-      return configPath.map(path -> {
-            try {
-              final var p = new Properties();
-              p.load(Files.newInputStream(path));
-              return p;
-            } catch (Exception e) {
-              throw new IllegalArgumentException(
-                  "ERROR: properties file at %s is failing to load".formatted(path));
-            }
-          })
-          .orElseGet(() -> {
-            try {
-              return contextOption.load();
-            } catch (IOException e) {
-              throw new IllegalArgumentException("ERROR: loading contexts");
-            }
-          });
+      return configPath
+          .map(
+              path -> {
+                try {
+                  final var p = new Properties();
+                  p.load(Files.newInputStream(path));
+                  return p;
+                } catch (Exception e) {
+                  throw new IllegalArgumentException(
+                      "ERROR: properties file at %s is failing to load".formatted(path));
+                }
+              })
+          .orElseGet(
+              () -> {
+                try {
+                  return contextOption.load();
+                } catch (IOException e) {
+                  throw new IllegalArgumentException("ERROR: loading contexts");
+                }
+              });
     }
   }
 
   static class ContextOption {
 
-    @Option(
-        names = "--kafka",
-        description = "Kafka context name",
-        required = true
-    )
+    @Option(names = "--kafka", description = "Kafka context name", required = true)
     String kafkaContextName;
 
     public Properties load() throws IOException {
@@ -127,7 +123,8 @@ public class Cli implements Callable<Integer> {
 
         return props;
       } else {
-        err.printf("ERROR: Kafka context `%s` not found. Check that context already exist.%n",
+        err.printf(
+            "ERROR: Kafka context `%s` not found. Check that context already exist.%n",
             kafkaContextName);
         return null;
       }
