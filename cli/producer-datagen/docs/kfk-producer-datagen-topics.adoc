@@ -19,7 +19,8 @@ kfk-producer-datagen-topics - List topics and schemas available in a cluster
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-producer-datagen topics* [*--pretty*] *-c*=_<configPath>_
+*kfk-producer-datagen topics* [*--pretty*] (*-c*=_<configPath>_ |
+                            [*--kafka*=_<kafkaContextName>_ [*--sr*=_<srContextName>_]])
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -36,8 +37,14 @@ List topics and schemas available in a cluster
 *-c*, *--config*=_<configPath>_::
   Client configuration properties file.Must include connection to Kafka and Schema Registry
 
+*--kafka*=_<kafkaContextName>_::
+  Kafka context name
+
 *--pretty*::
   Print pretty/formatted JSON
+
+*--sr*=_<srContextName>_::
+  Schema Registry context name
 
 // end::picocli-generated-man-section-options[]
 
