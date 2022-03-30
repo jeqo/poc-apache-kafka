@@ -87,6 +87,11 @@
     </dependency>
     <dependency>
       <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>avro-graalvm</artifactId>
+      <version>0.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-context</artifactId>
       <version>0.2.0</version>
     </dependency>
@@ -105,12 +110,6 @@
       <groupId>io.confluent.avro</groupId>
       <artifactId>avro-random-generator</artifactId>
       <version>${confluent.avro.generator.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.jeqo.kafka</groupId>
-      <artifactId>avro-graalvm</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
