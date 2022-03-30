@@ -1,4 +1,6 @@
-package kafka.cli.context;
+package kafka.context;
+
+import static kafka.context.ContextHelper.passwordHelper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -6,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -17,8 +21,30 @@ import org.apache.kafka.common.security.plain.internals.PlainSaslServer;
 public record KafkaContexts(Map<String, KafkaContext> contextMap) {
   static final ObjectMapper json = new ObjectMapper();
 
+  public static void save(KafkaContexts contexts) throws IOException {
+    Files.write(kafkaContextConfig(ContextHelper.baseDir()), contexts.serialize());
+  }
+
+  static Path kafkaContextConfig(Path home) throws IOException {
+    final var context = home.resolve("kafka.json");
+    if (!Files.isRegularFile(context)) {
+      System.err.println("Kafka Content configuration file doesn't exist, creating one...");
+      Files.write(context, KafkaContexts.empty());
+    }
+
+    return context;
+  }
+
   static byte[] empty() throws JsonProcessingException {
     return json.writeValueAsBytes(json.createArrayNode());
+  }
+
+  static KafkaContexts load(Path baseDir) throws IOException {
+    return from(Files.readAllBytes(kafkaContextConfig(baseDir)));
+  }
+
+  public static KafkaContexts load() throws IOException {
+    return load(ContextHelper.baseDir());
   }
 
   static KafkaContexts from(byte[] bytes) throws IOException {
@@ -67,7 +93,7 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
     return json.writeValueAsString(node);
   }
 
-  record KafkaContext(String name, KafkaCluster cluster) {
+  public record KafkaContext(String name, KafkaCluster cluster) {
 
     static KafkaContext parse(JsonNode node) {
       final var name = node.get("name").textValue();
@@ -80,7 +106,7 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
       return node;
     }
 
-    public Properties properties(PasswordHelper passwordHelper) throws IOException {
+    public Properties properties() throws IOException {
       final var props = new Properties();
       props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, cluster.bootstrapServers());
       switch (cluster.auth().type()) {
@@ -91,7 +117,7 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
           props.setProperty(
               SaslConfigs.SASL_JAAS_CONFIG,
               "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-                  .formatted(auth.username(), passwordHelper.decrypt(auth.password())));
+                  .formatted(auth.username(), passwordHelper().decrypt(auth.password())));
         }
         default -> {}
       }
@@ -109,7 +135,7 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
       };
     }
 
-    public String env(PasswordHelper passwordHelper, boolean includeAuth) {
+    public String env(boolean includeAuth) {
       return switch (cluster.auth().type()) {
         case SASL_PLAIN -> includeAuth
             ? """
@@ -119,14 +145,14 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
                 .formatted(
                     cluster.bootstrapServers,
                     ((UsernamePasswordAuth) cluster.auth()).username,
-                    passwordHelper.decrypt(((UsernamePasswordAuth) cluster.auth()).password))
+                    passwordHelper().decrypt(((UsernamePasswordAuth) cluster.auth()).password))
             : "export KAFKA_BOOTSTRAP_SERVERS=%s".formatted(cluster.bootstrapServers);
         default -> "export KAFKA_BOOTSTRAP_SERVERS=%s".formatted(cluster.bootstrapServers);
       };
     }
   }
 
-  record KafkaCluster(String bootstrapServers, KafkaAuth auth) {
+  public record KafkaCluster(String bootstrapServers, KafkaAuth auth) {
     static KafkaCluster parse(JsonNode cluster) {
       return new KafkaCluster(
           cluster.get("bootstrapServers").textValue(), KafkaAuth.parse(cluster.get("auth")));
@@ -139,7 +165,7 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
     }
   }
 
-  interface KafkaAuth {
+  public interface KafkaAuth {
     AuthType type();
 
     static KafkaAuth parse(JsonNode auth) {
@@ -161,15 +187,20 @@ public record KafkaContexts(Map<String, KafkaContext> contextMap) {
     }
   }
 
-  record NoAuth() implements KafkaAuth {
+  public record NoAuth() implements KafkaAuth {
     @Override
     public AuthType type() {
       return AuthType.PLAINTEXT;
     }
   }
 
-  record UsernamePasswordAuth(AuthType authType, String username, String password)
+  public record UsernamePasswordAuth(AuthType authType, String username, String password)
       implements KafkaAuth {
+
+    public static UsernamePasswordAuth build(AuthType authType, String username, String password) {
+      return new UsernamePasswordAuth(authType, username, passwordHelper().encrypt(password));
+    }
+
     @Override
     public AuthType type() {
       return authType;

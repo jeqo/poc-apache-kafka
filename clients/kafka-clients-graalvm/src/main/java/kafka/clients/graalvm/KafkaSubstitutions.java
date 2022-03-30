@@ -30,45 +30,47 @@ import org.apache.kafka.common.utils.AppInfoParser;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
-// Copied from: https://github.com/micronaut-projects/micronaut-kafka/blob/master/kafka/src/main/java/io/micronaut/configuration/kafka/graal/KafkaSubstitutions.java
-//CHECKSTYLE:OFF
+// Copied from:
+// https://github.com/micronaut-projects/micronaut-kafka/blob/master/kafka/src/main/java/io/micronaut/configuration/kafka/graal/KafkaSubstitutions.java
+// CHECKSTYLE:OFF
 @AutomaticFeature
 final class ChecksumFeature implements Feature {
-    @Override
-    public void beforeAnalysis(BeforeAnalysisAccess access) {
-        Class<?> c = access.findClassByName("java.util.zip.CRC32C");
-        if (c != null) {
-            RuntimeReflection.registerForReflectiveInstantiation(c);
-            RuntimeReflection.register(c);
-        }
+  @Override
+  public void beforeAnalysis(BeforeAnalysisAccess access) {
+    Class<?> c = access.findClassByName("java.util.zip.CRC32C");
+    if (c != null) {
+      RuntimeReflection.registerForReflectiveInstantiation(c);
+      RuntimeReflection.register(c);
     }
+  }
 }
 
-//@TargetClass(className = "org.apache.kafka.common.utils.Crc32C$Java9ChecksumFactory")
-//@Substitute
-//final class Java9ChecksumFactory {
+// @TargetClass(className = "org.apache.kafka.common.utils.Crc32C$Java9ChecksumFactory")
+// @Substitute
+// final class Java9ChecksumFactory {
 //
 //    @Substitute
 //    public Checksum create() {
-//        return (Checksum) InstantiationUtils.instantiate("java.util.zip.CRC32C", getClass().getClassLoader());
+//        return (Checksum) InstantiationUtils.instantiate("java.util.zip.CRC32C",
+// getClass().getClassLoader());
 //    }
 //
-//}
+// }
 
 // Replace unsupported compression types
 @TargetClass(className = "org.apache.kafka.common.record.CompressionType")
 final class CompressionTypeSubs {
 
-    // @Alias @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
-    // public static CompressionType LZ4 = CompressionType.GZIP;
+  // @Alias @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
+  // public static CompressionType LZ4 = CompressionType.GZIP;
 
-    @Alias
-    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
-    public static CompressionType SNAPPY = CompressionType.GZIP;
+  @Alias
+  @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
+  public static CompressionType SNAPPY = CompressionType.GZIP;
 
-    @Alias
-    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
-    public static CompressionType ZSTD = CompressionType.GZIP;
+  @Alias
+  @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)
+  public static CompressionType ZSTD = CompressionType.GZIP;
 }
 
 // Replace JMX metrics, no operable on GraalVM
@@ -76,51 +78,44 @@ final class CompressionTypeSubs {
 @Substitute
 final class NoopReporter implements MetricsReporter {
 
-    @Substitute
-    public NoopReporter() {
-    }
+  @Substitute
+  public NoopReporter() {}
 
-    @Substitute
-    public NoopReporter(String prefix) {
-    }
+  @Substitute
+  public NoopReporter(String prefix) {}
 
-    @Override
-    @Substitute
-    public void init(List<KafkaMetric> metrics) {
-    }
+  @Override
+  @Substitute
+  public void init(List<KafkaMetric> metrics) {}
 
-    @Override
-    @Substitute
-    public void metricChange(KafkaMetric metric) {
-    }
+  @Override
+  @Substitute
+  public void metricChange(KafkaMetric metric) {}
 
-    @Override
-    @Substitute
-    public void metricRemoval(KafkaMetric metric) {
-    }
+  @Override
+  @Substitute
+  public void metricRemoval(KafkaMetric metric) {}
 
-    @Override
-    @Substitute
-    public void close() {
-    }
+  @Override
+  @Substitute
+  public void close() {}
 
-    @Override
-    @Substitute
-    public void configure(Map<String, ?> configs) {
-    }
+  @Override
+  @Substitute
+  public void configure(Map<String, ?> configs) {}
 }
 
 @TargetClass(AppInfoParser.class)
 final class AppInfoParserNoJMX {
 
-    @Substitute
-    public static void registerAppInfo(String prefix, String id, Metrics metrics, long nowMs) {
-        // no-op
-    }
+  @Substitute
+  public static void registerAppInfo(String prefix, String id, Metrics metrics, long nowMs) {
+    // no-op
+  }
 
-    @Substitute
-    public static void unregisterAppInfo(String prefix, String id, Metrics metrics) {
-        // no-op
-    }
+  @Substitute
+  public static void unregisterAppInfo(String prefix, String id, Metrics metrics) {
+    // no-op
+  }
 }
-//CHECKSTYLE:ON
+// CHECKSTYLE:ON
