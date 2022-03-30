@@ -65,6 +65,11 @@
       <artifactId>picocli-codegen</artifactId>
       <version>${picocli.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>kafka-context</artifactId>
+      <version>0.1.2-SNAPSHOT</version>
+    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
