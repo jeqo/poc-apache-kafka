@@ -47,13 +47,7 @@ import picocli.CommandLine.Option;
     mixinStandardHelpOptions = true,
     descriptionHeading = "Kafka CLI - Producer Datagen",
     description = "Kafka Producer with Data generation",
-    subcommands = {
-      Perf.class,
-      Interval.class,
-      ProduceOnce.class,
-      Sample.class,
-      ListTopics.class
-    })
+    subcommands = {Perf.class, Interval.class, ProduceOnce.class, Sample.class, ListTopics.class})
 public class Cli implements Callable<Integer> {
 
   public static void main(String[] args) {
@@ -100,7 +94,9 @@ public class Cli implements Callable<Integer> {
         defaultValue = "JSON")
     Format format;
 
-    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    @Option(
+        names = {"-p", "--prop"},
+        description = "Additional client properties")
     Map<String, String> additionalProperties = new HashMap<>();
 
     int reportingInterval = 5_000;
@@ -186,7 +182,9 @@ public class Cli implements Callable<Integer> {
     @ArgGroup(multiplicity = "1")
     SchemaSourceOption schemaSource;
 
-    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    @Option(
+        names = {"-p", "--prop"},
+        description = "Additional client properties")
     Map<String, String> additionalProperties = new HashMap<>();
 
     int reportingInterval = 5_000;
@@ -252,7 +250,9 @@ public class Cli implements Callable<Integer> {
         defaultValue = "JSON")
     Format format;
 
-    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    @Option(
+        names = {"-p", "--prop"},
+        description = "Additional client properties")
     Map<String, String> additionalProperties = new HashMap<>();
 
     @Override
@@ -342,7 +342,9 @@ public class Cli implements Callable<Integer> {
         description = "Print pretty/formatted JSON")
     boolean pretty;
 
-    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    @Option(
+        names = {"-p", "--prop"},
+        description = "Additional client properties")
     Map<String, String> additionalProperties = new HashMap<>();
 
     final ObjectMapper json = new ObjectMapper();
