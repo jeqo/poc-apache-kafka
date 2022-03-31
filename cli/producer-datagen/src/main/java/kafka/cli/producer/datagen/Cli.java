@@ -4,6 +4,7 @@ import static java.lang.System.err;
 import static java.lang.System.out;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
@@ -27,7 +28,7 @@ import kafka.cli.producer.datagen.Cli.Sample;
 import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
 import kafka.cli.producer.datagen.PayloadGenerator.Config;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
-import kafka.cli.producer.datagen.TopicAndSchema.Schema;
+import kafka.cli.producer.datagen.TopicAndSchema.SubjectSchemas;
 import kafka.context.KafkaContexts;
 import kafka.context.SchemaRegistryContexts;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -330,7 +331,7 @@ public class Cli implements Callable<Integer> {
     }
   }
 
-  @Command(name = "topics", description = "List topics and schemas available in a cluster")
+  @Command(name = "topics", description = "List topics and subjectSchemas available in a cluster")
   static class ListTopics implements Callable<Integer> {
 
     @ArgGroup(multiplicity = "1")
@@ -378,12 +379,24 @@ public class Cli implements Callable<Integer> {
                 .map(
                     c -> {
                       try {
-                        return c.getSchemas(topic, false, true);
+                        final var allSubjectsByPrefix = c.getAllSubjectsByPrefix(topic);
+                        final var subjects = new HashMap<String, List<ParsedSchema>>();
+                        for (final var s : allSubjectsByPrefix) {
+                          try {
+                            final var schemas = c.getSchemas(s, false, true);
+                            subjects.put(s, schemas);
+                          } catch (IOException | RestClientException e) {
+                            throw new RuntimeException(e);
+                          }
+                        }
+                        return subjects;
                       } catch (IOException | RestClientException e) {
                         throw new RuntimeException(e);
                       }
                     })
-                .map(parsedSchemas -> parsedSchemas.stream().map(Schema::from).toList())
+                .map(
+                    parsedSchemas ->
+                        parsedSchemas.entrySet().stream().map(SubjectSchemas::from).toList())
                 .orElse(List.of());
         result.add(new TopicAndSchema(topic, subject));
       }
