@@ -348,6 +348,11 @@ public class Cli implements Callable<Integer> {
         description = "Additional client properties")
     Map<String, String> additionalProperties = new HashMap<>();
 
+    @Option(
+        names = {"--prefix"},
+        description = "Topic name prefix")
+    Optional<String> prefix;
+
     final ObjectMapper json = new ObjectMapper();
 
     @Override
@@ -356,7 +361,11 @@ public class Cli implements Callable<Integer> {
       if (props == null) return 1;
       props.putAll(additionalProperties);
       final var kafkaAdminClient = AdminClient.create(props);
-      final var topics = kafkaAdminClient.listTopics().names().get();
+      final var topics =
+          kafkaAdminClient.listTopics().names().get().stream()
+              .filter(t -> prefix.map(t::startsWith).orElse(true))
+              .toList();
+
       final var schemaRegistryUrl = props.getProperty("schema.registry.url");
       final Optional<SchemaRegistryClient> schemaRegistryClient;
       if (schemaRegistryUrl != null && !schemaRegistryUrl.isBlank()) {
