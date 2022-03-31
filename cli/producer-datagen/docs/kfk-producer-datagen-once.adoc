@@ -19,9 +19,10 @@ kfk-producer-datagen-once - produce once
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-producer-datagen once* [*-f*=_<format>_] *-t*=_<topicName>_ (*-c*=_<configPath>_ |
-                          [*--kafka*=_<kafkaContextName>_ [*--sr*=_<srContextName>_]])
-                          (*-q*=_<quickstart>_ | *-s*=_<schemaPath>_)
+*kfk-producer-datagen once* [*-f*=_<format>_] *-t*=_<topicName>_ [*-p*=_<String=String>_]...
+                          (*-c*=_<configPath>_ | [*--kafka*=_<kafkaContextName>_
+                          [*--sr*=_<srContextName>_]]) (*-q*=_<quickstart>_ |
+                          *-s*=_<schemaPath>_)
 
 // end::picocli-generated-man-section-synopsis[]
 
@@ -43,6 +44,9 @@ produce once
 
 *--kafka*=_<kafkaContextName>_::
   Kafka context name
+
+*-p*, *--prop*=_<String=String>_::
+  Additional client properties
 
 *-q*, *--quickstart*=_<quickstart>_::
   Quickstart name. Valid values:  CLICKSTREAM_CODES, CLICKSTREAM, CLICKSTREAM_USERS, ORDERS, RATINGS, USERS, USERS_, PAGEVIEWS, STOCK_TRADES, INVENTORY, PRODUCT, PURCHASES, TRANSACTIONS, STORES, CREDIT_CARDS

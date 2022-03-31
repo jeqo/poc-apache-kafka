@@ -12,14 +12,15 @@
 // tag::picocli-generated-man-section-name[]
 == Name
 
-kfk-producer-datagen-topics - List topics and schemas available in a cluster
+kfk-producer-datagen-topics - List topics and subjectSchemas available in a cluster
 
 // end::picocli-generated-man-section-name[]
 
 // tag::picocli-generated-man-section-synopsis[]
 == Synopsis
 
-*kfk-producer-datagen topics* [*--pretty*] (*-c*=_<configPath>_ |
+*kfk-producer-datagen topics* [*--pretty*] [*--prefix*=_<prefix>_]
+                            [*-p*=_<String=String>_]... (*-c*=_<configPath>_ |
                             [*--kafka*=_<kafkaContextName>_ [*--sr*=_<srContextName>_]])
 
 // end::picocli-generated-man-section-synopsis[]
@@ -27,7 +28,7 @@ kfk-producer-datagen-topics - List topics and schemas available in a cluster
 // tag::picocli-generated-man-section-description[]
 == Description
 
-List topics and schemas available in a cluster
+List topics and subjectSchemas available in a cluster
 
 // end::picocli-generated-man-section-description[]
 
@@ -39,6 +40,12 @@ List topics and schemas available in a cluster
 
 *--kafka*=_<kafkaContextName>_::
   Kafka context name
+
+*-p*, *--prop*=_<String=String>_::
+  Additional client properties
+
+*--prefix*=_<prefix>_::
+  Topic name prefix
 
 *--pretty*::
   Print pretty/formatted JSON
