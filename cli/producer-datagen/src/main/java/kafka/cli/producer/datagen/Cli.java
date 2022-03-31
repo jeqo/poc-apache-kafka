@@ -12,11 +12,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import kafka.cli.producer.datagen.Cli.Interval;
+import kafka.cli.producer.datagen.Cli.ListTopics;
+import kafka.cli.producer.datagen.Cli.Perf;
+import kafka.cli.producer.datagen.Cli.ProduceOnce;
+import kafka.cli.producer.datagen.Cli.Sample;
 import kafka.cli.producer.datagen.Cli.VersionProviderWithConfigProvider;
 import kafka.cli.producer.datagen.PayloadGenerator.Config;
 import kafka.cli.producer.datagen.PayloadGenerator.Format;
@@ -41,11 +48,11 @@ import picocli.CommandLine.Option;
     descriptionHeading = "Kafka CLI - Producer Datagen",
     description = "Kafka Producer with Data generation",
     subcommands = {
-      Cli.Run.class,
-      Cli.Interval.class,
-      Cli.ProduceOnce.class,
-      Cli.Sample.class,
-      Cli.ListTopics.class
+      Perf.class,
+      Interval.class,
+      ProduceOnce.class,
+      Sample.class,
+      ListTopics.class
     })
 public class Cli implements Callable<Integer> {
 
@@ -61,7 +68,7 @@ public class Cli implements Callable<Integer> {
   }
 
   @CommandLine.Command(name = "perf", description = "run performance tests")
-  static class Run implements Callable<Integer> {
+  static class Perf implements Callable<Integer> {
 
     @CommandLine.Option(
         names = {"-t", "--topic"},
@@ -93,6 +100,9 @@ public class Cli implements Callable<Integer> {
         defaultValue = "JSON")
     Format format;
 
+    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    Map<String, String> additionalProperties = new HashMap<>();
+
     int reportingInterval = 5_000;
     boolean shouldPrintMetrics = false;
 
@@ -100,9 +110,10 @@ public class Cli implements Callable<Integer> {
     long transactionDuration = 100L;
 
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
       var producerConfig = propertiesOption.load();
       if (producerConfig == null) return 1;
+      producerConfig.putAll(additionalProperties);
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -175,12 +186,16 @@ public class Cli implements Callable<Integer> {
     @ArgGroup(multiplicity = "1")
     SchemaSourceOption schemaSource;
 
+    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    Map<String, String> additionalProperties = new HashMap<>();
+
     int reportingInterval = 5_000;
 
     @Override
     public Integer call() throws Exception {
       var producerConfig = propertiesOption.load();
       if (producerConfig == null) return 1;
+      producerConfig.putAll(additionalProperties);
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -237,10 +252,14 @@ public class Cli implements Callable<Integer> {
         defaultValue = "JSON")
     Format format;
 
+    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    Map<String, String> additionalProperties = new HashMap<>();
+
     @Override
     public Integer call() throws Exception {
       var producerConfig = propertiesOption.load();
       if (producerConfig == null) return 1;
+      producerConfig.putAll(additionalProperties);
       var keySerializer = new StringSerializer();
       Serializer<Object> valueSerializer;
       if (format.equals(Format.AVRO)) {
@@ -323,12 +342,16 @@ public class Cli implements Callable<Integer> {
         description = "Print pretty/formatted JSON")
     boolean pretty;
 
+    @Option(names = {"-p", "--prop"}, description = "Additional client properties")
+    Map<String, String> additionalProperties = new HashMap<>();
+
     final ObjectMapper json = new ObjectMapper();
 
     @Override
     public Integer call() throws Exception {
       var props = propertiesOption.load();
       if (props == null) return 1;
+      props.putAll(additionalProperties);
       final var kafkaAdminClient = AdminClient.create(props);
       final var topics = kafkaAdminClient.listTopics().names().get();
       final var schemaRegistryUrl = props.getProperty("schema.registry.url");
@@ -385,7 +408,7 @@ public class Cli implements Callable<Integer> {
     @ArgGroup(exclusive = false)
     ContextOption contextOption;
 
-    public Properties load() throws IOException {
+    public Properties load() {
       return configPath
           .map(
               path -> {
