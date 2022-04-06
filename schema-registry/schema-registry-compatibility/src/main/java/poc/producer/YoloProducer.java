@@ -23,9 +23,9 @@ public class YoloProducer {
     final var jsonMapper = new ObjectMapper();
     final var valueJson = jsonMapper.createObjectNode()
         .put("username", "Jorge")
-//        .put("created_at", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        .put("created_at", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
     // or is it unix-time better?
-         .put("created_at", System.currentTimeMillis());
+//         .put("created_at", System.currentTimeMillis());
     final var value = jsonMapper.writeValueAsString(valueJson);
     final var record = new ProducerRecord<>(Topics.POC_YOLO.name(),
         valueJson.get("username").asText(), value);
