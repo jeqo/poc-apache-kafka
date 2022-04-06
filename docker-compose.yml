@@ -41,6 +41,8 @@ services:
       # Logging
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      # Broker-side Schema Validation
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
 
   schema-registry:
     image: confluentinc/cp-schema-registry:${CP_VERSION}
