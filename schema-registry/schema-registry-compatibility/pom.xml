@@ -11,10 +11,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <java.version>15</java.version>
-    <kafka.version>2.6.0</kafka.version>
-    <confluent.version>6.0.0</confluent.version>
-    <avro.version>1.9.2</avro.version>
+    <java.version>17</java.version>
+    <kafka.version>3.1.0</kafka.version>
+    <confluent.version>7.0.2</confluent.version>
+    <avro.version>1.11.0</avro.version>
   </properties>
 
   <dependencies>
@@ -35,10 +35,24 @@
       <version>${avro.version}</version>
     </dependency>
 
+    <!-- Core KafkaAvro(Ser/De) -->
     <dependency>
       <groupId>io.confluent</groupId>
       <artifactId>kafka-avro-serializer</artifactId>
       <version>${confluent.version}</version>
+    </dependency>
+
+    <!-- Specific/Generic Avro (Ser/De) -->
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-streams-avro-serde</artifactId>
+      <version>${confluent.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.36</version>
     </dependency>
   </dependencies>
 
@@ -53,7 +67,25 @@
           <target>${java.version}</target>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>${avro.version}</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+              <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+              <stringType>String</stringType>
+              <dateTimeLogicalTypeImplementation>JSR310</dateTimeLogicalTypeImplementation>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-schema-registry-maven-plugin</artifactId>

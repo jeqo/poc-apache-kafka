@@ -1,0 +1,28 @@
+{
+  "fields": [
+    {
+      "name": "username",
+      "type": {
+        "avro.java.string": "String",
+        "type": "string"
+      }
+    },
+    {
+      "name": "create_at",
+      "type": {
+        "logicalType": "timestamp-millis",
+        "type": "long"
+      }
+    },
+    {
+      "name": "country",
+      "type": {
+        "avro.java.string": "String",
+        "type": "string"
+      }
+    }
+  ],
+  "name": "User",
+  "namespace": "poc.avro",
+  "type": "record"
+}
