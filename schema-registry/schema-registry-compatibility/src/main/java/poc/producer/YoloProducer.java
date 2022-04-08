@@ -27,7 +27,7 @@ public class YoloProducer {
     // or is it unix-time better?
 //         .put("created_at", System.currentTimeMillis());
     final var value = jsonMapper.writeValueAsString(valueJson);
-    final var record = new ProducerRecord<>(Topics.POC_YOLO.name(),
+    final var record = new ProducerRecord<>(Topics.POC_BACKWARD.name(),
         valueJson.get("username").asText(), value);
     // Send
     producer.send(record, (metadata, exception) -> {

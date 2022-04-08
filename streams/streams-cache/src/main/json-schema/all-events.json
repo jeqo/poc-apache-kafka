@@ -1,0 +1,14 @@
+{
+  "oneOf": [
+    {
+      "name": "customer.schema.json",
+      "subject": "customer",
+      "version": 1
+    },
+    {
+      "name": "product.schema.json",
+      "subject": "product",
+      "version": 1
+    }
+  ]
+}
