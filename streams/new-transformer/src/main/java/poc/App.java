@@ -13,7 +13,6 @@ import org.apache.kafka.streams.processor.api.ContextualProcessor;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
 import org.apache.kafka.streams.processor.api.FixedKeyRecord;
-import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.Record;
 
 public class App {
@@ -48,12 +47,14 @@ public class App {
           }
         }, Named.as("test"))
         .to("output", Produced.with(Serdes.String(), Serdes.String()));
-//    input.process(() -> new Processor<>() {
-//      @Override
-//      public void process(Record<String, String> record) {
-//        System.out.println(record.value());
-//      }
-//    });
+    input.process(() -> new ContextualProcessor<>() {
+          @Override
+          public void process(Record<String, String> record) {
+            System.out.println(record.value());
+            context().forward(record);
+          }
+        })
+        .to("test-other");
     return builder.build();
   }
 
