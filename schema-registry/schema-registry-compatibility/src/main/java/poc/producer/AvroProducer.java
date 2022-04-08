@@ -33,7 +33,7 @@ public class AvroProducer {
 //        .setCity("London")
         .build();
     final var key = value.getUsername();
-    final var record = new ProducerRecord<>(Topics.POC_FORWARD.name(), key, value);
+    final var record = new ProducerRecord<>(Topics.POC_BACKWARD.name(), key, value);
     // Send
     producer.send(record, (metadata, exception) -> {
       if (exception == null) {

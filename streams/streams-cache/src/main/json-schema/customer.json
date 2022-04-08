@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "default": "customer_event"
+    },
+    "customer_id": {
+      "type": "string"
+    }
+  }
+}
