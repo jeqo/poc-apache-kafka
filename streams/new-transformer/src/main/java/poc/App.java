@@ -47,14 +47,14 @@ public class App {
           }
         }, Named.as("test"))
         .to("output", Produced.with(Serdes.String(), Serdes.String()));
-    input.process(() -> new ContextualProcessor<>() {
+    input.process(() -> new ContextualProcessor<String, String, String, String>() {
           @Override
           public void process(Record<String, String> record) {
             System.out.println(record.value());
             context().forward(record);
           }
-        })
-        .to("test-other");
+        }, Named.as("test-other"))
+        .to("other", Produced.with(Serdes.String(), Serdes.String()));
     return builder.build();
   }
 
