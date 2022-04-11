@@ -2,9 +2,11 @@ package kafka.cli.quotas;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import kafka.cli.quotas.Quotas.Quota;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.common.quota.ClientQuotaAlteration;
 import org.apache.kafka.common.quota.ClientQuotaEntity;
 import org.apache.kafka.common.quota.ClientQuotaFilter;
 import org.apache.kafka.common.quota.ClientQuotaFilterComponent;
@@ -50,23 +52,31 @@ public class QuotaManager {
         return query(filter);
     }
 
-    public Quotas byUser(List<String> users) {
+    public Quotas byUsers(List<String> users) {
         final var filter = ClientQuotaFilter.contains(
-                users.stream()
-                        .map(u -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, u))
-                        .toList());
+            users.stream()
+                .map(u -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, u))
+                .toList());
         return query(filter);
     }
 
-    public Quotas byClient(List<String> clientIds) {
+    public Quotas byUsers(Map<String, List<String>> users) {
         final var filter = ClientQuotaFilter.contains(
-                clientIds.stream()
-                        .map(id -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.CLIENT_ID, id))
-                        .toList());
+            users.keySet().stream()
+                .map(u -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, u))
+                .toList());
         return query(filter);
     }
 
-    public void create(Quota quota) {
-        throw new UnsupportedOperationException();
+    public Quotas byClients(List<String> clientIds) {
+        final var filter = ClientQuotaFilter.contains(
+            clientIds.stream()
+                .map(id -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.CLIENT_ID, id))
+                .toList());
+        return query(filter);
+    }
+
+    public void create(Quota quota) throws ExecutionException, InterruptedException {
+        kafkaAdmin.alterClientQuotas(List.of(quota.toAlteration())).all().get();
     }
 }
