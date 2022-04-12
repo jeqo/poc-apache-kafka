@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import kafka.cli.quotas.Quotas.Quota;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.quota.ClientQuotaEntity;
@@ -58,58 +57,90 @@ public class QuotaManager {
         return query(filter);
     }
 
-    public Quotas byUsers(List<String> users, boolean userDefault) {
-        final var components = users.stream()
-            .map(id -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, id))
-            .collect(Collectors.toList());
-        if (userDefault) {
-            components.add(ClientQuotaFilterComponent.ofDefaultEntity(ClientQuotaEntity.USER));
-        }
-        final var filter = ClientQuotaFilter.containsOnly(components);
-        return query(filter);
-    }
-
-    public Quotas byUsers(Map<String, List<String>> users) {
-//        final var components = users.keySet().stream()
-//            .map(u -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, u))
-//            .toList();
-        final var all = new Quotas(new ArrayList<>());
-        final var components = new ArrayList<ClientQuotaFilterComponent>();
+    public Quotas byUsers(Map<String, List<String>> users, boolean includeDefault, boolean onlyMatch) {
+        final var perEntity = Quotas.empty();
+        final var defaults = Quotas.empty();
         for (final var user : users.keySet()) {
-            components.add(ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, user));
-            for (final var client : users.get(user)) {
-                components.add(ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.CLIENT_ID, client));
+            if (includeDefault || !onlyMatch) {
+                defaults.append(fromUserClientDefault(user));
             }
-            final var filter = ClientQuotaFilter.containsOnly(components);
-            final var quotas = query(filter);
-            all.append(quotas);
+            for (final var client : users.get(user)) {
+                final var quotas = onlyByUserClient(user, client);
+                perEntity.append(quotas);
+            }
         }
-        return all;
+        if (onlyMatch) {
+            if (includeDefault) {
+                return perEntity.append(defaults);
+            }
+            return perEntity;
+        } else {
+            return perEntity.append(defaults);
+        }
     }
 
-    public Quotas byClients(List<String> clientIds, boolean clientIdDefault) {
-        final var components = clientIds.stream()
-            .map(id -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.CLIENT_ID, id))
-            .collect(Collectors.toList());
-        if (clientIdDefault) {
-            components.add(ClientQuotaFilterComponent.ofDefaultEntity(ClientQuotaEntity.CLIENT_ID));
+    public Quotas byUsers(List<String> users, boolean userDefault, boolean onlyMatch) {
+        return by(ClientQuotaEntity.USER, users, userDefault, onlyMatch);
+    }
+
+    public Quotas byClients(List<String> clientIds, boolean clientIdDefault, boolean onlyMatch) {
+        return by(ClientQuotaEntity.CLIENT_ID, clientIds, clientIdDefault, onlyMatch);
+    }
+
+    public Quotas byIps(List<String> ips, boolean ipDefault, boolean onlyMatch) {
+        return by(ClientQuotaEntity.IP, ips, ipDefault, onlyMatch);
+    }
+
+    public Quotas by(String entityType, List<String> entities, boolean includeDefault, boolean onlyMatch) {
+        final var perEntity = entities.stream()
+            .map(e -> onlyBy(entityType, e))
+            .reduce(Quotas.empty(), Quotas::append);
+        if (onlyMatch) {
+            if (includeDefault) {
+                return perEntity.append(fromDefault(entityType));
+            }
+            return perEntity;
+        } else {
+            return perEntity.append(fromDefault(entityType));
         }
-        final var filter = ClientQuotaFilter.containsOnly(components);
+    }
+
+    Quotas fromDefault(String entityType) {
+        final var components = ClientQuotaFilterComponent.ofDefaultEntity(entityType);
+        final var filter = ClientQuotaFilter.containsOnly(List.of(components));
         return query(filter);
     }
 
-    public Quotas byIps(List<String> ips, boolean ipDefault) {
-        final var components = ips.stream()
-            .map(id -> ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.IP, id))
-            .collect(Collectors.toList());
-        if (ipDefault) {
-            components.add(ClientQuotaFilterComponent.ofDefaultEntity(ClientQuotaEntity.IP));
-        }
-        final var filter = ClientQuotaFilter.containsOnly(components);
+    Quotas fromUserClientDefault(String user) {
+        final var byUser = ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, user);
+        final var byClient = ClientQuotaFilterComponent.ofDefaultEntity(ClientQuotaEntity.CLIENT_ID);
+        final var filter = ClientQuotaFilter.containsOnly(List.of(byClient));
+        return query(filter);
+    }
+
+    Quotas onlyBy(String entityType, String entity) {
+        final var components = ClientQuotaFilterComponent.ofEntity(entityType, entity);
+        final var filter = ClientQuotaFilter.containsOnly(List.of(components));
+        return query(filter);
+    }
+
+    Quotas onlyByUserClient(String user, String client) {
+        final var byUser = ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.USER, user);
+        final var byClient = ClientQuotaFilterComponent.ofEntity(ClientQuotaEntity.CLIENT_ID, client);
+        final var filter = ClientQuotaFilter.containsOnly(List.of(byUser, byClient));
         return query(filter);
     }
 
     public void create(Quota quota) throws ExecutionException, InterruptedException {
         kafkaAdmin.alterClientQuotas(List.of(quota.toAlteration())).all().get();
+    }
+
+    public void delete(Quota quota) throws ExecutionException, InterruptedException {
+        kafkaAdmin.alterClientQuotas(List.of(quota.toAlteration())).all().get();
+    }
+
+    public void delete(Quotas quotas) throws ExecutionException, InterruptedException {
+        final var alterations = quotas.toDeleteAlterations();
+        kafkaAdmin.alterClientQuotas(alterations).all().get();
     }
 }

@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import kafka.cli.quotas.Cli.CreateCommand;
+import kafka.cli.quotas.Cli.DeleteCommand;
 import kafka.cli.quotas.Cli.QueryCommand;
 import kafka.cli.quotas.Quotas.ConnectionCreationRate;
 import kafka.cli.quotas.Quotas.Constraint;
@@ -34,7 +35,8 @@ import picocli.CommandLine.Option;
     name = "kfk-quotas",
     subcommands = {
         QueryCommand.class,
-        CreateCommand.class
+        CreateCommand.class,
+        DeleteCommand.class
     }
 )
 public class Cli implements Callable<Integer> {
@@ -81,40 +83,48 @@ public class Cli implements Callable<Integer> {
         @Option(names = {"--ip-default"})
         boolean ipDefault;
 
+        @Option(names = {"--only-match", "-m"})
+        boolean onlyMatch;
+
         @Override
         public Integer call() throws Exception {
             final var props = propertiesOption.load();
-            final var kafkaAdmin = AdminClient.create(props);
-            final var quotaManager = new QuotaManager(kafkaAdmin);
+            try (final var kafkaAdmin = AdminClient.create(props)) {
+                final var quotaManager = new QuotaManager(kafkaAdmin);
 
-            if (allUsers) {
-                final var quotas = quotaManager.allByUsers();
-                System.out.println(quotas.toJson());
-            } else if (allClients) {
-                final var quotas = quotaManager.allByClients();
-                System.out.println(quotas.toJson());
-            } else if (allIps) {
-                final var quotas = quotaManager.allByIps();
-                System.out.println(quotas.toJson());
-            } else if (!userClients.isEmpty()) {
-                final var quotas = quotaManager.byUsers(userClients.keySet().stream()
-                    .collect(
-                        Collectors.toMap(k -> k, k -> List.of(userClients.get(k).split(",")))));
-                System.out.println(quotas.toJson());
-            } else if (userDefault || !users.isEmpty()) {
-                final var quotas = quotaManager.byUsers(users, userDefault);
-                System.out.println(quotas.toJson());
-            } else if (clientIdDefault || !clientIds.isEmpty()) {
-                final var quotas = quotaManager.byClients(clientIds, clientIdDefault);
-                System.out.println(quotas.toJson());
-            } else if (ipDefault || !ips.isEmpty()) {
-                final var quotas = quotaManager.byIps(ips, ipDefault);
-                System.out.println(quotas.toJson());
-            } else {
-                final var quotas = quotaManager.all();
-                System.out.println(quotas.toJson());
+                if (allUsers) {
+                    final var quotas = quotaManager.allByUsers();
+                    System.out.println(quotas.toJson());
+                } else if (allClients) {
+                    final var quotas = quotaManager.allByClients();
+                    System.out.println(quotas.toJson());
+                } else if (allIps) {
+                    final var quotas = quotaManager.allByIps();
+                    System.out.println(quotas.toJson());
+                } else // end of all by *
+                // start querying by params
+                    if (!userClients.isEmpty()) {
+                        final var userClientMap = userClients.keySet().stream()
+                            .collect(
+                                Collectors.toMap(k -> k,
+                                    k -> List.of(userClients.get(k).split(","))));
+                        final var quotas = quotaManager.byUsers(userClientMap, clientIdDefault, onlyMatch);
+                        System.out.println(quotas.toJson());
+                    } else if (userDefault || !users.isEmpty()) {
+                        final var quotas = quotaManager.byUsers(users, userDefault, onlyMatch);
+                        System.out.println(quotas.toJson());
+                    } else if (clientIdDefault || !clientIds.isEmpty()) {
+                        final var quotas = quotaManager.byClients(clientIds, clientIdDefault, onlyMatch);
+                        System.out.println(quotas.toJson());
+                    } else if (ipDefault || !ips.isEmpty()) {
+                        final var quotas = quotaManager.byIps(ips, ipDefault, onlyMatch);
+                        System.out.println(quotas.toJson());
+                    } else { // all (default)
+                        final var quotas = quotaManager.all();
+                        System.out.println(quotas.toJson());
+                    }
+                return 0;
             }
-            return 0;
         }
     }
 
@@ -140,34 +150,114 @@ public class Cli implements Callable<Integer> {
         Optional<String> ip;
 
         @Option(names = {"--produce-rate"}, description = "Write bandwidth")
-        Optional<Long> writeBandwidth;
+        Optional<Double> writeBandwidth;
         @Option(names = {"--fetch-rate"}, description = "Read bandwidth")
-        Optional<Long> readBandwidth;
+        Optional<Double> readBandwidth;
         @Option(names = {"--request-rate"}, description = "Request rate")
-        Optional<Long> requestRate;
+        Optional<Double> requestRate;
         @Option(names = {"--connection-rate"}, description = "Connection creation rate")
-        Optional<Long> connectionRate;
+        Optional<Double> connectionRate;
 
         @Override
         public Integer call() throws Exception {
             final var props = propertiesOption.load();
-            final var kafkaAdmin = AdminClient.create(props);
-            final var quotaManager = new QuotaManager(kafkaAdmin);
-            final var quota = new Quota(
-                new KafkaClient(
-                    new KafkaClientEntity(userDefault, user),
-                    new KafkaClientEntity(clientIdDefault, clientId),
-                    new KafkaClientEntity(ipDefault, ip)
-                ),
-                new Constraint(
-                    writeBandwidth.map(NetworkBandwidth::new),
-                    readBandwidth.map(NetworkBandwidth::new),
-                    requestRate.map(RequestRate::new),
-                    connectionRate.map(ConnectionCreationRate::new)
-                )
-            );
-            quotaManager.create(quota);
-            return 0;
+            try (final var kafkaAdmin = AdminClient.create(props)) {
+                final var quotaManager = new QuotaManager(kafkaAdmin);
+                final var quota = new Quota(
+                    new KafkaClient(
+                        new KafkaClientEntity(userDefault, user),
+                        new KafkaClientEntity(clientIdDefault, clientId),
+                        new KafkaClientEntity(ipDefault, ip)
+                    ),
+                    new Constraint(
+                        writeBandwidth.map(NetworkBandwidth::new),
+                        readBandwidth.map(NetworkBandwidth::new),
+                        requestRate.map(RequestRate::new),
+                        connectionRate.map(ConnectionCreationRate::new)
+                    )
+                );
+                quotaManager.create(quota);
+                return 0;
+            }
+        }
+    }
+
+    @Command(name = "delete")
+    static class DeleteCommand implements Callable<Integer> {
+
+        @ArgGroup(multiplicity = "1")
+        PropertiesOption propertiesOption;
+
+        @Option(names = {"--user-default"}, description = "Default to all users")
+        boolean userDefault;
+        @Option(names = {"--user"}, description = "Application's User Principal")
+        Optional<String> user;
+
+        @Option(names = {"--client-default"}, description = "Default to all client IDs")
+        boolean clientIdDefault;
+        @Option(names = {"--client"}, description = "Application's Client ID")
+        Optional<String> clientId;
+
+        @Option(names = {"--ip-default"}, description = "Default to all IPs")
+        boolean ipDefault;
+        @Option(names = {"--ip"}, description = "Application's IP")
+        Optional<String> ip;
+
+        @Option(names = {"--all"}, description = "All quotas")
+        boolean all;
+
+        @Option(names = {"--produce-rate"}, description = "Write bandwidth")
+        boolean writeBandwidth;
+        @Option(names = {"--fetch-rate"}, description = "Read bandwidth")
+        boolean readBandwidth;
+        @Option(names = {"--request-rate"}, description = "Request rate")
+        boolean requestRate;
+        @Option(names = {"--connection-rate"}, description = "Connection creation rate")
+        boolean connectionRate;
+
+        @Override
+        public Integer call() throws Exception {
+            final var props = propertiesOption.load();
+            try (final var kafkaAdmin = AdminClient.create(props)) {
+                final var quotaManager = new QuotaManager(kafkaAdmin);
+                if (all) {
+                    if (userDefault || user.isPresent()) {
+                        final var quotas = quotaManager.byUsers(
+                            user.map(List::of).orElse(List.of()), userDefault, true);
+                        System.out.println(quotas.toJson());
+                        quotaManager.delete(quotas);
+                    } else if (clientIdDefault || clientId.isPresent()) {
+                        final var quotas = quotaManager.byClients(
+                            clientId.map(List::of).orElse(List.of()), clientIdDefault, true);
+                        System.out.println(quotas.toJson());
+                        quotaManager.delete(quotas);
+                    } else if (ipDefault || ip.isPresent()) {
+                        final var quotas = quotaManager.byIps(ip.map(List::of).orElse(List.of()),
+                            ipDefault, true);
+                        System.out.println(quotas.toJson());
+                        quotaManager.delete(quotas);
+                    }
+                } else {
+                    final var quota = new Quota(
+                        new KafkaClient(
+                            new KafkaClientEntity(userDefault, user),
+                            new KafkaClientEntity(clientIdDefault, clientId),
+                            new KafkaClientEntity(ipDefault, ip)
+                        ),
+                        new Constraint(
+                            writeBandwidth ? Optional.of(NetworkBandwidth.empty())
+                                : Optional.empty(),
+                            readBandwidth ? Optional.of(NetworkBandwidth.empty())
+                                : Optional.empty(),
+                            requestRate ? Optional.of(RequestRate.empty()) : Optional.empty(),
+                            connectionRate ? Optional.of(ConnectionCreationRate.empty())
+                                : Optional.empty()
+                        )
+                    );
+                    quotaManager.delete(quota);
+                }
+                return 0;
+            }
         }
     }
 

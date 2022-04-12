@@ -17,12 +17,25 @@ public record Quotas(List<Quota> quotas) {
 
   static final ObjectMapper json = new ObjectMapper().registerModule(new Jdk8Module());
 
+  public static Quotas empty() {
+    return new Quotas(new ArrayList<>());
+  }
+
   public String toJson() throws JsonProcessingException {
     return json.writeValueAsString(this);
   }
 
-  public void append(Quotas quotas) {
+  public Quotas append(Quotas quotas) {
     this.quotas.addAll(quotas.quotas());
+    return new Quotas(new ArrayList<>(this.quotas));
+  }
+
+  public List<ClientQuotaAlteration> toDeleteAlterations() {
+    return quotas.stream().map(Quota::toDelete).map(Quota::toAlteration).toList();
+  }
+
+  public boolean isEmpty() {
+    return quotas.isEmpty();
   }
 
   record Quota(KafkaClient kafkaClient,
@@ -30,6 +43,10 @@ public record Quotas(List<Quota> quotas) {
 
     public static Quota from(ClientQuotaEntity entity, Map<String, Double> quotas) {
       return new Quota(KafkaClient.from(entity), Constraint.from(quotas));
+    }
+
+    public Quota toDelete() {
+      return new Quota(kafkaClient, constraints.toDelete());
     }
 
     public ClientQuotaAlteration toAlteration() {
@@ -66,8 +83,11 @@ public record Quotas(List<Quota> quotas) {
     public ClientQuotaEntity toEntity() {
       final var entries = new HashMap<String, String>(3);
       user.id().ifPresent(u -> entries.put(ClientQuotaEntity.USER, u));
+      if (user.isDefault) entries.put(ClientQuotaEntity.USER, null);
       clientId.id().ifPresent(c -> entries.put(ClientQuotaEntity.CLIENT_ID, c));
+      if (clientId.isDefault) entries.put(ClientQuotaEntity.CLIENT_ID, null);
       ip.id().ifPresent(i -> entries.put(ClientQuotaEntity.IP, i));
+      if (ip.isDefault) entries.put(ClientQuotaEntity.IP, null);
       return new ClientQuotaEntity(entries);
     }
   }
@@ -102,14 +122,26 @@ public record Quotas(List<Quota> quotas) {
           r -> entries.add(new Op(QuotaConfigs.IP_CONNECTION_RATE_OVERRIDE_CONFIG, r.rate())));
       return entries;
     }
+
+    public Constraint toDelete() {
+      return new Constraint(
+          produceRate.map(n -> NetworkBandwidth.empty()),
+          fetchRate.map(n -> NetworkBandwidth.empty()),
+          requestRate.map(r -> RequestRate.empty()),
+          connectionCreationRate.map(r -> ConnectionCreationRate.empty())
+      );
+    }
   }
 
-  record ConnectionCreationRate(double rate) {
+  record ConnectionCreationRate(Double rate) {
+    static ConnectionCreationRate empty() { return new ConnectionCreationRate(null); }
   }
 
-  record NetworkBandwidth(double bytesPerSec) {
+  record NetworkBandwidth(Double bytesPerSec) {
+    static NetworkBandwidth empty() { return new NetworkBandwidth(null); }
   }
 
-  record RequestRate(double percent) {
+  record RequestRate(Double percent) {
+    static RequestRate empty() { return new RequestRate(null); }
   }
 }
