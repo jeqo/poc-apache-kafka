@@ -2,11 +2,14 @@
 
 ## Requirements
 
-- [ ] List all quotas: quotas tree
-- [ ] List effective quotas an application, by client-id, user, or both.
-- [ ] Add quotas (with dry-run)
-- [ ] Remove quotas (with dry-run)
-- [ ] Envision metrics applications.
+- [x] List all quotas
+  - [ ] quotas tree
+- [x] List effective quotas an application, by client-id, user, or both.
+- [x] Add quotas
+  - [ ] (with dry-run)
+- [x] Remove quotas 
+  - [ ] (with dry-run)
+- [ ] Envision metrics applications: depending on the existing quotas, which metrics are created?
 
 ### Research
 
