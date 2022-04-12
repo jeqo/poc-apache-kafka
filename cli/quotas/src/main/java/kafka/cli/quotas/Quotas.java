@@ -12,7 +12,6 @@ import org.apache.kafka.common.config.internals.QuotaConfigs;
 import org.apache.kafka.common.quota.ClientQuotaAlteration;
 import org.apache.kafka.common.quota.ClientQuotaAlteration.Op;
 import org.apache.kafka.common.quota.ClientQuotaEntity;
-import org.apache.kafka.server.quota.ClientQuotaType;
 
 public record Quotas(List<Quota> quotas) {
 
@@ -20,6 +19,10 @@ public record Quotas(List<Quota> quotas) {
 
   public String toJson() throws JsonProcessingException {
     return json.writeValueAsString(this);
+  }
+
+  public void append(Quotas quotas) {
+    this.quotas.addAll(quotas.quotas());
   }
 
   record Quota(KafkaClient kafkaClient,
@@ -75,15 +78,15 @@ public record Quotas(List<Quota> quotas) {
                     Optional<ConnectionCreationRate> connectionCreationRate) {
 
     static Constraint from(Map<String, Double> quotas) {
-      final var produceRate = quotas.get(ClientQuotaType.PRODUCE.name());
-      final var fetchRate = quotas.get(ClientQuotaType.FETCH.name());
-      final var requestRate = quotas.get(ClientQuotaType.REQUEST.name());
-      final var connectionCreationRate = quotas.get("connection_creation_rate");
+      final var produceRate = quotas.get(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG);
+      final var fetchRate = quotas.get(QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG);
+      final var requestRate = quotas.get(QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG);
+      final var connectionRate = quotas.get(QuotaConfigs.IP_CONNECTION_RATE_OVERRIDE_CONFIG);
       return new Constraint(
           Optional.ofNullable(produceRate).map(NetworkBandwidth::new),
           Optional.ofNullable(fetchRate).map(NetworkBandwidth::new),
           Optional.ofNullable(requestRate).map(RequestRate::new),
-          Optional.ofNullable(connectionCreationRate).map(ConnectionCreationRate::new)
+          Optional.ofNullable(connectionRate).map(ConnectionCreationRate::new)
       );
     }
 
