@@ -1,5 +1,8 @@
 package kafka.producer;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
@@ -7,59 +10,76 @@ import java.util.Map;
 
 // sleep when no progress?
 // restart when new partitions are added?
-public class ProgressController {
+public class ProgressController implements Closeable {
   final Config config;
-  Map<TopicPartition, Long> progress;
-  Map<TopicPartition, Integer> iterations;
+  Map<TopicPartition, Control> progress;
+
+  volatile boolean running;
 
   public ProgressController(Config config) {
     this.config = config;
+    this.progress = new ConcurrentHashMap<>();
   }
 
   void control() {
-    while (true) {
+    while (running) {
       progress.forEach(
-          (tp, latest) -> {
+          (tp, control) -> {
             long current = System.currentTimeMillis();
-            long diff = current - latest;
-            eval(tp, current, diff);
+            if (eval(tp, control, current)) {
+              sendControl();
+            }
           });
     }
   }
 
-  void eval(TopicPartition tp, long current, long diff) {
-    var iteration = iterations.getOrDefault(tp, 0);
-    if (config.shouldSendControl(diff, iteration)) {
-      sendControl();
-      if (config.isLastOne(diff)) {
+  boolean eval(TopicPartition tp, Control control, long current) {
+    long diff = current - control.started();
+    var iteration = control.iteration(); //iterations.getOrDefault(tp, 0);
+    if (diff > config.start() + (Math.pow(2, iteration) * config.backoff())) {
+      if (config.onlyOnce() || diff >= config.end()) {
         progress.remove(tp);
-        iterations.remove(tp);
       } else {
-        progress.put(tp, current);
-        iterations.put(tp, ++iteration);
+        progress.put(tp, control.increment(current));
       }
+      return true;
     }
+    return false;
+  }
+
+  public void addTopicPartition(String topic, int partition, long timestamp) {
+    final var tp = new TopicPartition(topic, partition);
+    addTopicPartition(tp, timestamp);
+  }
+
+  public void addTopicPartition(TopicPartition tp, long ts) {
+    this.progress.put(tp, Control.create(ts));
   }
 
   void sendControl() {
+    //TODO send message
+  }
 
+  @Override
+  public void close() throws IOException {
+    this.running = false;
+  }
+
+
+  record Control(long started, long latest, long iteration) {
+
+    public static Control create(long timestamp) {
+      return new Control(timestamp, timestamp, 0);
+    }
+
+    public Control increment(long timestamp) {
+      return new Control(started, timestamp, this.iteration + 1);
+    }
   }
 
   record Config(boolean onlyOnce, long start, long end, long backoff, boolean backoffExponential) {
     public static Builder newBuilder() {
       return new Builder();
-    }
-
-    public boolean isLastOne(long diff) {
-      return onlyOnce || diff >= end;
-    }
-
-    boolean shouldSendControl(long diff) {
-      return shouldSendControl(diff, 0L);
-    }
-
-    boolean shouldSendControl(long diff, long iteration) {
-      return diff > start + (Math.pow(2, iteration) * this.backoff);
     }
 
     static class Builder {
