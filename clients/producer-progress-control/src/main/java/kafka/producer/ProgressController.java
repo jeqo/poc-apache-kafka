@@ -2,23 +2,36 @@ package kafka.producer;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import org.apache.kafka.common.TopicPartition;
-
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 
 // sleep when no progress?
 // restart when new partitions are added?
-public class ProgressController implements Closeable {
+public class ProgressController<K, V> implements Runnable, Closeable {
+
+  final Producer<K, V> producer;
   final Config config;
-  Map<TopicPartition, Control> progress;
+  final Map<TopicPartition, Control> progress;
 
   volatile boolean running;
 
-  public ProgressController(Config config) {
+  public ProgressController(Producer<K, V> producer, Config config) {
+    this.producer = producer;
     this.config = config;
     this.progress = new ConcurrentHashMap<>();
+  }
+
+  @Override
+  public void run() {
+    if (running) {
+      return;
+    }
+    this.running = true;
+    control();
   }
 
   void control() {
@@ -35,8 +48,8 @@ public class ProgressController implements Closeable {
 
   boolean eval(TopicPartition tp, Control control, long current) {
     long diff = current - control.started();
-    var iteration = control.iteration(); //iterations.getOrDefault(tp, 0);
-    if (diff > config.start() + (Math.pow(2, iteration) * config.backoff())) {
+    var iteration = control.iteration();
+    if (diff > threshold(iteration)) {
       if (config.onlyOnce() || diff >= config.end()) {
         progress.remove(tp);
       } else {
@@ -45,6 +58,13 @@ public class ProgressController implements Closeable {
       return true;
     }
     return false;
+  }
+
+  private double threshold(long iteration) {
+    if (iteration == 0) {
+      return config.start();
+    }
+    return config.start() + (Math.pow(2, iteration) * config.backoff());
   }
 
   public void addTopicPartition(String topic, int partition, long timestamp) {
@@ -57,14 +77,20 @@ public class ProgressController implements Closeable {
   }
 
   void sendControl() {
-    //TODO send message
+    // TODO send message
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     this.running = false;
+    this.producer.close();
   }
 
+  public void addTopicPartition(final ProducerRecord<K, V> record) {
+    final var timestamp =
+        record.timestamp() == null ? System.currentTimeMillis() : record.timestamp();
+    addTopicPartition(record.topic(), record.partition(), timestamp);
+  }
 
   record Control(long started, long latest, long iteration) {
 
@@ -89,24 +115,26 @@ public class ProgressController implements Closeable {
       Duration backoff = Duration.ofSeconds(0);
       boolean exponential = true;
 
-      Builder withEnd(Duration end) {
-        if (end.compareTo(start) > 0) throw new IllegalArgumentException("end <= start");
-        if (end.compareTo(start.plus(backoff)) > 0)
-          throw new IllegalArgumentException("end <= start + backoff");
-        this.end = end.toMillis();
-        this.onlyOnce = false;
-        return this;
-      }
-
       Builder withStart(Duration start) {
-        if (Long.compare(end, start.toMillis()) > 1) throw new IllegalArgumentException("end <= start");
-        if (Long.compare(end, start.plus(backoff).toMillis()) > 1)
+        if (Long.compare(end, start.toMillis()) > 1) {
+          throw new IllegalArgumentException("end <= start");
+        }
+        if (Long.compare(end, start.plus(backoff).toMillis()) > 1) {
           throw new IllegalArgumentException("end <= start + backoff");
+        }
         this.start = start;
         return this;
       }
 
-      Builder withBackoff(Duration backoff, boolean exponential) {
+      Builder withEnd(Duration end, Duration backoff, boolean exponential) {
+        if (end.compareTo(start) <= 0) {
+          throw new IllegalArgumentException("end <= start");
+        }
+        if (end.compareTo(start.plus(backoff)) <= 0) {
+          throw new IllegalArgumentException("end <= start + backoff");
+        }
+        this.end = end.toMillis();
+        this.onlyOnce = false;
         this.backoff = backoff;
         this.exponential = exponential;
         return this;
