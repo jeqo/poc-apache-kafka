@@ -43,8 +43,7 @@ public record Quotas(List<Quota> quotas) {
     return quotas.isEmpty();
   }
 
-  record Quota(ClientEntity clientEntity,
-               Constraint constraints) {
+  record Quota(ClientEntity clientEntity, Constraint constraints) {
 
     public static Quota from(ClientQuotaEntity entity, Map<String, Double> quotas) {
       return new Quota(ClientEntity.from(entity), Constraint.from(quotas));
@@ -55,10 +54,7 @@ public record Quotas(List<Quota> quotas) {
     }
 
     public ClientQuotaAlteration toAlteration() {
-      return new ClientQuotaAlteration(
-          clientEntity.toEntity(),
-          constraints.toEntries()
-      );
+      return new ClientQuotaAlteration(clientEntity.toEntity(), constraints.toEntries());
     }
 
     public JsonNode toJson() {
@@ -69,26 +65,27 @@ public record Quotas(List<Quota> quotas) {
     }
   }
 
-  record KafkaClientEntity(boolean isDefault, Optional<String> id) {
-
-  }
+  record KafkaClientEntity(boolean isDefault, Optional<String> id) {}
 
   record ClientEntity(KafkaClientEntity user, KafkaClientEntity clientId, KafkaClientEntity ip) {
 
     public static ClientEntity from(ClientQuotaEntity entity) {
       final var entries = entity.entries();
-      final var userEntity = new KafkaClientEntity(
-          entries.containsKey(ClientQuotaEntity.USER)
-              && entries.get(ClientQuotaEntity.USER) == null,
-          Optional.ofNullable(entries.get(ClientQuotaEntity.USER)));
-      final var clientEntity = new KafkaClientEntity(
-          entries.containsKey(ClientQuotaEntity.CLIENT_ID)
-              && entries.get(ClientQuotaEntity.CLIENT_ID) == null,
-          Optional.ofNullable(entries.get(ClientQuotaEntity.CLIENT_ID)));
-      final var ipEntity = new KafkaClientEntity(
-          entries.containsKey(ClientQuotaEntity.IP)
-              && entries.get(ClientQuotaEntity.IP) == null,
-          Optional.ofNullable(entries.get(ClientQuotaEntity.IP)));
+      final var userEntity =
+          new KafkaClientEntity(
+              entries.containsKey(ClientQuotaEntity.USER)
+                  && entries.get(ClientQuotaEntity.USER) == null,
+              Optional.ofNullable(entries.get(ClientQuotaEntity.USER)));
+      final var clientEntity =
+          new KafkaClientEntity(
+              entries.containsKey(ClientQuotaEntity.CLIENT_ID)
+                  && entries.get(ClientQuotaEntity.CLIENT_ID) == null,
+              Optional.ofNullable(entries.get(ClientQuotaEntity.CLIENT_ID)));
+      final var ipEntity =
+          new KafkaClientEntity(
+              entries.containsKey(ClientQuotaEntity.IP)
+                  && entries.get(ClientQuotaEntity.IP) == null,
+              Optional.ofNullable(entries.get(ClientQuotaEntity.IP)));
       return new ClientEntity(userEntity, clientEntity, ipEntity);
     }
 
@@ -127,10 +124,11 @@ public record Quotas(List<Quota> quotas) {
     }
   }
 
-  record Constraint(Optional<NetworkBandwidth> produceRate,
-                    Optional<NetworkBandwidth> fetchRate,
-                    Optional<RequestRate> requestRate,
-                    Optional<ConnectionCreationRate> connectionCreationRate) {
+  record Constraint(
+      Optional<NetworkBandwidth> produceRate,
+      Optional<NetworkBandwidth> fetchRate,
+      Optional<RequestRate> requestRate,
+      Optional<ConnectionCreationRate> connectionCreationRate) {
 
     static Constraint from(Map<String, Double> quotas) {
       final var produceRate = quotas.get(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG);
@@ -141,16 +139,19 @@ public record Quotas(List<Quota> quotas) {
           Optional.ofNullable(produceRate).map(NetworkBandwidth::new),
           Optional.ofNullable(fetchRate).map(NetworkBandwidth::new),
           Optional.ofNullable(requestRate).map(RequestRate::new),
-          Optional.ofNullable(connectionRate).map(ConnectionCreationRate::new)
-      );
+          Optional.ofNullable(connectionRate).map(ConnectionCreationRate::new));
     }
 
     public List<Op> toEntries() {
       final var entries = new ArrayList<Op>(5);
-      produceRate.ifPresent(r -> entries.add(
-          new Op(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec())));
-      fetchRate.ifPresent(r -> entries.add(
-          new Op(QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec())));
+      produceRate.ifPresent(
+          r ->
+              entries.add(
+                  new Op(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec())));
+      fetchRate.ifPresent(
+          r ->
+              entries.add(
+                  new Op(QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec())));
       requestRate.ifPresent(
           r -> entries.add(new Op(QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG, r.percent())));
       connectionCreationRate.ifPresent(
@@ -163,33 +164,38 @@ public record Quotas(List<Quota> quotas) {
           produceRate.map(n -> NetworkBandwidth.empty()),
           fetchRate.map(n -> NetworkBandwidth.empty()),
           requestRate.map(r -> RequestRate.empty()),
-          connectionCreationRate.map(r -> ConnectionCreationRate.empty())
-      );
+          connectionCreationRate.map(r -> ConnectionCreationRate.empty()));
     }
 
     public JsonNode toJson() {
       final var json = jsonMapper.createObjectNode();
-      produceRate.ifPresent(r -> json.put(
-          QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
-      fetchRate.ifPresent(r -> json.put(
-          QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
-      requestRate.ifPresent(r -> json.put(
-          QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG, r.percent()));
-      connectionCreationRate.ifPresent(r -> json.put(
-          QuotaConfigs.IP_CONNECTION_RATE_OVERRIDE_CONFIG, r.rate()));
+      produceRate.ifPresent(
+          r -> json.put(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
+      fetchRate.ifPresent(
+          r -> json.put(QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
+      requestRate.ifPresent(
+          r -> json.put(QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG, r.percent()));
+      connectionCreationRate.ifPresent(
+          r -> json.put(QuotaConfigs.IP_CONNECTION_RATE_OVERRIDE_CONFIG, r.rate()));
       return json;
     }
   }
 
   record ConnectionCreationRate(Double rate) {
-    static ConnectionCreationRate empty() { return new ConnectionCreationRate(null); }
+    static ConnectionCreationRate empty() {
+      return new ConnectionCreationRate(null);
+    }
   }
 
   record NetworkBandwidth(Double bytesPerSec) {
-    static NetworkBandwidth empty() { return new NetworkBandwidth(null); }
+    static NetworkBandwidth empty() {
+      return new NetworkBandwidth(null);
+    }
   }
 
   record RequestRate(Double percent) {
-    static RequestRate empty() { return new RequestRate(null); }
+    static RequestRate empty() {
+      return new RequestRate(null);
+    }
   }
 }
