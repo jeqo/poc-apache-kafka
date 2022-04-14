@@ -23,7 +23,7 @@
     <licenses>
         <license>
             <name>Apache-2.0</name>
-            <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/cluster-state/LICENSE</url>
+            <url>https://github.com/jeqo/poc-apache-kafka/blob/main/cli/context/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>io.github.jeqo.kafka</groupId>
             <artifactId>kafka-clients-graalvm</artifactId>
-            <version>0.1.1</version>
+            <version>0.2.0</version>
         </dependency>
 
         <dependency>
