@@ -19,7 +19,7 @@ import kafka.cli.quotas.Cli.DeleteCommand;
 import kafka.cli.quotas.Cli.QueryCommand;
 import kafka.cli.quotas.Quotas.ConnectionCreationRate;
 import kafka.cli.quotas.Quotas.Constraint;
-import kafka.cli.quotas.Quotas.KafkaClient;
+import kafka.cli.quotas.Quotas.ClientEntity;
 import kafka.cli.quotas.Quotas.KafkaClientEntity;
 import kafka.cli.quotas.Quotas.NetworkBandwidth;
 import kafka.cli.quotas.Quotas.Quota;
@@ -33,6 +33,9 @@ import picocli.CommandLine.Option;
 
 @Command(
     name = "kfk-quotas",
+    versionProvider = Cli.VersionProviderWithConfigProvider.class,
+    mixinStandardHelpOptions = true,
+    description = "CLI to manage Manage Kafka Quotas",
     subcommands = {
         QueryCommand.class,
         CreateCommand.class,
@@ -52,17 +55,22 @@ public class Cli implements Callable<Integer> {
         return 0;
     }
 
-    @Command(name = "query")
+    @Command(
+        name = "query",
+        description = """
+            Search for existing quotas or quotas applying to a certain client application
+            """
+    )
     static class QueryCommand implements Callable<Integer> {
 
         @ArgGroup(multiplicity = "1")
         PropertiesOption propertiesOption;
 
-        @Option(names = {"--all-users"})
+        @Option(names = {"--all-users"}, description = "Get all quotas related to users")
         boolean allUsers;
-        @Option(names = {"--all-clients"})
+        @Option(names = {"--all-clients"}, description = "Get all quotas related to clients")
         boolean allClients;
-        @Option(names = {"--all-ips"})
+        @Option(names = {"--all-ips"}, description = "Get all quotas related to IPs")
         boolean allIps;
 
         @Option(names = {"--user-clients"})
@@ -83,7 +91,11 @@ public class Cli implements Callable<Integer> {
         @Option(names = {"--ip-default"})
         boolean ipDefault;
 
-        @Option(names = {"--only-match", "-m"})
+        @Option(names = {"--only", "-o"}, description = """
+            Look only for quotas matching User, Client IDs, or IPs.
+            If set to false (default), returns quotas even if not explicitly matching filters, e.g. defaults.
+            If set to true, will return only the quotas matching the filters.
+            """)
         boolean onlyMatch;
 
         @Override
@@ -128,7 +140,7 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    @Command(name = "create")
+    @Command(name = "create", description = "Register new Quotas")
     static class CreateCommand implements Callable<Integer> {
 
         @ArgGroup(multiplicity = "1")
@@ -164,7 +176,7 @@ public class Cli implements Callable<Integer> {
             try (final var kafkaAdmin = AdminClient.create(props)) {
                 final var quotaManager = new QuotaManager(kafkaAdmin);
                 final var quota = new Quota(
-                    new KafkaClient(
+                    new ClientEntity(
                         new KafkaClientEntity(userDefault, user),
                         new KafkaClientEntity(clientIdDefault, clientId),
                         new KafkaClientEntity(ipDefault, ip)
@@ -182,7 +194,7 @@ public class Cli implements Callable<Integer> {
         }
     }
 
-    @Command(name = "delete")
+    @Command(name = "delete", description = "Remove an existing Quota")
     static class DeleteCommand implements Callable<Integer> {
 
         @ArgGroup(multiplicity = "1")
@@ -203,7 +215,8 @@ public class Cli implements Callable<Integer> {
         @Option(names = {"--ip"}, description = "Application's IP")
         Optional<String> ip;
 
-        @Option(names = {"--all"}, description = "All quotas")
+        @Option(names = {"--all"},
+            description = "Use to remove all existing quotas for an application")
         boolean all;
 
         @Option(names = {"--produce-rate"}, description = "Write bandwidth")
@@ -239,7 +252,7 @@ public class Cli implements Callable<Integer> {
                     }
                 } else {
                     final var quota = new Quota(
-                        new KafkaClient(
+                        new ClientEntity(
                             new KafkaClientEntity(userDefault, user),
                             new KafkaClientEntity(clientIdDefault, clientId),
                             new KafkaClientEntity(ipDefault, ip)
@@ -320,4 +333,21 @@ public class Cli implements Callable<Integer> {
         }
     }
 
+    static class VersionProviderWithConfigProvider implements CommandLine.IVersionProvider {
+
+        @Override
+        public String[] getVersion() throws IOException {
+            final var url =
+                VersionProviderWithConfigProvider.class.getClassLoader().getResource("cli.properties");
+            if (url == null) {
+                return new String[] {"No cli.properties file found in the classpath."};
+            }
+            final var properties = new Properties();
+            properties.load(url.openStream());
+            return new String[] {
+                properties.getProperty("appName") + " version " + properties.getProperty("appVersion") + "",
+                "Built: " + properties.getProperty("appBuildTime"),
+            };
+        }
+    }
 }
