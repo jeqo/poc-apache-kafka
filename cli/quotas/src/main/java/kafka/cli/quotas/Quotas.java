@@ -1,6 +1,7 @@
 package kafka.cli.quotas;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.util.ArrayList;
@@ -15,14 +16,18 @@ import org.apache.kafka.common.quota.ClientQuotaEntity;
 
 public record Quotas(List<Quota> quotas) {
 
-  static final ObjectMapper json = new ObjectMapper().registerModule(new Jdk8Module());
+  static final ObjectMapper jsonMapper = new ObjectMapper().registerModule(new Jdk8Module());
 
   public static Quotas empty() {
     return new Quotas(new ArrayList<>());
   }
 
   public String toJson() throws JsonProcessingException {
-    return json.writeValueAsString(this);
+    final var json = jsonMapper.createArrayNode();
+    for (final var quota : quotas) {
+      json.add(quota.toJson());
+    }
+    return jsonMapper.writeValueAsString(json);
   }
 
   public Quotas append(Quotas quotas) {
@@ -38,22 +43,29 @@ public record Quotas(List<Quota> quotas) {
     return quotas.isEmpty();
   }
 
-  record Quota(KafkaClient kafkaClient,
+  record Quota(ClientEntity clientEntity,
                Constraint constraints) {
 
     public static Quota from(ClientQuotaEntity entity, Map<String, Double> quotas) {
-      return new Quota(KafkaClient.from(entity), Constraint.from(quotas));
+      return new Quota(ClientEntity.from(entity), Constraint.from(quotas));
     }
 
     public Quota toDelete() {
-      return new Quota(kafkaClient, constraints.toDelete());
+      return new Quota(clientEntity, constraints.toDelete());
     }
 
     public ClientQuotaAlteration toAlteration() {
       return new ClientQuotaAlteration(
-          kafkaClient.toEntity(),
+          clientEntity.toEntity(),
           constraints.toEntries()
       );
+    }
+
+    public JsonNode toJson() {
+      final var json = jsonMapper.createObjectNode();
+      json.set("clientEntity", clientEntity.toJson());
+      json.set("constraints", constraints.toJson());
+      return json;
     }
   }
 
@@ -61,9 +73,9 @@ public record Quotas(List<Quota> quotas) {
 
   }
 
-  record KafkaClient(KafkaClientEntity user, KafkaClientEntity clientId, KafkaClientEntity ip) {
+  record ClientEntity(KafkaClientEntity user, KafkaClientEntity clientId, KafkaClientEntity ip) {
 
-    public static KafkaClient from(ClientQuotaEntity entity) {
+    public static ClientEntity from(ClientQuotaEntity entity) {
       final var entries = entity.entries();
       final var userEntity = new KafkaClientEntity(
           entries.containsKey(ClientQuotaEntity.USER)
@@ -77,7 +89,7 @@ public record Quotas(List<Quota> quotas) {
           entries.containsKey(ClientQuotaEntity.IP)
               && entries.get(ClientQuotaEntity.IP) == null,
           Optional.ofNullable(entries.get(ClientQuotaEntity.IP)));
-      return new KafkaClient(userEntity, clientEntity, ipEntity);
+      return new ClientEntity(userEntity, clientEntity, ipEntity);
     }
 
     public ClientQuotaEntity toEntity() {
@@ -89,6 +101,29 @@ public record Quotas(List<Quota> quotas) {
       ip.id().ifPresent(i -> entries.put(ClientQuotaEntity.IP, i));
       if (ip.isDefault) entries.put(ClientQuotaEntity.IP, null);
       return new ClientQuotaEntity(entries);
+    }
+
+    public JsonNode toJson() {
+      final var json = jsonMapper.createObjectNode();
+      if (user.id().isPresent() || user.isDefault()) {
+        final var userJson = jsonMapper.createObjectNode();
+        user.id().ifPresent(u -> userJson.put(ClientQuotaEntity.USER, u));
+        if (user.isDefault()) userJson.put("default", true);
+        json.set("user", userJson);
+      }
+      if (clientId.id().isPresent() || clientId.isDefault()) {
+        final var clientJson = jsonMapper.createObjectNode();
+        clientId.id().ifPresent(c -> clientJson.put(ClientQuotaEntity.CLIENT_ID, c));
+        if (clientId.isDefault) clientJson.put("default", "true");
+        json.set("client", clientJson);
+      }
+      if (ip.id().isPresent() || ip.isDefault()) {
+        final var ipJson = jsonMapper.createObjectNode();
+        ip.id().ifPresent(i -> ipJson.put(ClientQuotaEntity.IP, i));
+        if (ip.isDefault) ipJson.put("default", true);
+        json.set("ip", ipJson);
+      }
+      return json;
     }
   }
 
@@ -130,6 +165,19 @@ public record Quotas(List<Quota> quotas) {
           requestRate.map(r -> RequestRate.empty()),
           connectionCreationRate.map(r -> ConnectionCreationRate.empty())
       );
+    }
+
+    public JsonNode toJson() {
+      final var json = jsonMapper.createObjectNode();
+      produceRate.ifPresent(r -> json.put(
+          QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
+      fetchRate.ifPresent(r -> json.put(
+          QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, r.bytesPerSec()));
+      requestRate.ifPresent(r -> json.put(
+          QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG, r.percent()));
+      connectionCreationRate.ifPresent(r -> json.put(
+          QuotaConfigs.IP_CONNECTION_RATE_OVERRIDE_CONFIG, r.rate()));
+      return json;
     }
   }
 
