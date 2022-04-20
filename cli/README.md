@@ -8,6 +8,7 @@ This module includes some experimental CLIs for Apache Kafka.
 
 - [Cluster State](./cluster-state)
 - [Context](./context)
+- [Quotas](./quotas)
 
 ### Producer
 
