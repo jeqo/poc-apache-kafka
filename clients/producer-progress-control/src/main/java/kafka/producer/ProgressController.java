@@ -2,16 +2,22 @@ package kafka.producer;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // sleep when no progress?
 // restart when new partitions are added?
 public class ProgressController<K, V> implements Runnable, Closeable {
+
+  static final Logger LOG = LoggerFactory.getLogger(ProgressController.class);
 
   final Producer<K, V> producer;
   final Config config;
@@ -40,7 +46,7 @@ public class ProgressController<K, V> implements Runnable, Closeable {
           (tp, control) -> {
             long current = System.currentTimeMillis();
             if (eval(tp, control, current)) {
-              sendControl();
+              sendControl(tp, current);
             }
           });
     }
@@ -64,7 +70,9 @@ public class ProgressController<K, V> implements Runnable, Closeable {
     if (iteration == 0) {
       return config.start();
     }
-    return config.start() + (Math.pow(2, iteration) * config.backoff());
+    return config.backoffExponential
+            ? config.start() + (Math.pow(2, iteration) * config.backoff())
+            : config.start() + config.backoff();
   }
 
   public void addTopicPartition(String topic, int partition, long timestamp) {
@@ -76,8 +84,10 @@ public class ProgressController<K, V> implements Runnable, Closeable {
     this.progress.put(tp, Control.create(ts));
   }
 
-  void sendControl() {
-    // TODO send message
+  void sendControl(TopicPartition tp, long current) {
+    var record = new ProducerRecord<K, V>(tp.topic(), tp.partition(), null, null);
+    record.headers().add("control", String.valueOf(current).getBytes(StandardCharsets.UTF_8));
+    producer.send(record);
   }
 
   @Override
@@ -86,10 +96,8 @@ public class ProgressController<K, V> implements Runnable, Closeable {
     this.producer.close();
   }
 
-  public void addTopicPartition(final ProducerRecord<K, V> record) {
-    final var timestamp =
-        record.timestamp() == null ? System.currentTimeMillis() : record.timestamp();
-    addTopicPartition(record.topic(), record.partition(), timestamp);
+  public void addTopicPartition(final RecordMetadata metadata) {
+    addTopicPartition(metadata.topic(), metadata.partition(), metadata.timestamp());
   }
 
   record Control(long started, long latest, long iteration) {
@@ -112,7 +120,7 @@ public class ProgressController<K, V> implements Runnable, Closeable {
       boolean onlyOnce = true;
       Duration start = Duration.ofSeconds(10);
       long end = -1;
-      Duration backoff = Duration.ofSeconds(0);
+      Duration backoff = Duration.ofSeconds(1);
       boolean exponential = true;
 
       Builder withStart(Duration start) {
@@ -124,6 +132,10 @@ public class ProgressController<K, V> implements Runnable, Closeable {
         }
         this.start = start;
         return this;
+      }
+
+      Builder withEnd(Duration end, Duration backoff) {
+        return withEnd(end, backoff, false);
       }
 
       Builder withEnd(Duration end, Duration backoff, boolean exponential) {
