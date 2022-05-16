@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +33,21 @@ public class ProgressController<K, V> implements Runnable, Closeable {
     this.producer = producer;
     this.config = config;
     this.progress = new ConcurrentHashMap<>();
+  }
+
+  public static <K, V> ProgressController<K,V> create(Map<String,?> configs) {
+    final var producerConfig = new Properties(configs.size());
+    producerConfig.putAll(configs);
+    if (!producerConfig.containsKey("key.serializer"))
+      producerConfig.put("key.serializer", ByteArraySerializer.class);
+    if (!producerConfig.containsKey("value.serializer"))
+      producerConfig.put("value.serializer", ByteArraySerializer.class);
+    producerConfig.put("client.id", "progress-control-interceptor");
+    producerConfig.remove("interceptor.classes");
+
+    final var internalProducer = new KafkaProducer<K, V>(producerConfig);
+    final var config = ProgressControlConfig.load(configs);
+    return new ProgressController<>(internalProducer, config);
   }
 
   @Override
