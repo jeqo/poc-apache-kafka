@@ -24,12 +24,12 @@ public class ProgressController<K, V> implements Runnable, Closeable {
   static final Logger LOG = LoggerFactory.getLogger(ProgressController.class);
 
   final Producer<K, V> producer;
-  final Config config;
+  final ProgressControlConfig config;
   final Map<TopicPartition, Control> progress;
 
   volatile boolean running;
 
-  public ProgressController(Producer<K, V> producer, Config config) {
+  public ProgressController(Producer<K, V> producer, ProgressControlConfig config) {
     this.producer = producer;
     this.config = config;
     this.progress = new ConcurrentHashMap<>();
@@ -89,7 +89,7 @@ public class ProgressController<K, V> implements Runnable, Closeable {
     if (iteration == 0) {
       return config.start();
     }
-    return config.backoffExponential
+    return config.backoffExponential()
             ? config.start() + (Math.pow(2, iteration) * config.backoff())
             : config.start() + config.backoff();
   }
@@ -127,53 +127,6 @@ public class ProgressController<K, V> implements Runnable, Closeable {
 
     public Control increment(long timestamp) {
       return new Control(started, timestamp, this.iteration + 1);
-    }
-  }
-
-  record Config(boolean onlyOnce, long start, long end, long backoff, boolean backoffExponential) {
-    public static Builder newBuilder() {
-      return new Builder();
-    }
-
-    static class Builder {
-      boolean onlyOnce = true;
-      Duration start = Duration.ofSeconds(10);
-      long end = -1;
-      Duration backoff = Duration.ofSeconds(1);
-      boolean exponential = true;
-
-      Builder withStart(Duration start) {
-        if (Long.compare(end, start.toMillis()) > 1) {
-          throw new IllegalArgumentException("end <= start");
-        }
-        if (Long.compare(end, start.plus(backoff).toMillis()) > 1) {
-          throw new IllegalArgumentException("end <= start + backoff");
-        }
-        this.start = start;
-        return this;
-      }
-
-      Builder withEnd(Duration end, Duration backoff) {
-        return withEnd(end, backoff, false);
-      }
-
-      Builder withEnd(Duration end, Duration backoff, boolean exponential) {
-        if (end.compareTo(start) <= 0) {
-          throw new IllegalArgumentException("end <= start");
-        }
-        if (end.compareTo(start.plus(backoff)) <= 0) {
-          throw new IllegalArgumentException("end <= start + backoff");
-        }
-        this.end = end.toMillis();
-        this.onlyOnce = false;
-        this.backoff = backoff;
-        this.exponential = exponential;
-        return this;
-      }
-
-      public Config build() {
-        return new Config(onlyOnce, start.toMillis(), end, backoff.toMillis(), exponential);
-      }
     }
   }
 }

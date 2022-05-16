@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
-import kafka.producer.ProgressController.Config;
 import kafka.producer.ProgressController.Control;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -26,7 +25,7 @@ class ProgressControllerTest {
 
   @Test
   void shouldEvalFalse_whenDiffIsLessThanStartPeriod() {
-    final var config = Config.newBuilder().withStart(Duration.ofSeconds(1)).build();
+    final var config = ProgressControlConfig.newBuilder().withStart(Duration.ofSeconds(1)).build();
     try (final var controller = new ProgressController<>(producer, config)) {
       final var tp = new TopicPartition("t1", 0);
       final var eval = controller.eval(tp, Control.create(0), 10);
@@ -38,7 +37,7 @@ class ProgressControllerTest {
 
   @Test
   void shouldEvalTrue_whenDiffIsHigherThanStartPeriod() {
-    final var config = Config.newBuilder().withStart(Duration.ofSeconds(1)).build();
+    final var config = ProgressControlConfig.newBuilder().withStart(Duration.ofSeconds(1)).build();
     try (final var controller = new ProgressController<>(producer, config)) {
       final var tp = new TopicPartition("t1", 0);
       controller.addTopicPartition(tp, 0);
@@ -52,7 +51,7 @@ class ProgressControllerTest {
 
   @Test
   void shouldRemovePartition_whenEvalTrueAndNoBackoff() {
-    final var config = Config.newBuilder().withStart(Duration.ofSeconds(1)).build();
+    final var config = ProgressControlConfig.newBuilder().withStart(Duration.ofSeconds(1)).build();
     try (final var controller = new ProgressController<>(producer, config)) {
       final var tp = new TopicPartition("t1", 0);
       controller.addTopicPartition(tp, 0);
@@ -68,7 +67,7 @@ class ProgressControllerTest {
   @Test
   void shouldIncreaseIteration_whenEvalTrueAndNoBackoff() {
     final var config =
-        Config.newBuilder()
+        ProgressControlConfig.newBuilder()
             .withStart(Duration.ofSeconds(1))
             .withEnd(Duration.ofSeconds(10), Duration.ofSeconds(1), false)
             .build();
@@ -88,7 +87,7 @@ class ProgressControllerTest {
   @Test
   void shouldEvalFalse_when() {
     final var config =
-        Config.newBuilder()
+        ProgressControlConfig.newBuilder()
             .withStart(Duration.ofSeconds(1))
             .withEnd(Duration.ofSeconds(10), Duration.ofSeconds(2), false)
             .build();
