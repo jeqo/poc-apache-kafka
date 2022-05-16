@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 // sleep when no progress?
 // restart when new partitions are added?
-public class ProgressController<K, V> implements Runnable, Closeable {
+class ProgressController<K, V> implements Runnable, Closeable {
 
   static final Logger LOG = LoggerFactory.getLogger(ProgressController.class);
 
