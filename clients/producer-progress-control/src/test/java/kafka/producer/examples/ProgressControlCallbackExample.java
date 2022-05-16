@@ -2,8 +2,6 @@ package kafka.producer.examples;
 
 import kafka.producer.ProgressControlCallback;
 import kafka.producer.ProgressControlConfig;
-import kafka.producer.ProgressControlInterceptor;
-import kafka.producer.ProgressController;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
