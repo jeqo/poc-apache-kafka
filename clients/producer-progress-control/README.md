@@ -11,8 +11,8 @@ For instance, when a session window is created in Kafka Streams, to close a wind
 
 ## Goals
 
-- [ ] Keep track of messages sent per topic-partition
-- [ ] Send control messages after a timeout period has passed
-  - [ ] Allow to define a back-off period
-  - [ ] Allow to define a maximum consecutive messages
-- [ ] Document how consumers/streaming applications could use control messages.
+- [x] Keep track of messages sent per topic-partition
+- [x] Send control messages after a timeout period has passed
+  - [x] Allow to define a back-off period
+  - [x] Allow to define a maximum consecutive messages
+- [x] Document how consumers/streaming applications could use control messages.
