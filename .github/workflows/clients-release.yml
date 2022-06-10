@@ -68,6 +68,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           # TODO: fix once nexus plugin supports jdk17
           MAVEN_OPTS: --illegal-access=permit
+          JDK_JAVA_OPTIONS: '--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.desktop/java.awt.font=ALL-UNNAMED'
         working-directory: clients
         run: |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
