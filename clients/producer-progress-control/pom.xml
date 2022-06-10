@@ -4,7 +4,7 @@
 
   <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-producer-progress-control</artifactId>
-  <version>0.2.1-RC1</version>
+  <version>0.2.2-SNAPSHOT</version>
 
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
