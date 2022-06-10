@@ -3,11 +3,9 @@ package kafka.producer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -35,13 +33,15 @@ class ProgressController<K, V> implements Runnable, Closeable {
     this.progress = new ConcurrentHashMap<>();
   }
 
-  public static <K, V> ProgressController<K,V> create(Map<String,?> configs) {
+  public static <K, V> ProgressController<K, V> create(Map<String, ?> configs) {
     final var producerConfig = new Properties(configs.size());
     producerConfig.putAll(configs);
-    if (!producerConfig.containsKey("key.serializer"))
+    if (!producerConfig.containsKey("key.serializer")) {
       producerConfig.put("key.serializer", ByteArraySerializer.class);
-    if (!producerConfig.containsKey("value.serializer"))
+    }
+    if (!producerConfig.containsKey("value.serializer")) {
       producerConfig.put("value.serializer", ByteArraySerializer.class);
+    }
     producerConfig.put("client.id", "progress-control-interceptor");
     producerConfig.remove("interceptor.classes");
 
@@ -73,13 +73,15 @@ class ProgressController<K, V> implements Runnable, Closeable {
 
   boolean eval(TopicPartition tp, Control control, long current) {
     long diff = current - control.started();
-    var iteration = control.iteration();
-    if (diff > threshold(iteration)) {
+    var threshold = threshold(control.iteration());
+    LOG.info("{} with diff {} and threshold {}", tp, diff, threshold);
+    if (diff > threshold) {
       if (config.onlyOnce() || diff >= config.end()) {
         progress.remove(tp);
       } else {
         progress.put(tp, control.increment(current));
       }
+      LOG.info("Topic partition {} over threshold", tp);
       return true;
     }
     return false;
@@ -90,8 +92,8 @@ class ProgressController<K, V> implements Runnable, Closeable {
       return config.start();
     }
     return config.backoffExponential()
-            ? config.start() + (Math.pow(2, iteration) * config.backoff())
-            : config.start() + config.backoff();
+        ? config.start() + (Math.pow(2, iteration) * config.backoff())
+        : config.start() + config.backoff();
   }
 
   public void addTopicPartition(String topic, int partition, long timestamp) {
@@ -100,10 +102,14 @@ class ProgressController<K, V> implements Runnable, Closeable {
   }
 
   public void addTopicPartition(TopicPartition tp, long ts) {
-    this.progress.put(tp, Control.create(ts));
+    if (!progress.containsKey(tp)) {
+      LOG.info("Topic partition {} added to progress controller", tp);
+    }
+    progress.put(tp, Control.create(ts));
   }
 
   void sendControl(TopicPartition tp, long current) {
+    LOG.info("Sending progress control message for {}", tp);
     var record = new ProducerRecord<K, V>(tp.topic(), tp.partition(), null, null);
     record.headers().add("control", String.valueOf(current).getBytes(StandardCharsets.UTF_8));
     producer.send(record);

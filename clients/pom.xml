@@ -95,6 +95,7 @@
     <module>kafka-clients-graalvm</module>
     <module>schema-registry-client-graalvm</module>
     <module>kafka-context</module>
+    <module>producer-progress-control</module>
   </modules>
 
   <build>
