@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.jeqo.kafka</groupId>
-  <artifactId>producer-progress-control</artifactId>
+  <artifactId>kafka-producer-progress-control</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 
   <properties>

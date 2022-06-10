@@ -3,13 +3,14 @@ package kafka.producer;
 import java.time.Duration;
 import java.util.Map;
 
-public record ProgressControlConfig(boolean onlyOnce, long start, long end, long backoff, boolean backoffExponential) {
+public record ProgressControlConfig(
+    boolean onlyOnce, long start, long end, long backoff, boolean backoffExponential) {
   public static final String START_MS_CONFIG = "progress.control.start.ms";
   public static final String END_MS_CONFIG = "progress.control.end.ms";
   public static final String BACKOFF_MS_CONFIG = "progress.control.backoff.ms";
   public static final long BACKOFF_MS_DEFAULT = 1_000;
-  public static final String BACKOFF_EXPOTENTIAL_CONFIG = "progress.control.backoff.exponential";
-  public static final boolean BACKOFF_EXPOTENTIAL_DEFAULT = false;
+  public static final String BACKOFF_EXPONENTIAL_CONFIG = "progress.control.backoff.exponential";
+  public static final boolean BACKOFF_EXPONENTIAL_DEFAULT = false;
 
   static ProgressControlConfig load(Map<String, ?> props) {
     var builder = newBuilder();
@@ -19,12 +20,14 @@ public record ProgressControlConfig(boolean onlyOnce, long start, long end, long
     }
     if (props.containsKey(END_MS_CONFIG)) {
       var end = Duration.ofMillis(Long.parseLong(props.get(END_MS_CONFIG).toString()));
-      var backoff = props.containsKey(BACKOFF_MS_CONFIG)
+      var backoff =
+          props.containsKey(BACKOFF_MS_CONFIG)
               ? Duration.ofMillis(Long.parseLong(props.get(BACKOFF_MS_CONFIG).toString()))
               : Duration.ofMillis(BACKOFF_MS_DEFAULT);
-      var exp = props.containsKey(BACKOFF_EXPOTENTIAL_CONFIG)
-              ? Boolean.parseBoolean(props.get(BACKOFF_EXPOTENTIAL_CONFIG).toString())
-              : BACKOFF_EXPOTENTIAL_DEFAULT;
+      var exp =
+          props.containsKey(BACKOFF_EXPONENTIAL_CONFIG)
+              ? Boolean.parseBoolean(props.get(BACKOFF_EXPONENTIAL_CONFIG).toString())
+              : BACKOFF_EXPONENTIAL_DEFAULT;
       builder.withEnd(end, backoff, exp);
     }
     return builder.build();
@@ -71,7 +74,8 @@ public record ProgressControlConfig(boolean onlyOnce, long start, long end, long
     }
 
     public ProgressControlConfig build() {
-      return new ProgressControlConfig(onlyOnce, start.toMillis(), end, backoff.toMillis(), exponential);
+      return new ProgressControlConfig(
+          onlyOnce, start.toMillis(), end, backoff.toMillis(), exponential);
     }
   }
 }
