@@ -1,14 +1,11 @@
-package poc;
+package poc.stateful;
 
 import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import kafka.metrics.MetricsPrinter;
-import kafka.metrics.MetricsPrinter.MetricName;
 import kafka.streams.rest.armeria.HttpKafkaStreamsServer;
 import org.apache.avro.util.Utf8;
 import org.apache.kafka.common.serialization.Serdes;
@@ -36,16 +33,16 @@ public class StatelessInOut {
         .build(builder.build(), props);
     server.startApplicationAndServer();
 
-    var stats = new MetricsPrinter(() -> server.kafkaStreams().metrics(),
-        List.of(
-            new MetricName("stream-thread-metrics", "process-rate"),
-            new MetricName("stream-thread-metrics", "process-latency-avg"),
-            new MetricName("stream-thread-metrics", "process-latency-max"),
-            new MetricName("stream-thread-metrics", "poll-records-avg"),
-            new MetricName("stream-thread-metrics", "poll-records-max"),
-            new MetricName("consumer-fetch-manager-metrics", "records-lag-avg")
-        ),
-        10_000);
-    stats.start();
+//    var stats = new MetricsPrinter(() -> server.kafkaStreams().metrics(),
+//        List.of(
+//            new MetricName("stream-thread-metrics", "process-rate"),
+//            new MetricName("stream-thread-metrics", "process-latency-avg"),
+//            new MetricName("stream-thread-metrics", "process-latency-max"),
+//            new MetricName("stream-thread-metrics", "poll-records-avg"),
+//            new MetricName("stream-thread-metrics", "poll-records-max"),
+//            new MetricName("consumer-fetch-manager-metrics", "records-lag-avg")
+//        ),
+//        10_000);
+//    stats.start();
   }
 }

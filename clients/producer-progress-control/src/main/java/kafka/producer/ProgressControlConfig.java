@@ -1,16 +1,26 @@
 package kafka.producer;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public record ProgressControlConfig(
-    boolean onlyOnce, long start, long end, long backoff, boolean backoffExponential) {
+    boolean onlyOnce,
+    long start,
+    long end,
+    long backoff,
+    boolean backoffExponential,
+    Set<String> topicsIncluded) {
+
   public static final String START_MS_CONFIG = "progress.control.start.ms";
   public static final String END_MS_CONFIG = "progress.control.end.ms";
   public static final String BACKOFF_MS_CONFIG = "progress.control.backoff.ms";
   public static final long BACKOFF_MS_DEFAULT = 1_000;
   public static final String BACKOFF_EXPONENTIAL_CONFIG = "progress.control.backoff.exponential";
   public static final boolean BACKOFF_EXPONENTIAL_DEFAULT = false;
+
+  public static final String TOPICS_INCLUDE_CONFIG = "progress.control.topics.include";
 
   static ProgressControlConfig load(Map<String, ?> props) {
     var builder = newBuilder();
@@ -30,6 +40,10 @@ public record ProgressControlConfig(
               : BACKOFF_EXPONENTIAL_DEFAULT;
       builder.withEnd(end, backoff, exp);
     }
+    if (props.containsKey(TOPICS_INCLUDE_CONFIG)) {
+      var topicsInclude = props.get(TOPICS_INCLUDE_CONFIG).toString();
+      builder.withTopicsIncluded(topicsInclude.split(","));
+    }
     return builder.build();
   }
 
@@ -38,11 +52,13 @@ public record ProgressControlConfig(
   }
 
   public static class Builder {
+
     boolean onlyOnce = true;
     Duration start = Duration.ofSeconds(10);
     long end = -1;
     Duration backoff = Duration.ofSeconds(1);
     boolean exponential = true;
+    Set<String> topicsIncluded = new HashSet<>();
 
     Builder withStart(Duration start) {
       if (Long.compare(end, start.toMillis()) > 1) {
@@ -73,9 +89,18 @@ public record ProgressControlConfig(
       return this;
     }
 
+    Builder withTopicsIncluded(String[] topicsIncluded) {
+      for (var t : topicsIncluded) {
+        if (!t.isBlank()) {
+          this.topicsIncluded.add(t);
+        }
+      }
+      return this;
+    }
+
     public ProgressControlConfig build() {
       return new ProgressControlConfig(
-          onlyOnce, start.toMillis(), end, backoff.toMillis(), exponential);
+          onlyOnce, start.toMillis(), end, backoff.toMillis(), exponential, topicsIncluded);
     }
   }
 }
