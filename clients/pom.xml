@@ -44,7 +44,7 @@
     <version.javadoc.plugin>3.2.0</version.javadoc.plugin>
     <version.jar.plugin>3.2.0</version.jar.plugin>
     <version.license.plugin>4.0.rc2</version.license.plugin>
-    <version.nexus.plugin>1.6.8</version.nexus.plugin>
+    <version.nexus.plugin>1.6.13</version.nexus.plugin>
     <version.resources.plugin>3.2.0</version.resources.plugin>
     <version.site.plugin>3.8.2</version.site.plugin>
     <version.source.plugin>3.2.1</version.source.plugin>
