@@ -3,7 +3,7 @@
 
   <groupId>io.github.jeqo.kafka</groupId>
   <artifactId>kafka-clients</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.1-RC1</version>
   <packaging>pom</packaging>
 
   <name>kafka-clients</name>
@@ -70,7 +70,7 @@
   <scm>
     <connection>scm:git:${repository.url}</connection>
     <developerConnection>scm:git:${repository.url}</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v0.2.1-RC1</tag>
     <url>${repository.url}</url>
   </scm>
 
