@@ -1,4 +1,4 @@
-package poc;
+package poc.stateful;
 
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;

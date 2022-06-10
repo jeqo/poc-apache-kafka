@@ -1,4 +1,4 @@
-package poc;
+package poc.stateful;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;

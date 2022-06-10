@@ -7,14 +7,14 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>kafka-streams-benchmark</name>
+  <name>kafka-streams-examples</name>
   <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <kafka.version>3.1.0</kafka.version>
-    <confluent.version>7.0.1</confluent.version>
+    <kafka.version>3.1.1</kafka.version>
+    <confluent.version>7.1.0</confluent.version>
   </properties>
 
   <dependencies>
@@ -27,12 +27,17 @@
     <dependency>
       <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-streams-rest-armeria</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>0.1.17</version>
     </dependency>
     <dependency>
       <groupId>io.github.jeqo.kafka</groupId>
-      <artifactId>kafka-metrics-printer</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <artifactId>kafka-context</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>kafka-producer-progress-control</artifactId>
+      <version>0.2.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -40,15 +45,46 @@
       <artifactId>kafka-streams-avro-serde</artifactId>
       <version>${confluent.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>1.7.35</version>
+      <version>1.7.36</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-streams-test-utils</artifactId>
+      <version>${kafka.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.22.0</version>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.spotify.fmt</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <version>2.16</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -82,7 +118,7 @@
                 <image>ghcr.io/jeqo/poc-apache-kafka:stateless-in-out</image>
               </to>
               <container>
-                <mainClass>poc.StatelessInOut</mainClass>
+                <mainClass>poc.stateful.StatelessInOut</mainClass>
               </container>
               <extraDirectories>
                 <paths>
@@ -99,25 +135,4 @@
       </build>
     </profile>
   </profiles>
-
-  <repositories>
-    <repository>
-      <id>central</id>
-      <url>https://repo1.maven.org/maven2</url>
-    </repository>
-    <repository>
-      <id>github-1</id>
-      <url>https://maven.pkg.github.com/jeqo/kafka-streams-rest</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>github-2</id>
-      <url>https://maven.pkg.github.com/jeqo/poc-apache-kafka</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>

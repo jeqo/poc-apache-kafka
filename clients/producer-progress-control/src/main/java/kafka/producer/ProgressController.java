@@ -74,7 +74,6 @@ class ProgressController<K, V> implements Runnable, Closeable {
   boolean eval(TopicPartition tp, Control control, long current) {
     long diff = current - control.started();
     var threshold = threshold(control.iteration());
-    LOG.info("{} with diff {} and threshold {}", tp, diff, threshold);
     if (diff > threshold) {
       if (config.onlyOnce() || diff >= config.end()) {
         progress.remove(tp);
@@ -102,10 +101,12 @@ class ProgressController<K, V> implements Runnable, Closeable {
   }
 
   public void addTopicPartition(TopicPartition tp, long ts) {
-    if (!progress.containsKey(tp)) {
-      LOG.info("Topic partition {} added to progress controller", tp);
+    if (config.topicsIncluded().isEmpty() || config.topicsIncluded().contains(tp.topic())) {
+      if (!progress.containsKey(tp)) {
+        LOG.info("Topic partition {} added to progress controller", tp);
+      }
+      progress.put(tp, Control.create(ts));
     }
-    progress.put(tp, Control.create(ts));
   }
 
   void sendControl(TopicPartition tp, long current) {
