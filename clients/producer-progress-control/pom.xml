@@ -5,11 +5,11 @@
   <parent>
     <groupId>io.github.jeqo.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>0.2.1-RC3</version>
+    <version>0.2.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>kafka-producer-progress-control</artifactId>
-  <version>0.2.1-RC3</version>
+  <version>0.2.2-SNAPSHOT</version>
 
   <properties>
     <java.version>17</java.version>
