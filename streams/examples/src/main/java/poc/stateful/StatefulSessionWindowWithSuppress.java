@@ -1,4 +1,4 @@
-package poc.stateless;
+package poc.stateful;
 
 import java.io.IOException;
 import java.time.Duration;

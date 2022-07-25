@@ -13,8 +13,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <kafka.version>3.1.1</kafka.version>
-    <confluent.version>7.1.0</confluent.version>
+    <kafka.version>3.2.0</kafka.version>
+    <confluent.version>7.2.0</confluent.version>
   </properties>
 
   <dependencies>
@@ -67,7 +67,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.22.0</version>
+      <version>3.23.1</version>
     </dependency>
   </dependencies>
 
@@ -118,7 +118,7 @@
                 <image>ghcr.io/jeqo/poc-apache-kafka:stateless-in-out</image>
               </to>
               <container>
-                <mainClass>poc.stateful.StatelessInOut</mainClass>
+                <mainClass>poc.stateless.StatelessInOut</mainClass>
               </container>
               <extraDirectories>
                 <paths>

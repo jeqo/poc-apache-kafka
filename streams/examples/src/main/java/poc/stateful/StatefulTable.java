@@ -1,4 +1,4 @@
-package poc.stateless;
+package poc.stateful;
 
 import org.apache.kafka.streams.StreamsBuilder;
 
