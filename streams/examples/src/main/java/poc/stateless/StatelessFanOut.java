@@ -1,4 +1,4 @@
-package poc.stateful;
+package poc.stateless;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,4 +1,4 @@
-package poc.stateful;
+package poc.stateless;
 
 import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 import java.io.IOException;
