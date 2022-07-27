@@ -4,13 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public record Transaction(
-  long transactionId,
-  long cardId,
-  String userId,
-  long purchaseId,
-  int storeId
-) {
+public record Transaction(long transactionId, long cardId, String userId, long purchaseId, int storeId) {
   static final ObjectMapper jsonMapper = new ObjectMapper();
 
   public static Transaction fromJson(JsonNode jsonNode) {

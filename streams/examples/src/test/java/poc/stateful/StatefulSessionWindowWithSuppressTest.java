@@ -14,24 +14,12 @@ class StatefulSessionWindowWithSuppressTest {
     var inputTopicName = "input";
     var outputTopicName = "output";
 
-    var app = new StatefulSessionWindowWithSuppress(
-      inputTopicName,
-      outputTopicName
-    );
+    var app = new StatefulSessionWindowWithSuppress(inputTopicName, outputTopicName);
 
-    try (
-      final var driver = new TopologyTestDriver(
-        app.topology(),
-        Instant.ofEpochMilli(0)
-      )
-    ) {
+    try (final var driver = new TopologyTestDriver(app.topology(), Instant.ofEpochMilli(0))) {
       // Given
       // - with topics
-      var inputTopic = driver.createInputTopic(
-        "input",
-        app.keySerde.serializer(),
-        app.valueSerde.serializer()
-      );
+      var inputTopic = driver.createInputTopic("input", app.keySerde.serializer(), app.valueSerde.serializer());
       var outputTopic = driver.createOutputTopic(
         "output",
         app.keySerde.deserializer(),
