@@ -28,7 +28,7 @@ public class TransactionSerde implements Serde<Transaction> {
     public byte[] serialize(String s, Transaction transaction) {
       try {
         if (transaction == null) {
-          return new byte[]{};
+          return new byte[] {};
         }
         final var node = transaction.toJson();
         return jsonMapper.writeValueAsBytes(node);

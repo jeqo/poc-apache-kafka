@@ -12,14 +12,16 @@ public class StatelessFanOut {
     var b = new StreamsBuilder();
 
     // a:v1
-    b.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-        // 1 record -> * records
-        .flatMapValues(StatelessFanOut::getStrings)
-        // a:v1-topic1
-        // a:v1-topic2
-        // a:v1-topic3
-        .to((key, value, recordContext) -> 
-            new String(recordContext.headers().lastHeader("topic").value()));
+    b
+      .stream("input", Consumed.with(Serdes.String(), Serdes.String()))
+      // 1 record -> * records
+      .flatMapValues(StatelessFanOut::getStrings)
+      // a:v1-topic1
+      // a:v1-topic2
+      // a:v1-topic3
+      .to((key, value, recordContext) ->
+        new String(recordContext.headers().lastHeader("topic").value())
+      );
 
     System.out.println(b.build().describe());
   }
@@ -27,5 +29,4 @@ public class StatelessFanOut {
   private static List<String> getStrings(String value) {
     return Arrays.asList(value.split(","));
   }
-
 }

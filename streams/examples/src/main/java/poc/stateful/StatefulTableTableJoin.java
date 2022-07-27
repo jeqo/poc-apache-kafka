@@ -1,5 +1,3 @@
 package poc.stateful;
 
-public class StatefulTableTableJoin {
-
-}
+public class StatefulTableTableJoin {}

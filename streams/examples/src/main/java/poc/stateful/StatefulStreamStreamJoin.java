@@ -1,5 +1,3 @@
 package poc.stateful;
 
-public class StatefulStreamStreamJoin {
-
-}
+public class StatefulStreamStreamJoin {}
