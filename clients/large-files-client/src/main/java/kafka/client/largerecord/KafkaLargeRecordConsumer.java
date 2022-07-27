@@ -1,5 +1,3 @@
 package kafka.client.largerecord;
 
-public class KafkaLargeRecordConsumer {
-
-}
+public class KafkaLargeRecordConsumer {}

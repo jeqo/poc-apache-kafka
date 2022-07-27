@@ -6,27 +6,33 @@
 package io.confluent.examples.clients.basicavro;
 
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.message.SchemaStore;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.Utf8;
-import org.apache.avro.message.BinaryMessageEncoder;
-import org.apache.avro.message.BinaryMessageDecoder;
-import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
-public class Payment extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+public class Payment
+  extends org.apache.avro.specific.SpecificRecordBase
+  implements org.apache.avro.specific.SpecificRecord {
+
   private static final long serialVersionUID = 8349813343060722314L;
 
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser()
+    .parse(
+      "{\"type\":\"record\",\"name\":\"Payment\",\"namespace\":\"io.confluent.examples.clients.basicavro\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"amount\",\"type\":\"double\"},{\"name\":\"name\",\"type\":\"string\",\"default\":\"none\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"description1\",\"type\":\"string\",\"default\":\"hi\"}]}"
+    );
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Payment\",\"namespace\":\"io.confluent.examples.clients.basicavro\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"amount\",\"type\":\"double\"},{\"name\":\"name\",\"type\":\"string\",\"default\":\"none\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"description1\",\"type\":\"string\",\"default\":\"hi\"}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  public static org.apache.avro.Schema getClassSchema() {
+    return SCHEMA$;
+  }
 
   private static final SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<Payment> ENCODER =
-      new BinaryMessageEncoder<Payment>(MODEL$, SCHEMA$);
+  private static final BinaryMessageEncoder<Payment> ENCODER = new BinaryMessageEncoder<Payment>(MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<Payment> DECODER =
-      new BinaryMessageDecoder<Payment>(MODEL$, SCHEMA$);
+  private static final BinaryMessageDecoder<Payment> DECODER = new BinaryMessageDecoder<Payment>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -68,8 +74,7 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
    * @return a Payment instance decoded from the given buffer
    * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
    */
-  public static Payment fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
+  public static Payment fromByteBuffer(java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);
   }
 
@@ -94,7 +99,13 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
    * @param description The new value for description
    * @param description1 The new value for description1
    */
-  public Payment(java.lang.CharSequence id, java.lang.Double amount, java.lang.CharSequence name, java.lang.CharSequence description, java.lang.CharSequence description1) {
+  public Payment(
+    java.lang.CharSequence id,
+    java.lang.Double amount,
+    java.lang.CharSequence name,
+    java.lang.CharSequence description,
+    java.lang.CharSequence description1
+  ) {
     this.id = id;
     this.amount = amount;
     this.name = name;
@@ -102,30 +113,53 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     this.description1 = description1;
   }
 
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() {
+    return MODEL$;
+  }
+
+  public org.apache.avro.Schema getSchema() {
+    return SCHEMA$;
+  }
+
   // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
     switch (field$) {
-    case 0: return id;
-    case 1: return amount;
-    case 2: return name;
-    case 3: return description;
-    case 4: return description1;
-    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
+      case 0:
+        return id;
+      case 1:
+        return amount;
+      case 2:
+        return name;
+      case 3:
+        return description;
+      case 4:
+        return description1;
+      default:
+        throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
   // Used by DatumReader.  Applications should not call.
-  @SuppressWarnings(value="unchecked")
+  @SuppressWarnings(value = "unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
-    case 1: amount = (java.lang.Double)value$; break;
-    case 2: name = (java.lang.CharSequence)value$; break;
-    case 3: description = (java.lang.CharSequence)value$; break;
-    case 4: description1 = (java.lang.CharSequence)value$; break;
-    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
+      case 0:
+        id = (java.lang.CharSequence) value$;
+        break;
+      case 1:
+        amount = (java.lang.Double) value$;
+        break;
+      case 2:
+        name = (java.lang.CharSequence) value$;
+        break;
+      case 3:
+        description = (java.lang.CharSequence) value$;
+        break;
+      case 4:
+        description1 = (java.lang.CharSequence) value$;
+        break;
+      default:
+        throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -136,7 +170,6 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
   public java.lang.CharSequence getId() {
     return id;
   }
-
 
   /**
    * Sets the value of the 'id' field.
@@ -154,7 +187,6 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     return amount;
   }
 
-
   /**
    * Sets the value of the 'amount' field.
    * @param value the value to set.
@@ -170,7 +202,6 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
   public java.lang.CharSequence getName() {
     return name;
   }
-
 
   /**
    * Sets the value of the 'name' field.
@@ -188,7 +219,6 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     return description;
   }
 
-
   /**
    * Sets the value of the 'description' field.
    * @param value the value to set.
@@ -204,7 +234,6 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
   public java.lang.CharSequence getDescription1() {
     return description1;
   }
-
 
   /**
    * Sets the value of the 'description1' field.
@@ -227,7 +256,9 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
    * @param other The existing builder to copy.
    * @return A new Payment RecordBuilder
    */
-  public static io.confluent.examples.clients.basicavro.Payment.Builder newBuilder(io.confluent.examples.clients.basicavro.Payment.Builder other) {
+  public static io.confluent.examples.clients.basicavro.Payment.Builder newBuilder(
+    io.confluent.examples.clients.basicavro.Payment.Builder other
+  ) {
     if (other == null) {
       return new io.confluent.examples.clients.basicavro.Payment.Builder();
     } else {
@@ -240,7 +271,9 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
    * @param other The existing instance to copy.
    * @return A new Payment RecordBuilder
    */
-  public static io.confluent.examples.clients.basicavro.Payment.Builder newBuilder(io.confluent.examples.clients.basicavro.Payment other) {
+  public static io.confluent.examples.clients.basicavro.Payment.Builder newBuilder(
+    io.confluent.examples.clients.basicavro.Payment other
+  ) {
     if (other == null) {
       return new io.confluent.examples.clients.basicavro.Payment.Builder();
     } else {
@@ -252,7 +285,8 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
    * RecordBuilder for Payment instances.
    */
   @org.apache.avro.specific.AvroGenerated
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Payment>
+  public static class Builder
+    extends org.apache.avro.specific.SpecificRecordBuilderBase<Payment>
     implements org.apache.avro.data.RecordBuilder<Payment> {
 
     private java.lang.CharSequence id;
@@ -323,19 +357,18 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Gets the value of the 'id' field.
-      * @return The value.
-      */
+     * Gets the value of the 'id' field.
+     * @return The value.
+     */
     public java.lang.CharSequence getId() {
       return id;
     }
 
-
     /**
-      * Sets the value of the 'id' field.
-      * @param value The value of 'id'.
-      * @return This builder.
-      */
+     * Sets the value of the 'id' field.
+     * @param value The value of 'id'.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder setId(java.lang.CharSequence value) {
       validate(fields()[0], value);
       this.id = value;
@@ -344,18 +377,17 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Checks whether the 'id' field has been set.
-      * @return True if the 'id' field has been set, false otherwise.
-      */
+     * Checks whether the 'id' field has been set.
+     * @return True if the 'id' field has been set, false otherwise.
+     */
     public boolean hasId() {
       return fieldSetFlags()[0];
     }
 
-
     /**
-      * Clears the value of the 'id' field.
-      * @return This builder.
-      */
+     * Clears the value of the 'id' field.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder clearId() {
       id = null;
       fieldSetFlags()[0] = false;
@@ -363,19 +395,18 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Gets the value of the 'amount' field.
-      * @return The value.
-      */
+     * Gets the value of the 'amount' field.
+     * @return The value.
+     */
     public double getAmount() {
       return amount;
     }
 
-
     /**
-      * Sets the value of the 'amount' field.
-      * @param value The value of 'amount'.
-      * @return This builder.
-      */
+     * Sets the value of the 'amount' field.
+     * @param value The value of 'amount'.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder setAmount(double value) {
       validate(fields()[1], value);
       this.amount = value;
@@ -384,37 +415,35 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Checks whether the 'amount' field has been set.
-      * @return True if the 'amount' field has been set, false otherwise.
-      */
+     * Checks whether the 'amount' field has been set.
+     * @return True if the 'amount' field has been set, false otherwise.
+     */
     public boolean hasAmount() {
       return fieldSetFlags()[1];
     }
 
-
     /**
-      * Clears the value of the 'amount' field.
-      * @return This builder.
-      */
+     * Clears the value of the 'amount' field.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder clearAmount() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
     /**
-      * Gets the value of the 'name' field.
-      * @return The value.
-      */
+     * Gets the value of the 'name' field.
+     * @return The value.
+     */
     public java.lang.CharSequence getName() {
       return name;
     }
 
-
     /**
-      * Sets the value of the 'name' field.
-      * @param value The value of 'name'.
-      * @return This builder.
-      */
+     * Sets the value of the 'name' field.
+     * @param value The value of 'name'.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder setName(java.lang.CharSequence value) {
       validate(fields()[2], value);
       this.name = value;
@@ -423,18 +452,17 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Checks whether the 'name' field has been set.
-      * @return True if the 'name' field has been set, false otherwise.
-      */
+     * Checks whether the 'name' field has been set.
+     * @return True if the 'name' field has been set, false otherwise.
+     */
     public boolean hasName() {
       return fieldSetFlags()[2];
     }
 
-
     /**
-      * Clears the value of the 'name' field.
-      * @return This builder.
-      */
+     * Clears the value of the 'name' field.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder clearName() {
       name = null;
       fieldSetFlags()[2] = false;
@@ -442,19 +470,18 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Gets the value of the 'description' field.
-      * @return The value.
-      */
+     * Gets the value of the 'description' field.
+     * @return The value.
+     */
     public java.lang.CharSequence getDescription() {
       return description;
     }
 
-
     /**
-      * Sets the value of the 'description' field.
-      * @param value The value of 'description'.
-      * @return This builder.
-      */
+     * Sets the value of the 'description' field.
+     * @param value The value of 'description'.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder setDescription(java.lang.CharSequence value) {
       validate(fields()[3], value);
       this.description = value;
@@ -463,18 +490,17 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Checks whether the 'description' field has been set.
-      * @return True if the 'description' field has been set, false otherwise.
-      */
+     * Checks whether the 'description' field has been set.
+     * @return True if the 'description' field has been set, false otherwise.
+     */
     public boolean hasDescription() {
       return fieldSetFlags()[3];
     }
 
-
     /**
-      * Clears the value of the 'description' field.
-      * @return This builder.
-      */
+     * Clears the value of the 'description' field.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder clearDescription() {
       description = null;
       fieldSetFlags()[3] = false;
@@ -482,19 +508,18 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Gets the value of the 'description1' field.
-      * @return The value.
-      */
+     * Gets the value of the 'description1' field.
+     * @return The value.
+     */
     public java.lang.CharSequence getDescription1() {
       return description1;
     }
 
-
     /**
-      * Sets the value of the 'description1' field.
-      * @param value The value of 'description1'.
-      * @return This builder.
-      */
+     * Sets the value of the 'description1' field.
+     * @param value The value of 'description1'.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder setDescription1(java.lang.CharSequence value) {
       validate(fields()[4], value);
       this.description1 = value;
@@ -503,18 +528,17 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     }
 
     /**
-      * Checks whether the 'description1' field has been set.
-      * @return True if the 'description1' field has been set, false otherwise.
-      */
+     * Checks whether the 'description1' field has been set.
+     * @return True if the 'description1' field has been set, false otherwise.
+     */
     public boolean hasDescription1() {
       return fieldSetFlags()[4];
     }
 
-
     /**
-      * Clears the value of the 'description1' field.
-      * @return This builder.
-      */
+     * Clears the value of the 'description1' field.
+     * @return This builder.
+     */
     public io.confluent.examples.clients.basicavro.Payment.Builder clearDescription1() {
       description1 = null;
       fieldSetFlags()[4] = false;
@@ -530,7 +554,8 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
         record.amount = fieldSetFlags()[1] ? this.amount : (java.lang.Double) defaultValue(fields()[1]);
         record.name = fieldSetFlags()[2] ? this.name : (java.lang.CharSequence) defaultValue(fields()[2]);
         record.description = fieldSetFlags()[3] ? this.description : (java.lang.CharSequence) defaultValue(fields()[3]);
-        record.description1 = fieldSetFlags()[4] ? this.description1 : (java.lang.CharSequence) defaultValue(fields()[4]);
+        record.description1 =
+          fieldSetFlags()[4] ? this.description1 : (java.lang.CharSequence) defaultValue(fields()[4]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -541,28 +566,32 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
   }
 
   @SuppressWarnings("unchecked")
-  private static final org.apache.avro.io.DatumWriter<Payment>
-    WRITER$ = (org.apache.avro.io.DatumWriter<Payment>)MODEL$.createDatumWriter(SCHEMA$);
+  private static final org.apache.avro.io.DatumWriter<Payment> WRITER$ = (org.apache.avro.io.DatumWriter<Payment>) MODEL$.createDatumWriter(
+    SCHEMA$
+  );
 
-  @Override public void writeExternal(java.io.ObjectOutput out)
-    throws java.io.IOException {
+  @Override
+  public void writeExternal(java.io.ObjectOutput out) throws java.io.IOException {
     WRITER$.write(this, SpecificData.getEncoder(out));
   }
 
   @SuppressWarnings("unchecked")
-  private static final org.apache.avro.io.DatumReader<Payment>
-    READER$ = (org.apache.avro.io.DatumReader<Payment>)MODEL$.createDatumReader(SCHEMA$);
+  private static final org.apache.avro.io.DatumReader<Payment> READER$ = (org.apache.avro.io.DatumReader<Payment>) MODEL$.createDatumReader(
+    SCHEMA$
+  );
 
-  @Override public void readExternal(java.io.ObjectInput in)
-    throws java.io.IOException {
+  @Override
+  public void readExternal(java.io.ObjectInput in) throws java.io.IOException {
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-  @Override protected boolean hasCustomCoders() { return true; }
+  @Override
+  protected boolean hasCustomCoders() {
+    return true;
+  }
 
-  @Override public void customEncode(org.apache.avro.io.Encoder out)
-    throws java.io.IOException
-  {
+  @Override
+  public void customEncode(org.apache.avro.io.Encoder out) throws java.io.IOException {
     out.writeString(this.id);
 
     out.writeDouble(this.amount);
@@ -572,61 +601,43 @@ public class Payment extends org.apache.avro.specific.SpecificRecordBase impleme
     out.writeString(this.description);
 
     out.writeString(this.description1);
-
   }
 
-  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
-    throws java.io.IOException
-  {
+  @Override
+  public void customDecode(org.apache.avro.io.ResolvingDecoder in) throws java.io.IOException {
     org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
     if (fieldOrder == null) {
-      this.id = in.readString(this.id instanceof Utf8 ? (Utf8)this.id : null);
+      this.id = in.readString(this.id instanceof Utf8 ? (Utf8) this.id : null);
 
       this.amount = in.readDouble();
 
-      this.name = in.readString(this.name instanceof Utf8 ? (Utf8)this.name : null);
+      this.name = in.readString(this.name instanceof Utf8 ? (Utf8) this.name : null);
 
-      this.description = in.readString(this.description instanceof Utf8 ? (Utf8)this.description : null);
+      this.description = in.readString(this.description instanceof Utf8 ? (Utf8) this.description : null);
 
-      this.description1 = in.readString(this.description1 instanceof Utf8 ? (Utf8)this.description1 : null);
-
+      this.description1 = in.readString(this.description1 instanceof Utf8 ? (Utf8) this.description1 : null);
     } else {
       for (int i = 0; i < 5; i++) {
         switch (fieldOrder[i].pos()) {
-        case 0:
-          this.id = in.readString(this.id instanceof Utf8 ? (Utf8)this.id : null);
-          break;
-
-        case 1:
-          this.amount = in.readDouble();
-          break;
-
-        case 2:
-          this.name = in.readString(this.name instanceof Utf8 ? (Utf8)this.name : null);
-          break;
-
-        case 3:
-          this.description = in.readString(this.description instanceof Utf8 ? (Utf8)this.description : null);
-          break;
-
-        case 4:
-          this.description1 = in.readString(this.description1 instanceof Utf8 ? (Utf8)this.description1 : null);
-          break;
-
-        default:
-          throw new java.io.IOException("Corrupt ResolvingDecoder.");
+          case 0:
+            this.id = in.readString(this.id instanceof Utf8 ? (Utf8) this.id : null);
+            break;
+          case 1:
+            this.amount = in.readDouble();
+            break;
+          case 2:
+            this.name = in.readString(this.name instanceof Utf8 ? (Utf8) this.name : null);
+            break;
+          case 3:
+            this.description = in.readString(this.description instanceof Utf8 ? (Utf8) this.description : null);
+            break;
+          case 4:
+            this.description1 = in.readString(this.description1 instanceof Utf8 ? (Utf8) this.description1 : null);
+            break;
+          default:
+            throw new java.io.IOException("Corrupt ResolvingDecoder.");
         }
       }
     }
   }
 }
-
-
-
-
-
-
-
-
-
-

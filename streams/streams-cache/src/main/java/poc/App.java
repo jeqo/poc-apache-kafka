@@ -34,26 +34,27 @@ public class App {
 
     final var b = new StreamsBuilder();
     // as simple as possible, pass-through
-    b.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-        .to("output", Produced.with(Serdes.String(), Serdes.String()));
+    b
+      .stream("input", Consumed.with(Serdes.String(), Serdes.String()))
+      .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
     // basic stream operations (stateless)
-//    b.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-//        .filter((key, value) -> value.startsWith("a") || value.startsWith("b"))
-//        .mapValues((readOnlyKey, value) -> value.toUpperCase())
-//        .peek((key, value) -> System.out.println(key + "=>" + value))
-//        .to("output", Produced.with(Serdes.String(), Serdes.String()));
+    //    b.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
+    //        .filter((key, value) -> value.startsWith("a") || value.startsWith("b"))
+    //        .mapValues((readOnlyKey, value) -> value.toUpperCase())
+    //        .peek((key, value) -> System.out.println(key + "=>" + value))
+    //        .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
     // ktable
-//    b.table("input", Consumed.with(Serdes.String(), Serdes.String()))
-//        .filter((key, value) -> value.startsWith("a") || value.startsWith("b"))
-//        .mapValues((readOnlyKey, value) -> value.toUpperCase(),
-//            Materialized.<String, String, KeyValueStore<Bytes, byte[]>>as("ktable-store")
-//                .withKeySerde(Serdes.String())
-//                .withValueSerde(Serdes.String()))
-//        .toStream()
-//        .peek((key, value) -> System.out.println(key + "=>" + value))
-//        .to("output");
+    //    b.table("input", Consumed.with(Serdes.String(), Serdes.String()))
+    //        .filter((key, value) -> value.startsWith("a") || value.startsWith("b"))
+    //        .mapValues((readOnlyKey, value) -> value.toUpperCase(),
+    //            Materialized.<String, String, KeyValueStore<Bytes, byte[]>>as("ktable-store")
+    //                .withKeySerde(Serdes.String())
+    //                .withValueSerde(Serdes.String()))
+    //        .toStream()
+    //        .peek((key, value) -> System.out.println(key + "=>" + value))
+    //        .to("output");
 
     final var topology = b.build();
 

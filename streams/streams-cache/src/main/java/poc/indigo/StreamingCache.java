@@ -49,15 +49,16 @@ public class StreamingCache {
       streamsProps.load(inputStream);
     }
     final var port = Integer.parseInt(streamsProps.getProperty("app.port"));
-    final var hostname =  "localhost"; //TODO replace by var with hostname System.getenv().get("HOSTNAME");
+    final var hostname = "localhost"; //TODO replace by var with hostname System.getenv().get("HOSTNAME");
     final var appServer = hostname + ":" + port;
     streamsProps.put(StreamsConfig.APPLICATION_SERVER_CONFIG, appServer);
 
     var srClient = new CachedSchemaRegistryClient(
-        List.of(streamsProps.getProperty("schema.registry.url")),
-        10_000,
-        List.of(new JsonSchemaProvider()),
-        Map.of());
+      List.of(streamsProps.getProperty("schema.registry.url")),
+      10_000,
+      List.of(new JsonSchemaProvider()),
+      Map.of()
+    );
     final var config = new LinkedHashMap<String, Object>();
     streamsProps.forEach((o, o2) -> config.put(o.toString(), o2));
 
@@ -79,65 +80,81 @@ public class StreamingCache {
 
     final var storeName = "window-cache";
 
-    final var app = Javalin.create()
-        .get("/", ctx -> ctx.result("OK"))
-
-        .get("/internal/store/:key", ctx -> {
+    final var app = Javalin
+      .create()
+      .get("/", ctx -> ctx.result("OK"))
+      .get(
+        "/internal/store/:key",
+        ctx -> {
           var key = ctx.pathParam("key");
           getKeyFromStore(ks, storeName, ctx, key);
-        })
-
-        .get("/liveness", ctx -> {
+        }
+      )
+      .get(
+        "/liveness",
+        ctx -> {
           if (ks.state().isRunningOrRebalancing()) {
             ctx.result("Healthy");
           } else {
             ctx.result("Unhealthy");
           }
-        })
-        .get("/ready", ctx -> {
+        }
+      )
+      .get(
+        "/ready",
+        ctx -> {
           if (ks.state() == State.RUNNING) {
             ctx.result("READY");
           } else {
             ctx.result("NOT READY");
           }
-        })
-        .get("/topology", ctx -> ctx.result(topology.describe().toString()))
-        .get("/store/:key", ctx -> {
+        }
+      )
+      .get("/topology", ctx -> ctx.result(topology.describe().toString()))
+      .get(
+        "/store/:key",
+        ctx -> {
           var key = ctx.pathParam("key");
           var meta = ks.queryMetadataForKey(storeName, key, new StringSerializer());
           var activeHost = meta.activeHost();
           final var activeAppServer = activeHost.host() + ":" + activeHost.port();
           if (!appServer.equals(activeAppServer)) {
-            final var url =
-                "http://" + activeHost.host() + ":" + activeHost.port() + "/internal/store/" + key;
+            final var url = "http://" + activeHost.host() + ":" + activeHost.port() + "/internal/store/" + key;
             System.out.printf("Redirecting to: %s%n", url);
-            var response = HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder()
-                    .GET()
-                    .uri(URI.create(url))
-                    .build(),
-                BodyHandlers.ofByteArray());
+            var response = HttpClient
+              .newHttpClient()
+              .send(HttpRequest.newBuilder().GET().uri(URI.create(url)).build(), BodyHandlers.ofByteArray());
             ctx.status(response.statusCode()).result(response.body());
           } else {
             getKeyFromStore(ks, storeName, ctx, key);
           }
-        });
+        }
+      );
     app.start(port); // start HTTP server
 
     // Shutdown hook to close applications properly
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      app.stop();
-      ks.close();
-    }));
+    Runtime
+      .getRuntime()
+      .addShutdownHook(
+        new Thread(() -> {
+          app.stop();
+          ks.close();
+        })
+      );
   }
 
   private static void getKeyFromStore(KafkaStreams ks, String storeName, Context ctx, String key) {
-    ReadOnlyWindowStore<String, Object> cache =
-        ks.store(StoreQueryParameters.fromNameAndType(storeName,
-            QueryableStoreTypes.windowStore()));
+    ReadOnlyWindowStore<String, Object> cache = ks.store(
+      StoreQueryParameters.fromNameAndType(storeName, QueryableStoreTypes.windowStore())
+    );
     var now = Instant.now();
-    try (WindowStoreIterator<Object> iterator =
-        cache.backwardFetch(key, now.minusMillis(Duration.ofDays(1).toMillis()), now)) {
+    try (
+      WindowStoreIterator<Object> iterator = cache.backwardFetch(
+        key,
+        now.minusMillis(Duration.ofDays(1).toMillis()),
+        now
+      )
+    ) {
       if (iterator.hasNext()) {
         var kv = iterator.next();
         final var resultString = "Found: " + kv.value + "@" + Instant.ofEpochMilli(kv.key);
@@ -147,5 +164,4 @@ public class StreamingCache {
       }
     }
   }
-
 }

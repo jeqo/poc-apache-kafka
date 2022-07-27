@@ -10,10 +10,11 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 class StreamsTestingAppITest {
 
-  @Container KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.1"));
+  @Container
+  KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.1"));
 
-  @Test void test() {
+  @Test
+  void test() {
     Assertions.assertTrue(kafka.isRunning());
   }
-
 }

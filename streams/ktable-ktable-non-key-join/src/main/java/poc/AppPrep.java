@@ -12,12 +12,17 @@ public class AppPrep {
   public static void main(String[] args) throws ExecutionException, InterruptedException {
     final Properties props = loadProperties();
     final var admin = AdminClient.create(props);
-    admin.createTopics(List.of(
-        new NewTopic("items", 1, (short) 1),
-        new NewTopic("parent", 1, (short) 1),
-        new NewTopic("child", 1, (short) 1),
-        new NewTopic("joined", 1, (short) 1)
-    )).all().get();
+    admin
+      .createTopics(
+        List.of(
+          new NewTopic("items", 1, (short) 1),
+          new NewTopic("parent", 1, (short) 1),
+          new NewTopic("child", 1, (short) 1),
+          new NewTopic("joined", 1, (short) 1)
+        )
+      )
+      .all()
+      .get();
     admin.close();
   }
 

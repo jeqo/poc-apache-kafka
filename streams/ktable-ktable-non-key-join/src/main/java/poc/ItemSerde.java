@@ -8,6 +8,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class ItemSerde implements Serde<Item> {
+
   static ObjectMapper json = new ObjectMapper();
 
   @Override

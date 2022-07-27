@@ -29,8 +29,9 @@ public class ConsumerManualAssignment {
 
   static Properties props() {
     var props = new Properties();
-    try (final var inputStream = new FileInputStream(
-        "clients/large-files-client/src/main/resources/consumer.properties")) {
+    try (
+      final var inputStream = new FileInputStream("clients/large-files-client/src/main/resources/consumer.properties")
+    ) {
       props.load(inputStream);
     } catch (IOException e) {
       e.printStackTrace();

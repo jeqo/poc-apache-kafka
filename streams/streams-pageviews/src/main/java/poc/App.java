@@ -31,20 +31,25 @@ public class App {
     var inputValueSerde = new SpecificAvroSerde<pageviews>();
     inputValueSerde.configure(config.streamsConfigAsMap(), false);
 
-    builder.stream(config.inputTopic, Consumed.with(Serdes.String(), inputValueSerde))
-        .map((key, p) -> KeyValue.pair(p.getUserid(), p.getViewtime()))
-        .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
-        .reduce(Long::sum, Materialized.with(Serdes.String(), Serdes.Long()))
-        .toStream()
-        .to(config.outputTopic, Produced.with(Serdes.String(), Serdes.Long()));
+    builder
+      .stream(config.inputTopic, Consumed.with(Serdes.String(), inputValueSerde))
+      .map((key, p) -> KeyValue.pair(p.getUserid(), p.getViewtime()))
+      .groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
+      .reduce(Long::sum, Materialized.with(Serdes.String(), Serdes.Long()))
+      .toStream()
+      .to(config.outputTopic, Produced.with(Serdes.String(), Serdes.Long()));
 
     var topology = builder.build();
 
     var kafkaStreams = new KafkaStreams(topology, config.streamsConfig);
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      System.out.println("Stopping application...");
-      kafkaStreams.close();
-    }));
+    Runtime
+      .getRuntime()
+      .addShutdownHook(
+        new Thread(() -> {
+          System.out.println("Stopping application...");
+          kafkaStreams.close();
+        })
+      );
     kafkaStreams.start();
     System.out.println("Running application...");
   }
@@ -69,11 +74,18 @@ public class App {
 
     @Override
     public String toString() {
-      return "Config{" +
-          "inputTopic='" + inputTopic + '\'' +
-          ", outputTopic='" + outputTopic + '\'' +
-          ", streamsConfig=" + streamsConfig +
-          '}';
+      return (
+        "Config{" +
+        "inputTopic='" +
+        inputTopic +
+        '\'' +
+        ", outputTopic='" +
+        outputTopic +
+        '\'' +
+        ", streamsConfig=" +
+        streamsConfig +
+        '}'
+      );
     }
 
     static Config load() throws IOException {
@@ -99,6 +111,5 @@ public class App {
 
       return new Config(inputTopic, outputTopic, config);
     }
-
   }
 }

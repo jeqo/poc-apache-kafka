@@ -27,54 +27,56 @@ public class LatestEventPerSessionKey {
     var s = new StreamsBuilder();
 
     s.addStateStore(
-        Stores.sessionStoreBuilder(Stores.persistentSessionStore("sessions", Duration.ofDays(7)),
-            Serdes.String(), Serdes.String()));
+      Stores.sessionStoreBuilder(
+        Stores.persistentSessionStore("sessions", Duration.ofDays(7)),
+        Serdes.String(),
+        Serdes.String()
+      )
+    );
 
     // https://github.com/apache/kafka/blob/1e0916580f16b99b911b0ed36e9740dcaeef520e/streams/src/main/java/org/apache/kafka/streams/kstream/internals/KStreamSessionWindowAggregate.java
-    final TransformerSupplier<Object, Object, KeyValue<Object, Object>> session = () -> new Transformer<>() {
-      SessionStore<Object, Object> store;
-      ProcessorContext context;
+    final TransformerSupplier<Object, Object, KeyValue<Object, Object>> session = () ->
+      new Transformer<>() {
+        SessionStore<Object, Object> store;
+        ProcessorContext context;
 
-      @Override
-      public void init(ProcessorContext context) {
-        this.context = context;
-        store = context.getStateStore("session");
-      }
-
-      @Override
-      public KeyValue<Object, Object> transform(Object key, Object value) {
-        try (var iter = store.fetch(key)) {
-          if (iter.hasNext()) {
-            // (maybe) test if the context.timestamp is higher than the latest record
-            store.remove(iter.next().key);
-          }
+        @Override
+        public void init(ProcessorContext context) {
+          this.context = context;
+          store = context.getStateStore("session");
         }
-        store.put(
+
+        @Override
+        public KeyValue<Object, Object> transform(Object key, Object value) {
+          try (var iter = store.fetch(key)) {
+            if (iter.hasNext()) {
+              // (maybe) test if the context.timestamp is higher than the latest record
+              store.remove(iter.next().key);
+            }
+          }
+          store.put(
             // choose a different key
-            new Windowed<>(
-                key,
-                new SessionWindow(context.timestamp(), context.timestamp())),
+            new Windowed<>(key, new SessionWindow(context.timestamp(), context.timestamp())),
             value
-        );
+          );
 
-        // later
-        // store.fetch(record.key());
-        return KeyValue.pair(key, value);
-      }
+          // later
+          // store.fetch(record.key());
+          return KeyValue.pair(key, value);
+        }
 
-      @Override
-      public void close() {
-      }
-    };
+        @Override
+        public void close() {}
+      };
 
     var stream = s.stream("input");
     stream.transform(session);
 
-    s.stream("input", Consumed.with(Serdes.ByteArray(), Serdes.ByteBuffer()))
-        .groupByKey()
-        .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofMinutes(1)))
-        .reduce((value1, value2) -> value2, Materialized.as("session"));
+    s
+      .stream("input", Consumed.with(Serdes.ByteArray(), Serdes.ByteBuffer()))
+      .groupByKey()
+      .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofMinutes(1)))
+      .reduce((value1, value2) -> value2, Materialized.as("session"));
     return s.build();
   }
-
 }
