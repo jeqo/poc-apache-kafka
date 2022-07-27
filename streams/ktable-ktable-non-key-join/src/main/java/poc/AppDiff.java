@@ -22,8 +22,7 @@ public class AppDiff {
 
     System.out.println(topology.describe());
     final var kafkaStreams = new KafkaStreams(topology, config);
-    Runtime.getRuntime()
-        .addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
     kafkaStreams.start();
   }
 
@@ -46,17 +45,14 @@ public class AppDiff {
   static Topology buildTopology() {
     final var builder = new StreamsBuilder();
 
-    var parentTable =
-        builder.table("parent", Consumed.with(Serdes.String(), new ItemSerde()));
-    var childTable =
-        builder.table("child", Consumed.with(Serdes.String(), new ItemSerde()));
+    var parentTable = builder.table("parent", Consumed.with(Serdes.String(), new ItemSerde()));
+    var childTable = builder.table("child", Consumed.with(Serdes.String(), new ItemSerde()));
 
     childTable
-        .leftJoin(parentTable, Item::parent, (v1, v2) -> v1.addAttrs(v2.attributes()))
-        .toStream()
-        .to("joined", Produced.with(Serdes.String(), new ItemSerde()));
+      .leftJoin(parentTable, Item::parent, (v1, v2) -> v1.addAttrs(v2.attributes()))
+      .toStream()
+      .to("joined", Produced.with(Serdes.String(), new ItemSerde()));
 
     return builder.build();
   }
-
 }

@@ -10,27 +10,19 @@ public class TestInterceptor<K, V> implements ProducerInterceptor<K, V> {
   CloudEventHeaders cloudEventHeaders;
 
   @Override
-  public void configure(Map<String, ?> configs) {
-
-  }
+  public void configure(Map<String, ?> configs) {}
 
   @Override
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> record) {
-    if (cloudEventHeaders.validate(record.headers()))
-      return record;
-    else {
+    if (cloudEventHeaders.validate(record.headers())) return record; else {
       System.out.println("ERROR!!");
       return null;
     }
   }
 
   @Override
-  public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
-
-  }
+  public void onAcknowledgement(RecordMetadata metadata, Exception exception) {}
 
   @Override
-  public void close() {
-
-  }
+  public void close() {}
 }

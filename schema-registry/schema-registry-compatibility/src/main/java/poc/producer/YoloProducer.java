@@ -21,23 +21,26 @@ public class YoloProducer {
     final var producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
     // Prepare message
     final var jsonMapper = new ObjectMapper();
-    final var valueJson = jsonMapper.createObjectNode()
-        .put("username", "Jorge")
-        .put("created_at", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+    final var valueJson = jsonMapper
+      .createObjectNode()
+      .put("username", "Jorge")
+      .put("created_at", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
     // or is it unix-time better?
-//         .put("created_at", System.currentTimeMillis());
+    //         .put("created_at", System.currentTimeMillis());
     final var value = jsonMapper.writeValueAsString(valueJson);
-    final var record = new ProducerRecord<>(Topics.POC_BACKWARD.name(),
-        valueJson.get("username").asText(), value);
+    final var record = new ProducerRecord<>(Topics.POC_BACKWARD.name(), valueJson.get("username").asText(), value);
     // Send
-    producer.send(record, (metadata, exception) -> {
-      if (exception == null) {
-        System.out.printf("Record acked: %s%n", metadata);
-      } else {
-        System.err.printf("Exception when sending record: %s%n", exception.getMessage());
-        exception.printStackTrace();
+    producer.send(
+      record,
+      (metadata, exception) -> {
+        if (exception == null) {
+          System.out.printf("Record acked: %s%n", metadata);
+        } else {
+          System.err.printf("Exception when sending record: %s%n", exception.getMessage());
+          exception.printStackTrace();
+        }
       }
-    });
+    );
     // Flush
     producer.flush();
     // Close

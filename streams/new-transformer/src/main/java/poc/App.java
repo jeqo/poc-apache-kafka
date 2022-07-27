@@ -30,31 +30,40 @@ public class App {
   private static Topology topology() {
     final var builder = new StreamsBuilder();
     final var input = builder.stream("words", Consumed.with(Serdes.String(), Serdes.String()));
-    input.processValues(() -> new FixedKeyProcessor<String, String, String>() {
-          FixedKeyProcessorContext<String, String> context;
+    input
+      .processValues(
+        () ->
+          new FixedKeyProcessor<String, String, String>() {
+            FixedKeyProcessorContext<String, String> context;
 
-          @Override
-          public void init(FixedKeyProcessorContext<String, String> context) {
-            this.context = context;
-          }
-
-          @Override
-          public void process(FixedKeyRecord<String, String> record) {
-            for (var s : record.value().split(",")) {
-              context.forward(
-                  record.withValue("Hello " + s));
+            @Override
+            public void init(FixedKeyProcessorContext<String, String> context) {
+              this.context = context;
             }
-          }
-        }, Named.as("test"))
-        .to("output", Produced.with(Serdes.String(), Serdes.String()));
-    input.process(() -> new ContextualProcessor<String, String, String, String>() {
-          @Override
-          public void process(Record<String, String> record) {
-            System.out.println(record.value());
-            context().forward(record);
-          }
-        }, Named.as("test-other"))
-        .to("other", Produced.with(Serdes.String(), Serdes.String()));
+
+            @Override
+            public void process(FixedKeyRecord<String, String> record) {
+              for (var s : record.value().split(",")) {
+                context.forward(record.withValue("Hello " + s));
+              }
+            }
+          },
+        Named.as("test")
+      )
+      .to("output", Produced.with(Serdes.String(), Serdes.String()));
+    input
+      .process(
+        () ->
+          new ContextualProcessor<String, String, String, String>() {
+            @Override
+            public void process(Record<String, String> record) {
+              System.out.println(record.value());
+              context().forward(record);
+            }
+          },
+        Named.as("test-other")
+      )
+      .to("other", Produced.with(Serdes.String(), Serdes.String()));
     return builder.build();
   }
 

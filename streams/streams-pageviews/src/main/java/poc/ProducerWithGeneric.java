@@ -19,16 +19,26 @@ public class ProducerWithGeneric {
 
     final var producer = new KafkaProducer<GenericRecord, GenericRecord>(configs);
 
-    final var keySchema = SchemaBuilder.record("Key").namespace("poc.avro")
-        .fields()
-        .name("val1").type().stringType().noDefault()
-        .endRecord();
+    final var keySchema = SchemaBuilder
+      .record("Key")
+      .namespace("poc.avro")
+      .fields()
+      .name("val1")
+      .type()
+      .stringType()
+      .noDefault()
+      .endRecord();
     final var key = new GenericData.Record(keySchema);
     key.put("val1", "1");
-    final var valueSchema = SchemaBuilder.record("Value").namespace("poc.avro")
-        .fields()
-        .name("val1").type().stringType().noDefault()
-        .endRecord();
+    final var valueSchema = SchemaBuilder
+      .record("Value")
+      .namespace("poc.avro")
+      .fields()
+      .name("val1")
+      .type()
+      .stringType()
+      .noDefault()
+      .endRecord();
     final var value = new GenericData.Record(valueSchema);
     value.put("val1", "1");
 

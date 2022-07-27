@@ -14,7 +14,6 @@ public class MaxFailuresUncaughtExceptionHandler implements StreamsUncaughtExcep
   private Instant previousErrorTime;
   private int currentFailureCount;
 
-
   public MaxFailuresUncaughtExceptionHandler(final int maxFailures, final long maxTimeIntervalMillis) {
     this.maxFailures = maxFailures;
     this.maxTimeIntervalMillis = maxTimeIntervalMillis;

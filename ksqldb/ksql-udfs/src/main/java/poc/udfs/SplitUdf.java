@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 @UdfDescription(
-    name = "custom_split",
-    author = "jeqo",
-    version = "0.1.0",
-    description = "custom split a string into an array")
+  name = "custom_split",
+  author = "jeqo",
+  version = "0.1.0",
+  description = "custom split a string into an array"
+)
 public class SplitUdf implements Configurable {
 
   @Override
-  public void configure(Map<String, ?> map) {
-  }
+  public void configure(Map<String, ?> map) {}
 
   @Udf(description = "split")
   public List<String> split(@UdfParameter(value = "v") String v) {

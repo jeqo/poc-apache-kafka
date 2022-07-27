@@ -21,10 +21,10 @@ public class App {
     final var topology = buildTopology();
 
     System.out.println(topology.describe());
-//    final var kafkaStreams = new KafkaStreams(topology, config);
-//    Runtime.getRuntime()
-//        .addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
-//    kafkaStreams.start();
+    //    final var kafkaStreams = new KafkaStreams(topology, config);
+    //    Runtime.getRuntime()
+    //        .addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofMinutes(1))));
+    //    kafkaStreams.start();
   }
 
   static Properties loadConfig() throws IOException {
@@ -37,21 +37,19 @@ public class App {
     final var builder = new StreamsBuilder();
     final var items = builder.table("items", Consumed.with(Serdes.String(), new ItemSerde()));
 
-    items.leftJoin(items,
-            Item::parent,
-            (item, parent) -> item.addAttrs(parent.attributes()))
-        .toStream()
-        .to("joined", Produced.with(Serdes.String(), new ItemSerde()));
+    items
+      .leftJoin(items, Item::parent, (item, parent) -> item.addAttrs(parent.attributes()))
+      .toStream()
+      .to("joined", Produced.with(Serdes.String(), new ItemSerde()));
     return builder.build();
   }
 
   static Topology inout() {
-
     final var builder = new StreamsBuilder();
-    builder.stream("")
-        // meaningful part
-        .to("");
+    builder
+      .stream("")
+      // meaningful part
+      .to("");
     return builder.build();
   }
-
 }

@@ -24,20 +24,25 @@ public class JsonConsumer {
     final var consumer = new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
     // Subscribe and poll
     consumer.subscribe(List.of(Topics.POC_YOLO.name()));
-    while(!Thread.interrupted()) {
+    while (!Thread.interrupted()) {
       final var records = consumer.poll(Duration.ofSeconds(5));
       for (final var record : records) {
         final var value = record.value();
         final var valueJson = jsonMapper.readTree(value);
         final var username = valueJson.get("username").asText();
-//        final var createdAtText = valueJson.get("created_at").asText();
-//        final var createdAt = LocalDateTime.parse(createdAtText, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        //        final var createdAtText = valueJson.get("created_at").asText();
+        //        final var createdAt = LocalDateTime.parse(createdAtText, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         // or was it unix-time
         final var createdAtLong = valueJson.get("created_at").asText();
         final var createdAt = Instant.ofEpochMilli(Long.parseLong(createdAtLong));
-        System.out.printf("Record received from %s-%s@%s: {username=%s, createdAt=%s}%n",
-            record.topic(), record.partition(), record.offset(),
-            username, createdAt);
+        System.out.printf(
+          "Record received from %s-%s@%s: {username=%s, createdAt=%s}%n",
+          record.topic(),
+          record.partition(),
+          record.offset(),
+          username,
+          createdAt
+        );
       }
       consumer.commitAsync();
     }

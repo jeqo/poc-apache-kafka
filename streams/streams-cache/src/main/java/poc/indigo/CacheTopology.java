@@ -35,8 +35,7 @@ public class CacheTopology implements Supplier<Topology> {
   KafkaJsonSchemaSerde<Object> valueSerde;
   KafkaJsonSchemaSerde<Signal> outputValueSerde;
 
-  public CacheTopology(KafkaJsonSchemaSerde<Object> valueSerde,
-      KafkaJsonSchemaSerde<Signal> outputValueSerde) {
+  public CacheTopology(KafkaJsonSchemaSerde<Object> valueSerde, KafkaJsonSchemaSerde<Signal> outputValueSerde) {
     this.valueSerde = valueSerde;
     this.outputValueSerde = outputValueSerde;
   }
@@ -51,68 +50,71 @@ public class CacheTopology implements Supplier<Topology> {
   void windowedCache(StreamsBuilder builder) {
     final var storeName = "window-cache";
     final var storeBuilder = Stores.windowStoreBuilder(
-//        Stores.persistentWindowStore(storeName, Duration.ofMinutes(10), Duration.ofMinutes(1),
-//            false),
-        Stores.inMemoryWindowStore(storeName, Duration.ofMinutes(10), Duration.ofMinutes(1),
-            false),
-        Serdes.String(),
-        valueSerde
+      //        Stores.persistentWindowStore(storeName, Duration.ofMinutes(10), Duration.ofMinutes(1),
+      //            false),
+      Stores.inMemoryWindowStore(storeName, Duration.ofMinutes(10), Duration.ofMinutes(1), false),
+      Serdes.String(),
+      valueSerde
     );
     builder.addStateStore(storeBuilder);
 
-    builder.stream("all-events",
-            Consumed.with(Serdes.String(), valueSerde).withName("consume-event"))
-        .transformValues(() -> new ValueTransformerWithKey<>() {
-          ProcessorContext context;
-          WindowStore<String, Object> store;
+    builder
+      .stream("all-events", Consumed.with(Serdes.String(), valueSerde).withName("consume-event"))
+      .transformValues(
+        () ->
+          new ValueTransformerWithKey<>() {
+            ProcessorContext context;
+            WindowStore<String, Object> store;
 
-          @Override
-          public void init(ProcessorContext context) {
-            this.context = context;
-            this.store = context.getStateStore(storeName);
-          }
-
-          @Override
-          @WithSpan // Custom trace of the transform method
-          public Object transform(String key, Object value) {
-            Span.current().setAttribute("msg.key", key); // add new attr.
-
-            try {
-              store.put(key, value, context.timestamp());
-            } catch (Exception e) {
-              e.printStackTrace();
+            @Override
+            public void init(ProcessorContext context) {
+              this.context = context;
+              this.store = context.getStateStore(storeName);
             }
-            return value;
-          }
 
-          @Override
-          public void close() {
-          }
-        }, Named.as("cache"), storeName)
-        .mapValues((readOnlyKey, value) -> {
-              // TODO not working yet
-              var jsonNode = jsonMapper.valueToTree(value);
-              var id = "";
+            @Override
+            @WithSpan // Custom trace of the transform method
+            public Object transform(String key, Object value) {
+              Span.current().setAttribute("msg.key", key); // add new attr.
+
               try {
-                switch (jsonNode.get("event_type").textValue()) {
-                  case "customer_event":
-                    id = (jsonMapper.treeToValue(jsonNode, Customer.class)).getCustomerId();
-                    break;
-                  case "product_event":
-                    id = (jsonMapper.treeToValue(jsonNode, Product.class)).getProductId();
-                }
-              } catch (JsonProcessingException e) {
+                store.put(key, value, context.timestamp());
+              } catch (Exception e) {
                 e.printStackTrace();
               }
-              // end TODO
-              final var signal = new Signal();
-              signal.setId(id);
-              signal.setRef("/window-cache/" + readOnlyKey);
-              return signal;
-            },
-            Named.as("map-to-signal"))
-        .to("signal",
-            Produced.with(Serdes.String(), outputValueSerde).withName("produce-signal"));
-  }
+              return value;
+            }
 
+            @Override
+            public void close() {}
+          },
+        Named.as("cache"),
+        storeName
+      )
+      .mapValues(
+        (readOnlyKey, value) -> {
+          // TODO not working yet
+          var jsonNode = jsonMapper.valueToTree(value);
+          var id = "";
+          try {
+            switch (jsonNode.get("event_type").textValue()) {
+              case "customer_event":
+                id = (jsonMapper.treeToValue(jsonNode, Customer.class)).getCustomerId();
+                break;
+              case "product_event":
+                id = (jsonMapper.treeToValue(jsonNode, Product.class)).getProductId();
+            }
+          } catch (JsonProcessingException e) {
+            e.printStackTrace();
+          }
+          // end TODO
+          final var signal = new Signal();
+          signal.setId(id);
+          signal.setRef("/window-cache/" + readOnlyKey);
+          return signal;
+        },
+        Named.as("map-to-signal")
+      )
+      .to("signal", Produced.with(Serdes.String(), outputValueSerde).withName("produce-signal"));
+  }
 }

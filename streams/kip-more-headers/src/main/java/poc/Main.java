@@ -19,33 +19,38 @@ public class Main {
 
   public static void main(String[] args) {
     var builder = new StreamsBuilder();
-    var input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()))
-        .mapValueToRecord()
-        .split();
+    var input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.String())).mapValueToRecord().split();
     input
-        .branch((key, value) -> value.topic().equals("input"), Branched.withConsumer(b1 -> {
-          b1.filter((key, value) -> value.headers().hasWithName("a"))
-              .filter((key, value) -> ("a").equals(value.headers().lastWithName("a").valueAsUtf8()))
-              .setRecordHeaders((k, v) -> v.headers().addUtf8("a", "b").retainLatest())
-              .mapValues((k, v) -> v.value())
-              .to("output", Produced.with(Serdes.String(), Serdes.String()));
+      .branch(
+        (key, value) -> value.topic().equals("input"),
+        Branched.withConsumer(b1 -> {
+          b1
+            .filter((key, value) -> value.headers().hasWithName("a"))
+            .filter((key, value) -> ("a").equals(value.headers().lastWithName("a").valueAsUtf8()))
+            .setRecordHeaders((k, v) -> v.headers().addUtf8("a", "b").retainLatest())
+            .mapValues((k, v) -> v.value())
+            .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
-          b1.groupByKey()
-              .reduce((value1, value2) -> {
-                value1.headers()
-                    .forEach(header -> value2.headers().add(header));
+          b1
+            .groupByKey()
+            .reduce(
+              (value1, value2) -> {
+                value1.headers().forEach(header -> value2.headers().add(header));
                 return value2;
-              }, Materialized.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.String())));
+              },
+              Materialized.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.String()))
+            );
 
-          b1.groupByKey().count()
-              .toStream()
-              .mapValueToRecord()
-              .repartition(
-                  Repartitioned.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.Long())))
-              .foreach((key, value) -> System.out.println(key + " => " + value));
-
-        }))
-        .noDefaultBranch();
+          b1
+            .groupByKey()
+            .count()
+            .toStream()
+            .mapValueToRecord()
+            .repartition(Repartitioned.with(Serdes.String(), new RecordSerde<>(Serdes.String(), Serdes.Long())))
+            .foreach((key, value) -> System.out.println(key + " => " + value));
+        })
+      )
+      .noDefaultBranch();
 
     var configs = new Properties();
     configs.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");

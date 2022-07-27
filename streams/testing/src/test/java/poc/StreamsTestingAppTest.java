@@ -1,6 +1,5 @@
 package poc;
 
-
 import static poc.StreamsTestingApp.buildSimpleFromTo;
 import static poc.StreamsTestingApp.loadConfig;
 
@@ -21,25 +20,15 @@ class StreamsTestingAppTest {
     try (final var driver = new TopologyTestDriver(buildSimpleFromTo(), loadConfig())) {
       // Given
       // - with topics
-      var inputTopic = driver.createInputTopic(
-          "input",
-          new StringSerializer(),
-          new StringSerializer()
-      );
-      var outputTopic = driver.createOutputTopic(
-          "output",
-          new StringDeserializer(),
-          new StringDeserializer()
-      );
+      var inputTopic = driver.createInputTopic("input", new StringSerializer(), new StringSerializer());
+      var outputTopic = driver.createOutputTopic("output", new StringDeserializer(), new StringDeserializer());
 
       // When
       inputTopic.pipeInput("k1", "v1");
       var kv1 = outputTopic.readKeyValue();
 
       // Then
-      Assertions.assertThat(kv1)
-          .extracting("key", "value")
-          .contains("k1", "v1");
+      Assertions.assertThat(kv1).extracting("key", "value").contains("k1", "v1");
     }
   }
 }
