@@ -13,10 +13,7 @@ public class StatelessRepartition {
   public static void main(String[] args) {
     var builder = new StreamsBuilder();
     builder
-      .stream(
-        "input",
-        Consumed.with(Serdes.String(), Serdes.String()).withName("poll-input")
-      )
+      .stream("input", Consumed.with(Serdes.String(), Serdes.String()).withName("poll-input"))
       .map(
         (key, value) -> {
           if (key == null) {
@@ -28,9 +25,7 @@ public class StatelessRepartition {
         },
         Named.as("map-key-when-null")
       )
-      .repartition(
-        Repartitioned.with(Serdes.String(), Serdes.String()).withName("input")
-      )
+      .repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("input"))
       .mapValues(value -> "Processed: " + value)
       .to("output", Produced.with(Serdes.String(), Serdes.String()));
 
@@ -43,10 +38,7 @@ public class StatelessRepartition {
 
   void other() {
     var builder = new StreamsBuilder();
-    final var input = builder.stream(
-      "input",
-      Consumed.with(Serdes.String(), Serdes.String()).withName("poll-input")
-    );
+    final var input = builder.stream("input", Consumed.with(Serdes.String(), Serdes.String()).withName("poll-input"));
 
     input
       .filter((key, value) -> key == null)

@@ -15,8 +15,7 @@ import org.apache.kafka.streams.kstream.Produced;
 
 public class StatelessInOut {
 
-  public static void main(String[] args)
-    throws IOException, InterruptedException {
+  public static void main(String[] args) throws IOException, InterruptedException {
     final var props = new Properties();
     props.load(Files.newInputStream(Path.of("streams.properties")));
     final var valueSerde = new GenericAvroSerde();
@@ -30,9 +29,7 @@ public class StatelessInOut {
     final var builder = new StreamsBuilder();
     builder
       .stream("jeqo-test-v1", Consumed.with(Serdes.String(), valueSerde))
-      .filter((key, value) ->
-        ((Utf8) value.get("ip")).toString().startsWith("1")
-      )
+      .filter((key, value) -> ((Utf8) value.get("ip")).toString().startsWith("1"))
       .to("jeqo-test-output-v1", Produced.with(Serdes.String(), valueSerde));
     final var server = HttpKafkaStreamsServer
       .newBuilder()

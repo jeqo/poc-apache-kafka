@@ -29,10 +29,7 @@ public class StatefulSessionWindowWithSuppress {
   final String inputTopic;
   final String outputTopic;
 
-  public StatefulSessionWindowWithSuppress(
-    String inputTopic,
-    String outputTopic
-  ) {
+  public StatefulSessionWindowWithSuppress(String inputTopic, String outputTopic) {
     this.inputTopic = inputTopic;
     this.outputTopic = outputTopic;
   }
@@ -45,19 +42,11 @@ public class StatefulSessionWindowWithSuppress {
       .selectKey((s, transaction) -> transaction.userId())
       .repartition(Repartitioned.with(keySerde, valueSerde))
       .groupByKey()
-      .windowedBy(
-        SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(30))
-      )
+      .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(30)))
       .count()
       .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()))
       .toStream()
-      .selectKey((w, aLong) ->
-        "%s@<%s,%s>".formatted(
-            w.key(),
-            w.window().start(),
-            w.window().endTime()
-          )
-      )
+      .selectKey((w, aLong) -> "%s@<%s,%s>".formatted(w.key(), w.window().start(), w.window().endTime()))
       .to(outputTopic, Produced.with(keySerde, outputValueSerde));
 
     return b.build();
@@ -73,10 +62,7 @@ public class StatefulSessionWindowWithSuppress {
       ProgressControlInterceptor.class.getName()
     );
     props.put("progress.control.start.ms", 60000);
-    props.put(
-      "progress.control.topics.include",
-      "ks1-KSTREAM-REPARTITION-0000000002-repartition"
-    );
+    props.put("progress.control.topics.include", "ks1-KSTREAM-REPARTITION-0000000002-repartition");
 
     final var app = new StatefulSessionWindowWithSuppress("input", "output");
 

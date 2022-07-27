@@ -47,12 +47,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
     final var b = new StreamsBuilder();
     b.addStateStore(
       Stores.windowStoreBuilder(
-        Stores.inMemoryWindowStore(
-          storeName,
-          retention,
-          Duration.ofMinutes(10),
-          false
-        ),
+        Stores.inMemoryWindowStore(storeName, retention, Duration.ofMinutes(10), false),
         keySerde,
         valueSerde
       )
@@ -73,10 +68,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
             }
 
             @Override
-            public Transaction transform(
-              String readOnlyKey,
-              Transaction value
-            ) { // kip-820: process(record) {
+            public Transaction transform(String readOnlyKey, Transaction value) { // kip-820: process(record) {
               store.put(readOnlyKey, value, context.timestamp()); //kip-820: record.timestamp()
               // context().forward(record)
               return value;
@@ -100,11 +92,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
             @Override
             public void init(ProcessorContext context) {
               this.context = context;
-              context.schedule(
-                Duration.ofMinutes(1),
-                PunctuationType.WALL_CLOCK_TIME,
-                timestamp -> {}
-              );
+              context.schedule(Duration.ofMinutes(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {});
               store = context.getStateStore(storeName);
             }
 
