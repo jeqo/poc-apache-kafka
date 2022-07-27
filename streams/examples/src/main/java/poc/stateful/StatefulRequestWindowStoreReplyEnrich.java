@@ -13,12 +13,14 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.processor.ProcessorContext;
+import org.apache.kafka.streams.processor.PunctuationType;
 import org.apache.kafka.streams.state.Stores;
 import org.apache.kafka.streams.state.WindowStore;
 import poc.data.Transaction;
 import poc.data.TransactionSerde;
 
 public class StatefulRequestWindowStoreReplyEnrich {
+
   final Serde<String> keySerde = Serdes.String();
   final Serde<Transaction> valueSerde = new TransactionSerde();
   final String storeName = "transactions";
@@ -55,6 +57,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
         .transformValues(() -> new ValueTransformerWithKey<String, Transaction, Transaction>() {
           ProcessorContext context;
           WindowStore<String, Transaction> store;
+
           @Override
           public void init(ProcessorContext context) {
             this.context = context;
@@ -62,8 +65,10 @@ public class StatefulRequestWindowStoreReplyEnrich {
           }
 
           @Override
-          public Transaction transform(String readOnlyKey, Transaction value) {
-            store.put(readOnlyKey, value, context.timestamp());
+          public Transaction transform(String readOnlyKey,
+              Transaction value) { // kip-820: process(record) {
+            store.put(readOnlyKey, value, context.timestamp()); //kip-820: record.timestamp()
+            // context().forward(record)
             return value;
           }
 
@@ -77,18 +82,29 @@ public class StatefulRequestWindowStoreReplyEnrich {
         .transformValues(() -> new ValueTransformerWithKey<String, String, Transaction>() {
           ProcessorContext context;
           WindowStore<String, Transaction> store;
+
           @Override
           public void init(ProcessorContext context) {
             this.context = context;
+            context.schedule(Duration.ofMinutes(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
+
+            });
             store = context.getStateStore(storeName);
           }
 
           @Override
           public Transaction transform(String readOnlyKey, String value) {
-            try(var iter = store.backwardFetch(readOnlyKey, context.timestamp() - retention.toMillis(), context.timestamp())) {
+            try (var iter =
+                store.backwardFetch(
+                    readOnlyKey,
+                    context.timestamp() - retention.toMillis(),
+                    context.timestamp()
+                )) {
               if (iter.hasNext()) {
-                return iter.next().value;
-              } else return null;
+                return iter.next().value; // kip-820: record.withValue(iter.next().value);
+              } else {
+                return null;
+              }
             }
           }
 
@@ -106,13 +122,25 @@ public class StatefulRequestWindowStoreReplyEnrich {
 
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "ks1");
 
-    final var app = new StatefulRequestWindowStoreReplyEnrich("request", "request-backend", "response-backend", "response");
+    final var app = new StatefulRequestWindowStoreReplyEnrich(
+        "request",
+        "request-backend",
+        "response-backend",
+        "response"
+    );
 
     final var server =
         HttpKafkaStreamsServer.newBuilder()
             .port(8080)
             .prometheusMetricsEnabled(true)
+            .addServiceForWindowStore(app.storeName)
             .build(app.topology(), props);
     server.startApplicationAndServer();
+
+//    var ks = new KafkaStreams(app.topology(), props);
+//    Runtime.getRuntime().addShutdownHook(new Thread(ks::close));
+//    ks.start();
+//    ks.streamsMetadataForStore(app.storeName)
+//        .stream().map(streamsMetadata -> streamsMetadata.hostInfo().)
   }
 }
