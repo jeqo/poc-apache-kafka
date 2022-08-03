@@ -10,29 +10,27 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.processor.PunctuationType;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
-import org.apache.kafka.streams.state.WindowStore;
 import poc.data.Transaction;
 import poc.data.TransactionSerde;
 
-public class StatefulRequestWindowStoreReplyEnrich {
+public class StatefulRequestKeyValueStoreReplyEnrich {
 
   final Serde<String> keySerde = Serdes.String();
   final Serde<Transaction> valueSerde = new TransactionSerde();
   final String storeName = "transactions";
-  final Duration retention = Duration.ofHours(1);
 
   final String requestTopic;
   final String requestBackendTopic;
   final String responseBackendTopic;
   final String responseTopic;
 
-  public StatefulRequestWindowStoreReplyEnrich(
+  public StatefulRequestKeyValueStoreReplyEnrich(
     String requestTopic,
     String requestBackendTopic,
     String responseBackendTopic,
@@ -47,25 +45,20 @@ public class StatefulRequestWindowStoreReplyEnrich {
   public Topology topology() {
     final var b = new StreamsBuilder();
     b.addStateStore(
-      Stores.windowStoreBuilder(
-        Stores.inMemoryWindowStore(storeName, retention, Duration.ofMinutes(10), false),
+      Stores.keyValueStoreBuilder(
+        Stores.inMemoryKeyValueStore(storeName),
         keySerde,
         valueSerde
       )
     );
 
-//    if (requiresValidation) {
-//      b.stream("").to("");
-//    }
-
     b
-      .stream(requestTopic, Consumed.with(keySerde, valueSerde).withName("consume-transactions"))
-      .peek((key, value) -> {})
-      .transformValues( // .processValues(
+      .stream(requestTopic, Consumed.with(keySerde, valueSerde))
+      .transformValues(
         () ->
           new ValueTransformerWithKey<String, Transaction, Transaction>() {
             ProcessorContext context;
-            WindowStore<String, Transaction> store;
+            KeyValueStore<String, Transaction> store;
 
             @Override
             public void init(ProcessorContext context) {
@@ -75,7 +68,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
 
             @Override
             public Transaction transform(String readOnlyKey, Transaction value) { // kip-820: process(record) {
-              store.put(readOnlyKey, value, context.timestamp()); //kip-820: record.timestamp()
+              store.put(readOnlyKey, value); //kip-820: record.timestamp()
               // context().forward(record)
               return value;
             }
@@ -83,10 +76,9 @@ public class StatefulRequestWindowStoreReplyEnrich {
             @Override
             public void close() {} // nothing to close
           },
-        Named.as("cache-request"),
         storeName
       )
-      .to(requestBackendTopic, Produced.with(keySerde, valueSerde).withName("send-to-backend"));
+      .to(requestBackendTopic, Produced.with(keySerde, valueSerde));
 
     b
       .stream(responseBackendTopic, Consumed.with(keySerde, Serdes.String()))
@@ -94,7 +86,7 @@ public class StatefulRequestWindowStoreReplyEnrich {
         () ->
           new ValueTransformerWithKey<String, String, Transaction>() {
             ProcessorContext context;
-            WindowStore<String, Transaction> store;
+            KeyValueStore<String, Transaction> store;
 
             @Override
             public void init(ProcessorContext context) {
@@ -105,19 +97,12 @@ public class StatefulRequestWindowStoreReplyEnrich {
 
             @Override
             public Transaction transform(String readOnlyKey, String value) {
-              try (
-                var iter = store.backwardFetch(
-                  readOnlyKey,
-                  context.timestamp() - retention.toMillis(),
-                  context.timestamp()
-                )
-              ) {
-                if (iter.hasNext()) {
-                  return iter.next().value; // kip-820: record.withValue(iter.next().value);
-                } else {
-                  return null;
-                }
+              var transaction = store.delete(readOnlyKey);
+              if (transaction == null) {
+               // rehydrate store with transaction
               }
+              // use transaction for enrichment
+              return transaction;
             }
 
             @Override
@@ -134,9 +119,9 @@ public class StatefulRequestWindowStoreReplyEnrich {
     final var props = kafka.properties();
 
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "ks1");
-    props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
+    props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2);
 
-    final var app = new StatefulRequestWindowStoreReplyEnrich(
+    final var app = new StatefulRequestKeyValueStoreReplyEnrich(
       "request",
       "request-backend",
       "response-backend",
