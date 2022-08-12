@@ -13,8 +13,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <kafka.version>3.2.0</kafka.version>
-    <confluent.version>7.2.0</confluent.version>
+    <kafka.version>3.2.1</kafka.version>
+    <confluent.version>7.2.1</confluent.version>
+    <kafka-libs.version>0.5.1</kafka-libs.version>
   </properties>
 
   <dependencies>
@@ -32,12 +33,27 @@
     <dependency>
       <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-context</artifactId>
-      <version>0.2.0</version>
+      <version>${kafka-libs.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>datagen-schemas</artifactId>
+      <version>${kafka-libs.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>connect-schema-serde</artifactId>
+      <version>${kafka-libs.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>connect-json</artifactId>
+      <version>${kafka.version}</version>
     </dependency>
     <dependency>
       <groupId>io.github.jeqo.kafka</groupId>
       <artifactId>kafka-producer-progress-control</artifactId>
-      <version>0.2.2-SNAPSHOT</version>
+      <version>${kafka-libs.version}</version>
     </dependency>
 
     <dependency>
@@ -55,19 +71,19 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.8.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-streams-test-utils</artifactId>
-      <version>${kafka.version}</version>
+      <version>5.9.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <version>3.23.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-streams-test-utils</artifactId>
+      <version>${kafka.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

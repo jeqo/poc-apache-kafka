@@ -54,9 +54,9 @@ public class StatefulRequestWindowStoreReplyEnrich {
       )
     );
 
-//    if (requiresValidation) {
-//      b.stream("").to("");
-//    }
+    //    if (requiresValidation) {
+    //      b.stream("").to("");
+    //    }
 
     b
       .stream(requestTopic, Consumed.with(keySerde, valueSerde).withName("consume-transactions"))

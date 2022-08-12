@@ -17,22 +17,16 @@ public class StatelessSplitBranches {
   Topology build() {
     var b = new StreamsBuilder();
 
-//    var s = b.stream("abc");
-//    s.mapValues().to();
-//    s.mapValues().to();
+    //    var s = b.stream("abc");
+    //    s.mapValues().to();
+    //    s.mapValues().to();
 
-    var branches = b.stream("t1", Consumed.with(Serdes.String(), Serdes.String()))
+    var branches = b
+      .stream("t1", Consumed.with(Serdes.String(), Serdes.String()))
       .split()
-      .branch(
-        (key, value) -> value.startsWith("a"),
-        Branched.as("A")
-      )
-      .branch(
-        (key, value) -> value.startsWith("b"),
-        Branched.as("B")
-      )
-      .branch((key, value) -> value.startsWith("C"),
-        Branched.withConsumer(ks -> new SubProcess().accept(ks)))
+      .branch((key, value) -> value.startsWith("a"), Branched.as("A"))
+      .branch((key, value) -> value.startsWith("b"), Branched.as("B"))
+      .branch((key, value) -> value.startsWith("C"), Branched.withConsumer(ks -> new SubProcess().accept(ks)))
       .defaultBranch();
 
     branches.forEach((name, ks) -> finalizeProcess(ks));
@@ -46,9 +40,7 @@ public class StatelessSplitBranches {
     public ValueTransformerWithKey<String, String, String> get() {
       return new ValueTransformerWithKey<>() {
         @Override
-        public void init(ProcessorContext context) {
-
-        }
+        public void init(ProcessorContext context) {}
 
         @Override
         public String transform(String readOnlyKey, String value) {
@@ -56,9 +48,7 @@ public class StatelessSplitBranches {
         }
 
         @Override
-        public void close() {
-
-        }
+        public void close() {}
       };
     }
   }
@@ -68,8 +58,7 @@ public class StatelessSplitBranches {
     @Override
     public void accept(KStream<String, String> ks) {
       // to mq
-      var s1 = ks
-        .mapValues((key, value) -> value.split(" "));
+      var s1 = ks.mapValues((key, value) -> value.split(" "));
       // to status
       s1.to("mq");
       ks.mapValues(s -> s).to("status");
