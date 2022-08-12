@@ -1,14 +1,14 @@
 package poc.stateless;
 
-import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
-import java.util.stream.Collectors;
+import java.util.Map;
+import kafka.context.KafkaContexts;
+import kafka.serde.connect.SchemaAndValueSerde;
+import kafka.serde.connect.util.Requirements;
 import kafka.streams.rest.armeria.HttpKafkaStreamsServer;
-import org.apache.avro.util.Utf8;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.connect.data.SchemaAndValue;
+import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
@@ -16,21 +16,27 @@ import org.apache.kafka.streams.kstream.Produced;
 public class StatelessInOut {
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    final var props = new Properties();
-    props.load(Files.newInputStream(Path.of("streams.properties")));
-    final var valueSerde = new GenericAvroSerde();
-    final var srConfig = props
-      .keySet()
-      .stream()
-      .map(o -> (String) o)
-      //        .filter(s -> s.startsWith("schema"))
-      .collect(Collectors.toMap(s -> s, props::get));
-    valueSerde.configure(srConfig, false);
+    var props = KafkaContexts.load().getDefault().properties();
+    props.put("application.id", "test_v1");
+    //final var srConfig = props
+    //  .keySet()
+    //  .stream()
+    //  .map(o -> (String) o)
+    //  //        .filter(s -> s.startsWith("schema"))
+    //  .collect(Collectors.toMap(s -> s, props::get));
+    //    final var valueSerde = new GenericAvroSerde();
+    //    valueSerde.configure(srConfig, false);
+    var converter = new JsonConverter();
+    converter.configure(Map.of("schemas.enable", "false", "converter.type", "value"));
+    var valueSerde = new SchemaAndValueSerde(converter);
     final var builder = new StreamsBuilder();
     builder
-      .stream("jeqo-test-v1", Consumed.with(Serdes.String(), valueSerde))
-      .filter((key, value) -> ((Utf8) value.get("ip")).toString().startsWith("1"))
-      .to("jeqo-test-output-v1", Produced.with(Serdes.String(), valueSerde));
+      .stream("test-input", Consumed.with(Serdes.String(), valueSerde))
+      .mapValues((s, schemaAndValue) -> Requirements.requireMapOrNull(schemaAndValue.value(), "testing"))
+      .filter((s, map) -> !map.isEmpty())
+      .filter((s, map) -> map.get("gender").toString().equals("MALE"))
+      .mapValues((s, stringObjectMap) -> new SchemaAndValue(null, stringObjectMap))
+      .to("test-output", Produced.with(Serdes.String(), valueSerde));
     final var server = HttpKafkaStreamsServer
       .newBuilder()
       .port(8080)

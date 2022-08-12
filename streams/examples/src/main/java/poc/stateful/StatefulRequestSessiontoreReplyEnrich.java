@@ -52,11 +52,7 @@ public class StatefulRequestSessiontoreReplyEnrich {
   public Topology topology() {
     final var b = new StreamsBuilder();
     b.addStateStore(
-      Stores.sessionStoreBuilder(
-        Stores.inMemorySessionStore(storeName, retention),
-        keySerde,
-        valueSerde
-      )
+      Stores.sessionStoreBuilder(Stores.inMemorySessionStore(storeName, retention), keySerde, valueSerde)
     );
 
     b
@@ -76,9 +72,7 @@ public class StatefulRequestSessiontoreReplyEnrich {
 
             @Override
             public Transaction transform(String readOnlyKey, Transaction value) { // kip-820: process(record) {
-              store.put(
-                new Windowed<>(readOnlyKey, new SessionWindow(context.timestamp(), Long.MAX_VALUE)),
-                value); //kip-820: record.timestamp()
+              store.put(new Windowed<>(readOnlyKey, new SessionWindow(context.timestamp(), Long.MAX_VALUE)), value); //kip-820: record.timestamp()
               // context().forward(record)
               return value;
             }
@@ -108,11 +102,7 @@ public class StatefulRequestSessiontoreReplyEnrich {
 
             @Override
             public Transaction transform(String readOnlyKey, String value) {
-              try (
-                var iter = store.backwardFetch(
-                  readOnlyKey
-                )
-              ) {
+              try (var iter = store.backwardFetch(readOnlyKey)) {
                 if (iter.hasNext()) {
                   return iter.next().value; // kip-820: record.withValue(iter.next().value);
                 } else {
@@ -151,13 +141,16 @@ public class StatefulRequestSessiontoreReplyEnrich {
       .addServiceForWindowStore(app.storeName)
       .build(app.topology(), props);
     server.startApplicationAndServer();
-    server.kafkaStreams().setUncaughtExceptionHandler(new StreamsUncaughtExceptionHandler() {
-      @Override
-      public StreamThreadExceptionResponse handle(Throwable exception) {
-
-        return null;
-      }
-    });
+    server
+      .kafkaStreams()
+      .setUncaughtExceptionHandler(
+        new StreamsUncaughtExceptionHandler() {
+          @Override
+          public StreamThreadExceptionResponse handle(Throwable exception) {
+            return null;
+          }
+        }
+      );
     //    var ks = new KafkaStreams(app.topology(), props);
     //    Runtime.getRuntime().addShutdownHook(new Thread(ks::close));
     //    ks.start();
@@ -165,7 +158,7 @@ public class StatefulRequestSessiontoreReplyEnrich {
     //        .stream().map(streamsMetadata -> streamsMetadata.hostInfo().)
   }
 
-  static class DeadLetterTopicStreamsUncaughtExceptionHandler implements StreamsUncaughtExceptionHandler{
+  static class DeadLetterTopicStreamsUncaughtExceptionHandler implements StreamsUncaughtExceptionHandler {
 
     final Producer<String, String> producer;
 
@@ -175,7 +168,6 @@ public class StatefulRequestSessiontoreReplyEnrich {
 
     @Override
     public StreamThreadExceptionResponse handle(Throwable exception) {
-
       return StreamThreadExceptionResponse.REPLACE_THREAD;
     }
   }

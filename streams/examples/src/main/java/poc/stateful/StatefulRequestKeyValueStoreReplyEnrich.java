@@ -44,13 +44,7 @@ public class StatefulRequestKeyValueStoreReplyEnrich {
 
   public Topology topology() {
     final var b = new StreamsBuilder();
-    b.addStateStore(
-      Stores.keyValueStoreBuilder(
-        Stores.inMemoryKeyValueStore(storeName),
-        keySerde,
-        valueSerde
-      )
-    );
+    b.addStateStore(Stores.keyValueStoreBuilder(Stores.inMemoryKeyValueStore(storeName), keySerde, valueSerde));
 
     b
       .stream(requestTopic, Consumed.with(keySerde, valueSerde))
@@ -99,7 +93,7 @@ public class StatefulRequestKeyValueStoreReplyEnrich {
             public Transaction transform(String readOnlyKey, String value) {
               var transaction = store.delete(readOnlyKey);
               if (transaction == null) {
-               // rehydrate store with transaction
+                // rehydrate store with transaction
               }
               // use transaction for enrichment
               return transaction;
