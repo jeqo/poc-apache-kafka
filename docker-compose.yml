@@ -65,8 +65,7 @@ services:
     ports:
       - "9021:9021"
     environment:
-      # To be solved in a future hotfix - getting streams crossed error message atm
-      # CONTROL_CENTER_MODE_ENABLE: "management"
+      CONTROL_CENTER_MODE_ENABLE: "management"
       CONTROL_CENTER_BOOTSTRAP_SERVERS: PLAINTEXT://broker:29092
       CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 4
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
