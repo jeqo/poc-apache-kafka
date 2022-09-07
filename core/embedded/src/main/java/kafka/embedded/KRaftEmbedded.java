@@ -43,6 +43,7 @@ public class KRaftEmbedded {
     props.put(KafkaConfig.LogDirsProp(), logDirs);
 
     var config = KafkaConfig.fromProps(props, true);
+    // from https://github.com/apache/kafka/blob/16324448a2d3d52f6a3a0a2058c3ceec14e84d52/core/src/main/scala/kafka/Kafka.scala#L76-L80
     var kraftServer = new KafkaRaftServer(config, SystemTime.SYSTEM, Option.empty());
     Runtime.getRuntime().addShutdownHook(new Thread(kraftServer::shutdown));
     kraftServer.startup();
