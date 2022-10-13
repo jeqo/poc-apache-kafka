@@ -9,22 +9,79 @@
   <version>1.0-SNAPSHOT</version>
 
   <properties>
-    <maven.compiler.source>18</maven.compiler.source>
-    <maven.compiler.target>18</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <graalvm.at-build-time.slf4j>org.slf4j.LoggerFactory,org.slf4j.impl.StaticLoggerBinder,org.slf4j.impl.SimpleLogger,com.sun.org.slf4j</graalvm.at-build-time.slf4j>
+    <graalvm.at-build-time.kafka>org.apache.kafka,kafka,net.jpountz</graalvm.at-build-time.kafka>
+    <graalvm.at-build-time.json>com.fasterxml.jackson,jdk.xml,javax.xml,com.sun.org.apache.xerces,org.yaml.snakeyaml</graalvm.at-build-time.json>
+
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.13</artifactId>
-      <version>3.2.1
-      </version>
+      <version>3.2.1</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.11</version>
+      <version>1.4.0</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.jeqo.kafka</groupId>
+      <artifactId>kafka-clients-graalvm</artifactId>
+      <version>0.6.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.graalvm.nativeimage</groupId>
+      <artifactId>svm</artifactId>
+      <version>22.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>native</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <version>0.9.13</version>
+            <extensions>true</extensions>
+            <executions>
+              <execution>
+                <id>build-native</id>
+                <goals>
+                  <goal>build</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <buildDirectory>bin/</buildDirectory>
+              <imageName>kraft-embedded-${project.version}</imageName>
+              <mainClass>kafka.embedded.KRaftEmbedded</mainClass>
+              <buildArgs>
+                <buildArg>--no-fallback</buildArg>
+<!--                <buildArg>&#45;&#45;link-at-build-time</buildArg>-->
+                <buildArg>
+                  --initialize-at-build-time=${graalvm.at-build-time.slf4j}
+                </buildArg>
+                <buildArg>--enable-url-protocols=http</buildArg>
+                <buildArg>--enable-url-protocols=https</buildArg>
+                <buildArg>--report-unsupported-elements-at-runtime</buildArg>
+              </buildArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
