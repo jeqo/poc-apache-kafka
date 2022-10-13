@@ -1,0 +1,17 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "logback.xml"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "sun.security.util.AuthResources"
+    },
+    {
+      "name": "sun.security.util.Resources"
+    }
+  ]
+}
