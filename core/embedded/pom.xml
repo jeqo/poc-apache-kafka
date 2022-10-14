@@ -65,7 +65,7 @@
               </execution>
             </executions>
             <configuration>
-              <buildDirectory>bin/</buildDirectory>
+<!--              <buildDirectory>bin/</buildDirectory>-->
               <imageName>kraft-embedded-${project.version}</imageName>
               <mainClass>kafka.embedded.KRaftEmbedded</mainClass>
               <buildArgs>

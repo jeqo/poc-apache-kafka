@@ -17,6 +17,9 @@
 
     <kafka.version>3.3.1</kafka.version>
     <armeria.version>1.20.1</armeria.version>
+    <logback.version>1.4.3</logback.version>
+    <slf4j.version>2.0.3</slf4j.version>
+    <micrometer.version>1.9.5</micrometer.version>
   </properties>
 
   <dependencies>
@@ -33,17 +36,27 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.4.3</version>
+      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.4.3</version>
+      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.0.3</version>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-core</artifactId>
+      <version>${micrometer.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <version>${micrometer.version}</version>
     </dependency>
 
     <dependency>
