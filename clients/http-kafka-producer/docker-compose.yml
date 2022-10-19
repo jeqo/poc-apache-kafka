@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  http-producer:
+    image: ghcr.io/jeqo/poc-apache-kafka:http-kafka-producer
+    ports:
+      - "8080:8080"
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/config/:/etc/prometheus/
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: password
+    ports:
+      - "3000:3000"
