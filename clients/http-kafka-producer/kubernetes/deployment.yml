@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafkahttp-deployment
+  labels:
+    app: kafkahttp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafkahttp
+  template:
+    metadata:
+      labels:
+        app: kafkahttp
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: kafkahttp
+          image: ghcr.io/jeqo/poc-http-kafka-producer:0.1.0-SNAPSHOT
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 2000m
+              memory: 3Gi
+          volumeMounts:
+            - name: kafka-properties
+              mountPath: "/config"
+              readOnly: true
+      volumes:
+        - name: kafka-properties
+          secret:
+            secretName: kafka-properties

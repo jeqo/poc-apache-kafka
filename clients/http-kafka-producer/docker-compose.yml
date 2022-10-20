@@ -1,9 +1,11 @@
 version: '3.8'
 services:
   http-producer:
-    image: ghcr.io/jeqo/poc-apache-kafka:http-kafka-producer
+    image: ghcr.io/jeqo/poc-http-kafka-producer:0.1.0-SNAPSHOT
     ports:
       - "8080:8080"
+    volumes:
+      - ./kubernetes/kafka.properties:/config/kafka.properties
   prometheus:
     image: prom/prometheus:latest
     ports:
