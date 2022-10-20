@@ -93,8 +93,13 @@
             <image>openjdk:17</image>
           </from>
           <to>
-            <image>ghcr.io/jeqo/poc-apache-kafka:http-kafka-producer</image>
+            <image>ghcr.io/jeqo/poc-http-kafka-producer:${project.version}</image>
           </to>
+          <container>
+            <labels>
+              <org.opencontainers.image.source>https://github.com/jeqo/poc-apache-kafka</org.opencontainers.image.source>
+            </labels>
+          </container>
         </configuration>
       </plugin>
     </plugins>
