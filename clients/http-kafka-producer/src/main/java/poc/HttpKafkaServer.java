@@ -9,6 +9,7 @@ import com.linecorp.armeria.common.metric.MeterIdPrefixFunction;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Description;
+import com.linecorp.armeria.server.annotation.Param;
 import com.linecorp.armeria.server.annotation.Post;
 import com.linecorp.armeria.server.docs.DocService;
 import com.linecorp.armeria.server.metric.MetricCollectingService;
@@ -37,7 +38,7 @@ public class HttpKafkaServer {
   public static void main(String[] args) throws IOException {
     // load config
     final var config = new Properties();
-    config.load(Files.newInputStream(Path.of("kafka.properties")));
+    config.load(Files.newInputStream(Path.of("config/kafka.properties")));
     // create producer
     final var producer = new KafkaProducer<>(config, new ByteArraySerializer(), new ByteArraySerializer());
     // prepare metrics registry
@@ -51,7 +52,7 @@ public class HttpKafkaServer {
     new ProcessMemoryMetrics().bindTo(prometheusRegistry);
     new ProcessThreadMetrics().bindTo(prometheusRegistry);
     // create service
-    final var service = new HttpKafkaService(producer, config.getProperty("topic"));
+    final var service = new HttpKafkaService(producer);
     // prepare and start server
     Server
       .builder()
@@ -73,15 +74,13 @@ public class HttpKafkaServer {
 
     final ObjectMapper mapper = new ObjectMapper();
     final Producer<byte[], byte[]> producer;
-    final String topic;
 
-    HttpKafkaService(Producer<byte[], byte[]> producer, String topic) {
+    HttpKafkaService(Producer<byte[], byte[]> producer) {
       this.producer = producer;
-      this.topic = topic;
     }
 
-    @Post("/send")
-    public HttpResponse send(@Description("Payload") byte[] body, HttpHeaders httpHeaders, ServiceRequestContext ctx) {
+    @Post("/send/{topic}")
+    public HttpResponse send(@Param("topic") String topic, @Description("Payload") byte[] body, HttpHeaders httpHeaders, ServiceRequestContext ctx) {
       try {
         final var key = httpHeaders.get("key");
         final byte[] keyBytes = key != null ? key.getBytes(StandardCharsets.UTF_8) : null;
