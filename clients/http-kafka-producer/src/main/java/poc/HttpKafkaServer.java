@@ -79,35 +79,36 @@ public class HttpKafkaServer {
       this.producer = producer;
     }
 
+    // to use proper executor service for blocking operations as `get()` is waiting for ack.
+    // more here: https://armeria.dev/docs/server-annotated-service/#specifying-a-blocking-task-executor
     @Post("/send/{topic}")
-    public HttpResponse send(@Param("topic") String topic, @Description("Payload") byte[] body, HttpHeaders httpHeaders, ServiceRequestContext ctx) {
+    public HttpResponse send(
+      @Param("topic") String topic,
+      @Description("Payload") byte[] body,
+      HttpHeaders httpHeaders,
+      ServiceRequestContext ctx
+    ) {
       try {
         final var key = httpHeaders.get("key");
         final byte[] keyBytes = key != null ? key.getBytes(StandardCharsets.UTF_8) : null;
         final var record = new ProducerRecord<>(topic, keyBytes, body);
         final var f = new CompletableFuture<HttpResponse>();
-        // to use proper executor service for blocking operations as `get()` is waiting for ack.
-        // more here: https://armeria.dev/docs/server-annotated-service/#specifying-a-blocking-task-executor
-        ctx
-          .blockingTaskExecutor()
-          .execute(() ->
-            producer.send(
-              record,
-              (meta, e) -> {
-                if (e != null) {
-                  f.complete(HttpResponse.ofFailure(e));
-                } else {
-                  final var responseBody = mapper
-                    .createObjectNode()
-                    .put("topic", meta.topic())
-                    .put("partition", meta.partition())
-                    .put("offset", meta.offset())
-                    .put("timestamp", meta.timestamp());
-                  f.complete(HttpResponse.ofJson(HttpStatus.CREATED, responseBody));
-                }
-              }
-            )
-          );
+        producer.send(
+          record,
+          (meta, e) -> {
+            if (e != null) {
+              f.complete(HttpResponse.ofFailure(e));
+            } else {
+              final var responseBody = mapper
+                .createObjectNode()
+                .put("topic", meta.topic())
+                .put("partition", meta.partition())
+                .put("offset", meta.offset())
+                .put("timestamp", meta.timestamp());
+              f.complete(HttpResponse.ofJson(HttpStatus.CREATED, responseBody));
+            }
+          }
+        );
         return HttpResponse.from(f);
       } catch (Exception e) {
         return HttpResponse.ofFailure(e);
