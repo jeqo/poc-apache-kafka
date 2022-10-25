@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./kubernetes/kafka.properties:/config/kafka.properties
+      - ./kubernetes/config/kafka.properties:/config/kafka.properties
   prometheus:
     image: prom/prometheus:latest
     ports:
