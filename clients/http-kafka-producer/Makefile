@@ -20,6 +20,18 @@ load_tp12:
 load_tp64:
 	hey -n 100000 -m POST -D ./data/random.txt http://34.105.229.223/send/t_64p -c 50
 
+load_sync_tp1:
+	hey -n 100000 -m POST -D ./data/random.txt http://34.105.229.223/send_sync/t_1p -c 50
+
+load_sync_tp6:
+	hey -n 100000 -m POST -D ./data/random.txt http://34.105.229.223/send_sync/t_6p -c 50
+
+load_sync_tp12:
+	hey -n 100000 -m POST -D ./data/random.txt http://34.105.229.223/send_sync/t_12p -c 50
+
+load_sync_tp64:
+	hey -n 100000 -m POST -D ./data/random.txt http://34.105.229.223/send_sync/t_64p -c 50
+
 k8s_delete:
 	kustomize build kubernetes/ | kubectl delete -f -
 
