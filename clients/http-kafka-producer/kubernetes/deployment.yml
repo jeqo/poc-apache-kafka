@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafkahttp-deployment
+  name: kafkahttp
   labels:
     app: kafkahttp
 spec:

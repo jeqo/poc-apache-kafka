@@ -8,6 +8,7 @@ import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.metric.MeterIdPrefixFunction;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServiceRequestContext;
+import com.linecorp.armeria.server.annotation.Blocking;
 import com.linecorp.armeria.server.annotation.Description;
 import com.linecorp.armeria.server.annotation.Param;
 import com.linecorp.armeria.server.annotation.Post;
@@ -81,6 +82,31 @@ public class HttpKafkaServer {
 
     // to use proper executor service for blocking operations as `get()` is waiting for ack.
     // more here: https://armeria.dev/docs/server-annotated-service/#specifying-a-blocking-task-executor
+    @Blocking
+    @Post("/send_sync/{topic}")
+    public HttpResponse sendSync(
+      @Param("topic") String topic,
+      @Description("Payload") byte[] body,
+      HttpHeaders httpHeaders,
+      ServiceRequestContext ctx
+    ) {
+      try {
+        final var key = httpHeaders.get("key");
+        final byte[] keyBytes = key != null ? key.getBytes(StandardCharsets.UTF_8) : null;
+        final var record = new ProducerRecord<>(topic, keyBytes, body);
+        final var meta = producer.send(record).get();
+        final var responseBody = mapper
+          .createObjectNode()
+          .put("topic", meta.topic())
+          .put("partition", meta.partition())
+          .put("offset", meta.offset())
+          .put("timestamp", meta.timestamp());
+        return HttpResponse.ofJson(responseBody);
+      } catch (Exception e) {
+        return HttpResponse.ofFailure(e);
+      }
+    }
+
     @Post("/send/{topic}")
     public HttpResponse send(
       @Param("topic") String topic,
