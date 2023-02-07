@@ -11,14 +11,21 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
-import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.processor.PunctuationType;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
+import org.apache.kafka.streams.processor.api.FixedKeyRecord;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
 import poc.data.Transaction;
 import poc.data.TransactionSerde;
 
+/**
+ * Stateful example where there are two input streams: transactions request and response.
+ * The request incoming stream receives and stores transactions.
+ * <p>
+ *
+ */
 public class StatefulRequestKeyValueStoreReplyEnrich {
 
   final Serde<String> keySerde = Serdes.String();
@@ -48,23 +55,22 @@ public class StatefulRequestKeyValueStoreReplyEnrich {
 
     b
       .stream(requestTopic, Consumed.with(keySerde, valueSerde))
-      .transformValues(
+      .processValues(
         () ->
-          new ValueTransformerWithKey<String, Transaction, Transaction>() {
-            ProcessorContext context;
+          new FixedKeyProcessor<String, Transaction, Transaction>() {
+            FixedKeyProcessorContext<String, Transaction> context;
             KeyValueStore<String, Transaction> store;
 
             @Override
-            public void init(ProcessorContext context) {
+            public void init(FixedKeyProcessorContext<String, Transaction> context) {
               this.context = context;
               store = context.getStateStore(storeName);
             }
 
             @Override
-            public Transaction transform(String readOnlyKey, Transaction value) { // kip-820: process(record) {
-              store.put(readOnlyKey, value); //kip-820: record.timestamp()
-              // context().forward(record)
-              return value;
+            public void process(FixedKeyRecord<String, Transaction> record) {
+              store.put(record.key(), record.value());
+              context.forward(record);
             }
 
             @Override
@@ -76,27 +82,27 @@ public class StatefulRequestKeyValueStoreReplyEnrich {
 
     b
       .stream(responseBackendTopic, Consumed.with(keySerde, Serdes.String()))
-      .transformValues(
+      .processValues(
         () ->
-          new ValueTransformerWithKey<String, String, Transaction>() {
-            ProcessorContext context;
+          new FixedKeyProcessor<String, String, Transaction>() {
+            FixedKeyProcessorContext<String, Transaction> context;
             KeyValueStore<String, Transaction> store;
 
             @Override
-            public void init(ProcessorContext context) {
+            public void init(FixedKeyProcessorContext<String, Transaction> context) {
               this.context = context;
               context.schedule(Duration.ofMinutes(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {});
               store = context.getStateStore(storeName);
             }
 
             @Override
-            public Transaction transform(String readOnlyKey, String value) {
-              var transaction = store.delete(readOnlyKey);
+            public void process(FixedKeyRecord<String, String> record) {
+              var transaction = store.delete(record.key());
               if (transaction == null) {
                 // rehydrate store with transaction
               }
               // use transaction for enrichment
-              return transaction;
+              context.forward(record.withValue(transaction));
             }
 
             @Override
