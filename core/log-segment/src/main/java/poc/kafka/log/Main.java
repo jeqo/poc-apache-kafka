@@ -21,6 +21,10 @@ public class Main {
             System.out.println(records.sizeInBytes());
             RecordBatch first = records.firstBatch();
             System.out.println("Compression at start: " + first.compressionType());
+            {
+                // Alternative 0: only use the first batch
+                System.out.println("1: Compression at end: " + first.compressionType() + "] batches: ");
+            }
 
             {
                 // Alternative 1: naive iteration over batches
