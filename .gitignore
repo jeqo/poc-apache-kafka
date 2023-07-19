@@ -1,5 +1,3 @@
-client*.properties
-streams*.properties
-cloud*.properties
-
+/*.properties
+*.db
 target/
